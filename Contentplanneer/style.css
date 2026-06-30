@@ -1,0 +1,312 @@
+/* ==========================================================================
+   1. GLOBAL STYLES & VARIABLES
+   ========================================================================== */
+:root {
+    --bg-main: #0f172a;
+    --bg-card: #1e293b;
+    --bg-input: #0f172a;
+    --border-color: #334155;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    
+    /* Status Colors */
+    --color-scripting: #854d0e;
+    --text-scripting: #fef08a;
+    --color-shooting: #1e40af;
+    --text-shooting: #bfdbfe;
+    --color-editing: #9a3412;
+    --text-editing: #fed7aa;
+    --color-done: #166534;
+    --text-done: #bbf7d0;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Poppins', 'Kantumruuy Pro', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    padding: 10px;
+    line-height: 1.5;
+}
+
+.container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 10px;
+}
+
+/* ==========================================================================
+   2. LOGIN PAGE (RESPONSIVE)
+   ========================================================================== */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 85vh;
+    padding: 15px;
+}
+
+.login-card {
+    background-color: var(--bg-card);
+    padding: 25px;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+}
+
+.login-title {
+    font-size: 22px;
+    text-align: center;
+    margin-bottom: 8px;
+    color: #38bdf8;
+    font-weight: 700;
+}
+
+.login-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.btn-login {
+    width: 100%;
+    background: linear-gradient(to right, #2563eb, #7c3aed);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 15px;
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.btn-login:active { transform: scale(0.98); }
+
+/* ==========================================================================
+   3. HEADER & SEARCH BAR (RESPONSIVE)
+   ========================================================================== */
+.header {
+    display: flex;
+    flex-direction: column; /* ទូរស័ព្ទដើរជាជួរដេកឈរ */
+    gap: 15px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+}
+
+.logo {
+    font-size: 24px;
+    background: linear-gradient(to right, #38bdf8, #c084fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+    text-align: center;
+}
+
+.subtitle {
+    color: var(--text-muted);
+    margin-top: 5px;
+    font-size: 13px;
+    text-align: center;
+}
+
+.header-right {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.search-box input {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: white;
+    padding: 12px 15px;
+    border-radius: 8px;
+    width: 100%;
+    font-size: 14px;
+}
+
+.btn-logout {
+    background-color: #475569;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+    text-align: center;
+}
+
+/* ==========================================================================
+   4. DASHBOARD STATS (RESPONSIVE)
+   ========================================================================== */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* ទូរស័ព្ទចែកជា ២ ប្រអប់ */
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.stat-card {
+    background-color: var(--bg-card);
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    font-weight: bold;
+    font-size: 13px;
+    text-align: center;
+}
+
+.text-green { color: #4ade80; }
+.badge-num { background-color: var(--bg-main); padding: 2px 6px; border-radius: 4px; margin-left: 3px; }
+
+.backup-section {
+    grid-column: span 2; /* ឱ្យប៊ូតុង Backup រត់ពេញទទឹងលើទូរស័ព្ទ */
+    display: flex;
+    gap: 8px;
+}
+
+.btn-backup {
+    flex: 1;
+    background-color: #334155;
+    color: white;
+    border: 1px solid #475569;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    text-align: center;
+}
+
+/* ==========================================================================
+   5. MAIN APP LAYOUT (MOBILE TO DESKTOP)
+   ========================================================================== */
+.main-layout {
+    display: grid;
+    grid-template-columns: 1fr; /* ទូរស័ព្ទបង្ហាញ Form ពីលើ Schedule ពីក្រោម */
+    gap: 25px;
+}
+
+.sidebar {
+    background-color: var(--bg-card);
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    height: fit-content;
+}
+
+.form-group > div { margin-bottom: 15px; }
+.label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
+
+.input-field {
+    width: 100%;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    color: #fff;
+    padding: 12px;
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-buttons { display: flex; gap: 10px; }
+.btn-submit { flex: 2; background: linear-gradient(to right, #2563eb, #7c3aed); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+.btn-cancel { flex: 1; background-color: #475569; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; }
+
+/* Schedule Container */
+.days-container { display: flex; flex-direction: column; gap: 15px; }
+.day-card { background-color: var(--bg-card); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); }
+
+.day-header {
+    display: flex;
+    flex-direction: column; /* ទូរស័ព្ទ៖ ឈ្មោះថ្ងៃ និង គន្លឹះការងារ ធ្លាក់លើគ្នា */
+    align-items: flex-start;
+    gap: 5px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+}
+
+.day-title { background-color: var(--bg-main); padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 14px; }
+.day-tip { font-size: 11px; color: var(--text-muted); font-style: italic; }
+
+/* Task Items inside Schedule */
+.task-item {
+    background-color: var(--bg-main);
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column; /* ទូរស័ព្ទ៖ អក្សរនៅពីលើ ប៊ូតុងបញ្ជានៅពីក្រោម */
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.task-tags { display: inline-flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+.task-tags span { font-size: 10px; padding: 2px 8px; border-radius: 20px; }
+.tag-format { background-color: #1e3a8a; color: #93c5fd; }
+
+/* Status Labels */
+.status-Scripting { background-color: var(--color-scripting); color: var(--text-scripting); } 
+.status-Shooting { background-color: var(--color-shooting); color: var(--text-shooting); }  
+.status-Editing { background-color: var(--color-editing); color: var(--text-editing); }   
+.status-Done { background-color: var(--color-done); color: var(--text-done); }      
+
+.action-btns { display: flex; gap: 8px; width: 100%; }
+.btn-edit, .btn-delete { flex: 1; text-align: center; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
+.btn-edit { background-color: #0369a1; color: #e0f2fe; border: 1px solid #0284c7; }
+.btn-delete { background-color: #991b1b; color: #fee2e2; border: 1px solid #b91c1c; }
+
+.hidden { display: none !important; }
+
+/* ==========================================================================
+   6. MEDIA QUERIES (កែសម្រួលសម្រាប់ TABLET & LAPTOP/DESKTOP)
+   ========================================================================== */
+
+/* 💻 សម្រាប់អេក្រង់ធំល្មម (Tablets, iPads ទទឹងចាប់ពី 768px ឡើងទៅ) */
+@media (min-width: 768px) {
+    body { padding: 20px; }
+    .container { padding: 20px; }
+    
+    .header { flex-direction: row; justify-content: space-between; align-items: center; }
+    .logo, .subtitle { text-align: left; }
+    .header-right { flex-direction: row; width: auto; }
+    .search-box input { width: 250px; }
+    .btn-logout { padding: 10px 20px; }
+
+    .dashboard-grid { grid-template-columns: repeat(3, auto); justify-content: flex-start; gap: 15px; }
+    .stat-card { text-align: left; padding: 10px 20px; }
+    .backup-section { grid-column: auto; }
+    .btn-backup { flex: none; }
+
+    .day-header { flex-direction: row; justify-content: space-between; align-items: center; }
+    .day-tip { font-size: 12px; }
+    
+    .task-item { flex-direction: row; justify-content: space-between; align-items: center; }
+    .action-btns { width: auto; }
+    .btn-edit, .btn-delete { flex: none; padding: 6px 14px; }
+}
+
+/* 🖥️ សម្រាប់អេក្រង់កុំព្យូទ័រធំ (Laptops & Desktops ទទឹងចាប់ពី 1024px ឡើងទៅ) */
+@media (min-width: 1024px) {
+    .main-layout {
+        grid-template-columns: 350px 1fr; /* ខាងឆ្វេង Form ថេរទំហំ 350px ខាងស្តាំ Schedule រត់ពេញ */
+        gap: 30px;
+    }
+    .sidebar { position: sticky; top: 20px; } /* ពេល Scroll ចុះក្រោម Form នឹងនៅជាប់មួយកន្លែងមិនរត់បាត់ */
+    .logo { font-size: 28px; }
+    .day-card { padding: 20px; }
+}

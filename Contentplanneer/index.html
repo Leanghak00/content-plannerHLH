@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Content Planner Pro</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kantumruuy+Pro:wght@300;400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div id="loginPage" class="login-container">
+        <div class="login-card">
+            <h2 class="login-title">🔒 LOGIN TO PLANNER</h2>
+            <p class="login-subtitle">សូមបញ្ចូលគណនីដើម្បីគ្រប់គ្រងកាលវិភាគថតវីដេអូ</p>
+            <div id="loginError" class="error-msg hidden">❌ ឈ្មោះ ឬលេខកូដសម្ងាត់មិនត្រឹមត្រូវទេ!</div>
+            <form id="loginForm">
+                <div class="form-input-group">
+                    <label class="label">ឈ្មោះអ្នកប្រើប្រាស់ (Username)</label>
+                    <input type="text" id="username" required placeholder="admin / writer / editor" class="input-field">
+                </div>
+                <div class="form-input-group">
+                    <label class="label">លេខកូដសម្ងាត់ (Password)</label>
+                    <input type="password" id="password" required placeholder="••••••••" class="input-field">
+                </div>
+                <button type="submit" class="btn-login">ចូលប្រើប្រាស់</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="mainApp" class="container hidden">
+        <header class="header">
+            <div>
+                <h1 class="logo">🎬 PRO CONTENT PLANNER</h1>
+                <p class="subtitle">គណនីកំពុងប្រើ៖ <span id="userRoleBadge" class="user-badge">...</span></p>
+            </div>
+            <div class="header-right">
+                <div class="search-box">
+                    <input type="text" id="searchBar" placeholder="🔍 ស្វែងរកវីដេអូ..." oninput="renderPlanner()">
+                </div>
+                <button onclick="logout()" class="btn-logout">🚪 ចាកចេញ</button>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+            <div class="stat-card">📽️ វីដេអូសរុប: <span id="totalVideos" class="badge-num">0</span></div>
+            <div class="stat-card text-green">✅ រួចរាល់: <span id="doneVideos" class="badge-num">0</span></div>
+            <div id="backupSection" class="backup-section hidden">
+                <button onclick="exportData()" class="btn-backup">📥 ទាញយកទិន្នន័យទុក (Backup)</button>
+                <button onclick="document.getElementById('importFile').click()" class="btn-backup">📤 បញ្ចូលទិន្នន័យចាស់ (Restore)</button>
+                <input type="file" id="importFile" class="hidden" onchange="importData(event)">
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <div id="sidebarSection" class="sidebar">
+                <h2 id="formTitle" class="section-title text-purple">📝 បន្ថែមវីដេអូថ្មី (Video Brief)</h2>
+                <form id="plannerForm" class="form-group">
+                    <input type="hidden" id="taskId">
+
+                    <div>
+                        <label class="label">ថ្ងៃដែលត្រូវធ្វើសកម្មភាព</label>
+                        <select id="videoDay" class="input-field">
+                            <option value="ច័ន្ទ">ថ្ងៃច័ន្ទ (Brainstorm & Script)</option>
+                            <option value="អង្គារ">ថ្ងៃអង្គារ (Preparation)</option>
+                            <option value="ពុធ">ថ្ងៃពុធ (Shooting Day)</option>
+                            <option value="ព្រហស្បតិ៍">ថ្ងៃព្រហស្បតិ៍ (Editing)</option>
+                            <option value="សុក្រ">ថ្ងៃសុក្រ (Review & Schedule)</option>
+                            <option value="សៅរ៍-អាទិត្យ">ថ្ងៃសៅរ៍ - អាទិត្យ (Publish & Engage)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="label">ចំណងជើងវីដេអូ (Title)</label>
+                        <input type="text" id="videoTitle" required placeholder="ឧទាហរណ៍៖ របៀបកាត់តឱ្យលឿន..." class="input-field">
+                    </div>
+
+                    <div class="grid-2">
+                        <div>
+                            <label class="label">ទម្រង់វីដេអូ (Format)</label>
+                            <select id="videoFormat" class="input-field">
+                                <option value="9:16 (Shorts/TikTok)">9:16 (Shorts/TikTok)</option>
+                                <option value="16:9 (YouTube/Facebook)">16:9 (YouTube/FB)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="label">ស្ថានភាព (Status)</label>
+                            <select id="videoStatus" class="input-field">
+                                <option value="Scripting">📝 Scripting</option>
+                                <option value="Shooting">🎥 Shooting</option>
+                                <option value="Editing">✂️ Editing</option>
+                                <option value="Done">✅ Done</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="label">Hook (៣ វិនាទីដំបូង)</label>
+                        <textarea id="videoHook" rows="2" placeholder="ឃ្លាទាក់ទាញឱ្យគេទប់មេដៃមើល..." class="input-field"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="label">កំណត់ចំណាំ ឬ លីងវីដេអូគំរូ (Notes/Links)</label>
+                        <textarea id="videoNotes" rows="3" placeholder="រក្សាទុក Link ភ្លេង ឬ គំនិតបន្ថែម..." class="input-field"></textarea>
+                    </div>
+
+                    <div class="form-buttons">
+                        <button type="submit" id="btnSubmit" class="btn-submit">➕ បន្ថែមទៅក្នុងតារាង</button>
+                        <button type="button" id="btnCancel" class="btn-cancel hidden" onclick="resetFormState()">បោះបង់</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="content-area">
+                <h2 class="section-title text-blue">📅 លំហូរការងារប្រចាំសប្តាហ៍ (Weekly Schedule)</h2>
+                <div id="daysContainer" class="days-container">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
