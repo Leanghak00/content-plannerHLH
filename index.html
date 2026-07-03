@@ -1,90 +1,98 @@
-<!DOCTYPE html>
-<html lang="km">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Content Planner Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cloud Content Planner Pro</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Kantumruuy+Pro:wght@300;400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- 👇 លីង Font ថ្មីដែលបានកែសម្រួលឱ្យកាន់តែស្អាត -->
+    <link href="https://fonts.googleapis.com/css2?family=Kantumruuy+Pro:ital,wght@0,300..700;1,300..700&family=Koh+Santepheap:wght@400;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+    <style>
+        /* បន្ថែម Style បន្តិចបន្តួចសម្រាប់ផ្នែក Idea Bucket */
+        .idea-section { background: #1e1e2e; padding: 20px; border-radius: 12px; margin-top: 25px; border: 1px dashed #6366f1; }
+        .idea-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-top: 15px; }
+        .idea-card-item { background: #27293d; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b; position: relative; }
+        .idea-title-text { font-size: 14px; font-weight: 600; color: #f8fafc; margin-bottom: 8px; }
+        .idea-btns { display: flex; gap: 8px; margin-top: 10px; justify-content: flex-end; }
+        .btn-move { background: #10b981; color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-family: 'Kantumruuy Pro'; }
+        .btn-move:hover { background: #059669; }
+        .idea-badge { background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+    </style>
 </head>
 <body>
 
+    <!-- ផ្ទាំង LOGIN -->
     <div id="loginPage" class="login-container">
         <div class="login-card">
-            <h2 class="login-title">🔒 LOGIN TO PLANNER</h2>
-            <p class="login-subtitle">សូមបញ្ចូលគណនីដើម្បីគ្រប់គ្រងកាលវិភាគថតវីដេអូ</p>
-            <div id="loginError" class="error-msg hidden">❌ ឈ្មោះ ឬលេខកូដសម្ងាត់មិនត្រឹមត្រូវទេ!</div>
+            <div class="login-icon">🔒</div>
+            <h2 class="login-title">LOCAL PLANNER</h2>
+            <p class="login-subtitle">ប្រព័ន្ធគ្រប់គ្រងគម្រោងវីដេអូការងារ (សុវត្ថិភាពខ្ពស់)</p>
+            <div id="loginError" class="error-msg hidden">❌ ឈ្មោះ ឬលេខកូដសម្ងាត់មិនត្រឹមត្រូវ!</div>
             <form id="loginForm">
-                <div class="form-input-group">
+                <div class="form-group-login">
                     <label class="label">ឈ្មោះអ្នកប្រើប្រាស់ (Username)</label>
-                    <input type="text" id="username" required placeholder="admin / writer / editor" class="input-field">
+                    <input type="text" id="username" required placeholder="លាងហាក់ / នីតូ / editor" class="input-field">
                 </div>
-                <div class="form-input-group">
+                <div class="form-group-login">
                     <label class="label">លេខកូដសម្ងាត់ (Password)</label>
                     <input type="password" id="password" required placeholder="••••••••" class="input-field">
                 </div>
-                <button type="submit" class="btn-login">ចូលប្រើប្រាស់</button>
+                <button type="submit" class="btn-login">ចូលប្រើប្រាស់ប្រព័ន្ធ</button>
             </form>
         </div>
     </div>
 
+    <!-- ផ្ទាំងកម្មវិធីចម្បង APP -->
     <div id="mainApp" class="container hidden">
         <header class="header">
-            <div>
-                <h1 class="logo">🎬 PRO CONTENT PLANNER</h1>
+            <div class="header-left-box">
+                <h1 class="logo">💻 LOCAL PLANNER</h1>
                 <p class="subtitle">គណនីកំពុងប្រើ៖ <span id="userRoleBadge" class="user-badge">...</span></p>
             </div>
             <div class="header-right">
                 <div class="search-box">
-                    <input type="text" id="searchBar" placeholder="🔍 ស្វែងរកវីដេអូ..." oninput="renderPlanner()">
+                    <input type="text" id="searchBar" placeholder="🔍 ស្វែងរកវីដេអូ ឬឈ្មោះមនុស្ស...">
                 </div>
-                <button onclick="logout()" class="btn-logout">🚪 ចាកចេញ</button>
+                <button id="btnLogout" class="btn-logout">🚪 ចាកចេញ</button>
             </div>
         </header>
 
         <div class="dashboard-grid">
-            <div class="stat-card">📽️ វីដេអូសរុប: <span id="totalVideos" class="badge-num">0</span></div>
-            <div class="stat-card text-green">✅ រួចរាល់: <span id="doneVideos" class="badge-num">0</span></div>
-            <div id="backupSection" class="backup-section hidden">
-                <button onclick="exportData()" class="btn-backup">📥 ទាញយកទិន្នន័យទុក (Backup)</button>
-                <button onclick="document.getElementById('importFile').click()" class="btn-backup">📤 បញ្ចូលទិន្នន័យចាស់ (Restore)</button>
-                <input type="file" id="importFile" class="hidden" onchange="importData(event)">
-            </div>
+            <div class="stat-card">📽️ វីដេអូក្នុងផែនការ: <span id="totalVideos" class="badge-num">0</span></div>
+            <div class="stat-card text-green">💡 គំនិតវីដេអូថ្មីៗ (Ideas): <span id="totalIdeas" class="badge-num">0</span></div>
         </div>
 
         <div class="main-layout">
+            <!-- Form Input Sidebar -->
             <div id="sidebarSection" class="sidebar">
-                <h2 id="formTitle" class="section-title text-purple">📝 បន្ថែមវីដេអូថ្មី (Video Brief)</h2>
+                <h2 id="formTitle" class="section-title text-purple">📝 បន្ថែមវីដេអូថ្មី</h2>
                 <form id="plannerForm" class="form-group">
                     <input type="hidden" id="taskId">
-
                     <div>
                         <label class="label">ថ្ងៃដែលត្រូវធ្វើសកម្មភាព</label>
                         <select id="videoDay" class="input-field">
+                            <option value="Idea_Bucket">💡 ទុកក្នុងធុងគំនិតសិន (Idea Bucket)</option>
                             <option value="ច័ន្ទ">ថ្ងៃច័ន្ទ (Brainstorm & Script)</option>
                             <option value="អង្គារ">ថ្ងៃអង្គារ (Preparation)</option>
                             <option value="ពុធ">ថ្ងៃពុធ (Shooting Day)</option>
                             <option value="ព្រហស្បតិ៍">ថ្ងៃព្រហស្បតិ៍ (Editing)</option>
                             <option value="សុក្រ">ថ្ងៃសុក្រ (Review & Schedule)</option>
-                            <option value="សៅរ៍-អាទិត្យ">ថ្ងៃសៅរ៍ - អាទិត្យ (Publish & Engage)</option>
+                            <option value="សៅរ៍-អាទិត្យ">ថ្ងៃសៅរ៍ - អាទិត្យ (Publish)</option>
                         </select>
                     </div>
-
                     <div>
                         <label class="label">ចំណងជើងវីដេអូ (Title)</label>
-                        <input type="text" id="videoTitle" required placeholder="ឧទាហរណ៍៖ របៀបកាត់តឱ្យលឿន..." class="input-field">
+                        <input type="text" id="videoTitle" required placeholder="ឧទាហរណ៍៖ របៀបកាត់ត..." class="input-field">
                     </div>
-
                     <div class="grid-2">
                         <div>
-                            <label class="label">ទម្រង់វីដេអូ (Format)</label>
+                            <label class="label">ទម្រង់វីដេអូ</label>
                             <select id="videoFormat" class="input-field">
-                                <option value="9:16 (Shorts/TikTok)">9:16 (Shorts/TikTok)</option>
-                                <option value="16:9 (YouTube/Facebook)">16:9 (YouTube/FB)</option>
+                                <option value="9:16 (Shorts)">9:16 (Shorts)</option>
+                                <option value="16:9 (YouTube)">16:9 (YouTube)</option>
                             </select>
                         </div>
                         <div>
-                            <label class="label">ស្ថានភាព (Status)</label>
+                            <label class="label">ស្ថានភាព</label>
                             <select id="videoStatus" class="input-field">
                                 <option value="Scripting">📝 Scripting</option>
                                 <option value="Shooting">🎥 Shooting</option>
@@ -93,28 +101,48 @@
                             </select>
                         </div>
                     </div>
+                    
+                    <div class="grid-2">
+                        <div>
+                            <label class="label">ថ្ងៃកំណត់ផុស (Deadline)</label>
+                            <input type="date" id="videoDeadline" class="input-field">
+                        </div>
+                        <div>
+                            <label class="label">អ្នកទទួលខុសត្រូវ</label>
+                            <select id="videoAssignee" class="input-field">
+                                <option value="ទូទៅ">👥 ទាំងអស់គ្នា</option>
+                                <option value="លាងហាក់">👨‍💻 លាងហាក់</option>
+                                <option value="នីតូ">🎬 នីតូ</option>
+                            </select>
+                        </div>
+                    </div>
 
                     <div>
                         <label class="label">Hook (៣ វិនាទីដំបូង)</label>
-                        <textarea id="videoHook" rows="2" placeholder="ឃ្លាទាក់ទាញឱ្យគេទប់មេដៃមើល..." class="input-field"></textarea>
+                        <textarea id="videoHook" rows="2" placeholder="ឃ្លាទាក់ទាញ..." class="input-field"></textarea>
                     </div>
-
                     <div>
-                        <label class="label">កំណត់ចំណាំ ឬ លីងវីដេអូគំរូ (Notes/Links)</label>
-                        <textarea id="videoNotes" rows="3" placeholder="រក្សាទុក Link ភ្លេង ឬ គំនិតបន្ថែម..." class="input-field"></textarea>
+                        <label class="label">កំណត់ចំណាំ (Notes/Links)</label>
+                        <textarea id="videoNotes" rows="2" placeholder="គំនិតបន្ថែម..." class="input-field"></textarea>
                     </div>
-
                     <div class="form-buttons">
-                        <button type="submit" id="btnSubmit" class="btn-submit">➕ បន្ថែមទៅក្នុងតារាង</button>
-                        <button type="button" id="btnCancel" class="btn-cancel hidden" onclick="resetFormState()">បោះបង់</button>
+                        <button type="submit" id="btnSubmit" class="btn-submit">➕ បន្ថែមគម្រោង</button>
+                        <button type="button" id="btnCancel" class="btn-cancel hidden">បោះបង់</button>
                     </div>
                 </form>
             </div>
 
+            <!-- Display Area -->
             <div class="content-area">
-                <h2 class="section-title text-blue">📅 លំហូរការងារប្រចាំសប្តាហ៍ (Weekly Schedule)</h2>
-                <div id="daysContainer" class="days-container">
-                    </div>
+                <h2 class="section-title text-blue">📅 លំហូរការងារប្រចាំសប្តាហ៍</h2>
+                <div id="daysContainer" class="days-container"></div>
+
+                <!-- ផ្នែកទី៤៖ IDEA BUCKET CONTAINER -->
+                <div class="idea-section">
+                    <h2 class="section-title" style="color: #f59e0b; margin-bottom: 5px;">💡 ធុងប្រមូលគំនិតវីដេអូ (Idea Bucket)</h2>
+                    <p style="color: #94a3b8; font-size: 13px;">កន្លែងសម្រាប់ទម្លាក់ Topic ថ្មីៗដែលគិតឃើញភ្លាមៗ ប៉ុន្តែមិនទាន់កំណត់ថ្ងៃធ្វើការងារ</p>
+                    <div id="ideasContainer" class="idea-grid"></div>
+                </div>
             </div>
         </div>
     </div>
