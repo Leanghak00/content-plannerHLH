@@ -1,7 +1,7 @@
 // ====== 1. Database គណនីសម្ងាត់ (Username & Password) ======
 const USERS_DB = {
-    "លាងហាក់": { pass: "123", role: "admin", permissions: ["create", "edit", "delete"] },
-    "នីតូ": { pass: "123", role: "writer", permissions: ["create", "edit"] },
+    "hak": { pass: "123", role: "admin", permissions: ["create", "edit", "delete"] },
+    "hom": { pass: "123", role: "writer", permissions: ["create", "edit"] },
     "editor": { pass: "123", role: "editor", permissions: ["edit_status"] }
 };
 
@@ -36,6 +36,9 @@ loginForm.addEventListener('submit', (e) => {
     if (USERS_DB[userIn] && USERS_DB[userIn].pass === passIn) {
         localStorage.setItem('local_planner_logged_user', userIn);
         loginError.classList.add('hidden');
+        // សម្អាត input ពេល login រួច
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
         checkAuth();
     } else {
         loginError.classList.remove('hidden');
@@ -185,7 +188,7 @@ function renderPlanner() {
     document.getElementById('totalIdeas').innerText = ideaTasks.length;
 }
 
-// មុខងារផ្ទេរគំនិតវីដេអូចូលទៅកាន់ថ្ងៃណាមួយក្នុងសប្តាហ៍
+// មុខងារផ្ទេរគំនិតវីដេអូចូលទៅកាន់ថ្ងៃណាមួយក្នុងសប្តាហ៍ (ភ្ជាប់ទៅ window ដើម្បីឱ្យ onclick ហៅដំណើរការបាន)
 window.moveIdeaToSchedule = function(id) {
     const task = contentData.find(t => t.id === id);
     if (!task) return;
