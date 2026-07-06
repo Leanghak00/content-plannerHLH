@@ -36,6 +36,61 @@ body {
     display: none !important;
 }
 
+/* បន្ថែម Style សម្រាប់ផ្នែក Idea Bucket */
+.idea-section { 
+    background: #1e1e2e; 
+    padding: 20px; 
+    border-radius: 12px; 
+    margin-top: 25px; 
+    border: 1px dashed #6366f1; 
+}
+.idea-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); 
+    gap: 15px; 
+    margin-top: 15px; 
+}
+.idea-card-item { 
+    background: #27293d; 
+    padding: 15px; 
+    border-radius: 8px; 
+    border-left: 4px solid #f59e0b; 
+    position: relative; 
+}
+.idea-title-text { 
+    font-size: 14px; 
+    font-weight: 600; 
+    color: #f8fafc; 
+    margin-bottom: 8px; 
+}
+.idea-btns { 
+    display: flex; 
+    gap: 8px; 
+    margin-top: 10px; 
+    justify-content: flex-end; 
+}
+.btn-move { 
+    background: #10b981; 
+    color: white; 
+    border: none; 
+    padding: 4px 8px; 
+    border-radius: 4px; 
+    font-size: 11px; 
+    cursor: pointer; 
+    font-family: 'Kantumruuy Pro'; 
+}
+.btn-move:hover { 
+    background: #059669; 
+}
+.idea-badge { 
+    background: rgba(245, 158, 11, 0.2); 
+    color: #f59e0b; 
+    padding: 2px 6px; 
+    border-radius: 4px; 
+    font-size: 11px; 
+    font-weight: bold; 
+}
+
 /* ==========================================================================
    2. LOGIN PAGE STYLES
    ========================================================================== */
@@ -77,6 +132,11 @@ body {
     color: var(--text-muted);
     font-size: 13px;
     margin-bottom: 25px;
+}
+
+.form-group-login {
+    margin-bottom: 15px;
+    text-align: left;
 }
 
 .error-msg {
@@ -385,7 +445,7 @@ button {
 .status-Scripting { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
 .status-Shooting { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
 .status-Editing { background: rgba(168, 85, 247, 0.2); color: #c084fc; }
-.status-Done { background: rgba(16., 185, 129, 0.2); color: #34d399; }
+.status-Done { background: rgba(16, 185, 129, 0.2); color: #34d399; }
 
 /* Action Buttons Inside Tasks */
 .action-btns {
