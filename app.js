@@ -1,6 +1,6 @@
 // ====== 1. Database គណនីសម្ងាត់ (Username & Password) ======
 const USERS_DB = {
-    "hak": { pass: "123", role: "admin", permissions: ["create", "edit", "delete"] },
+    "hak": { pass: "១២៣", role: "admin", permissions: ["create", "edit", "delete"] },
     "hom": { pass: "123", role: "writer", permissions: ["create", "edit"] },
     "editor": { pass: "123", role: "editor", permissions: ["edit_status"] }
 };
