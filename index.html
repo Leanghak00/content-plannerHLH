@@ -1,26 +1,14 @@
+<!DOCTYPE html>
+<html lang="km">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cloud Content Planner Pro</title>
     <link rel="stylesheet" href="style.css">
-    <!-- 👇 លីង Font ថ្មីដែលបានកែសម្រួលឱ្យកាន់តែស្អាត -->
     <link href="https://fonts.googleapis.com/css2?family=Kantumruuy+Pro:ital,wght@0,300..700;1,300..700&family=Koh+Santepheap:wght@400;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-</head>
-    <style>
-        /* បន្ថែម Style បន្តិចបន្តួចសម្រាប់ផ្នែក Idea Bucket */
-        .idea-section { background: #1e1e2e; padding: 20px; border-radius: 12px; margin-top: 25px; border: 1px dashed #6366f1; }
-        .idea-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-top: 15px; }
-        .idea-card-item { background: #27293d; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b; position: relative; }
-        .idea-title-text { font-size: 14px; font-weight: 600; color: #f8fafc; margin-bottom: 8px; }
-        .idea-btns { display: flex; gap: 8px; margin-top: 10px; justify-content: flex-end; }
-        .btn-move { background: #10b981; color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-family: 'Kantumruuy Pro'; }
-        .btn-move:hover { background: #059669; }
-        .idea-badge { background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-    </style>
 </head>
 <body>
 
-    <!-- ផ្ទាំង LOGIN -->
     <div id="loginPage" class="login-container">
         <div class="login-card">
             <div class="login-icon">🔒</div>
@@ -30,7 +18,7 @@
             <form id="loginForm">
                 <div class="form-group-login">
                     <label class="label">ឈ្មោះអ្នកប្រើប្រាស់ (Username)</label>
-                    <input type="text" id="username" required placeholder="លាងហាក់ / នីតូ / editor" class="input-field">
+                    <input type="text" id="username" required placeholder="hak / hom / editor" class="input-field">
                 </div>
                 <div class="form-group-login">
                     <label class="label">លេខកូដសម្ងាត់ (Password)</label>
@@ -41,7 +29,6 @@
         </div>
     </div>
 
-    <!-- ផ្ទាំងកម្មវិធីចម្បង APP -->
     <div id="mainApp" class="container hidden">
         <header class="header">
             <div class="header-left-box">
@@ -62,7 +49,6 @@
         </div>
 
         <div class="main-layout">
-            <!-- Form Input Sidebar -->
             <div id="sidebarSection" class="sidebar">
                 <h2 id="formTitle" class="section-title text-purple">📝 បន្ថែមវីដេអូថ្មី</h2>
                 <form id="plannerForm" class="form-group">
@@ -70,13 +56,13 @@
                     <div>
                         <label class="label">ថ្ងៃដែលត្រូវធ្វើសកម្មភាព</label>
                         <select id="videoDay" class="input-field">
-                            <option value="Idea_Bucket">💡 ទុកក្នុងធុងគំនិតសិន (Idea Bucket)</option>
-                            <option value="ច័ន្ទ">ថ្ងៃច័ន្ទ (Brainstorm & Script)</option>
-                            <option value="អង្គារ">ថ្ងៃអង្គារ (Preparation)</option>
-                            <option value="ពុធ">ថ្ងៃពុធ (Shooting Day)</option>
-                            <option value="ព្រហស្បតិ៍">ថ្ងៃព្រហស្បតិ៍ (Editing)</option>
-                            <option value="សុក្រ">ថ្ងៃសុក្រ (Review & Schedule)</option>
-                            <option value="សៅរ៍-អាទិត្យ">ថ្ងៃសៅរ៍ - អាទិត្យ (Publish)</option>
+                            <option value="Idea_Bucket">💡 ប្រៀង (Idea Bucket)</option>
+                            <option value="ច័ន្ទ">ថ្ងៃច័ន្ទ</option>
+                            <option value="អង្គារ">ថ្ងៃអង្គារ </option>
+                            <option value="ពុធ">ថ្ងៃពុធ </option>
+                            <option value="ព្រហស្បតិ៍">ថ្ងៃព្រហស្បតិ៍ </option>
+                            <option value="សុក្រ">ថ្ងៃសុក្រ </option>
+                            <option value="សៅរ៍-អាទិត្យ">ថ្ងៃសៅរ៍ - អាទិត្យ </option>
                         </select>
                     </div>
                     <div>
@@ -111,8 +97,8 @@
                             <label class="label">អ្នកទទួលខុសត្រូវ</label>
                             <select id="videoAssignee" class="input-field">
                                 <option value="ទូទៅ">👥 ទាំងអស់គ្នា</option>
-                                <option value="លាងហាក់">👨‍💻 លាងហាក់</option>
-                                <option value="នីតូ">🎬 នីតូ</option>
+                                <option value="លាងហាក់">👨‍💻 LEANGHAK</option>
+                                <option value="នីតូ">🎬 HOM</option>
                             </select>
                         </div>
                     </div>
@@ -132,12 +118,10 @@
                 </form>
             </div>
 
-            <!-- Display Area -->
             <div class="content-area">
                 <h2 class="section-title text-blue">📅 លំហូរការងារប្រចាំសប្តាហ៍</h2>
                 <div id="daysContainer" class="days-container"></div>
 
-                <!-- ផ្នែកទី៤៖ IDEA BUCKET CONTAINER -->
                 <div class="idea-section">
                     <h2 class="section-title" style="color: #f59e0b; margin-bottom: 5px;">💡 ធុងប្រមូលគំនិតវីដេអូ (Idea Bucket)</h2>
                     <p style="color: #94a3b8; font-size: 13px;">កន្លែងសម្រាប់ទម្លាក់ Topic ថ្មីៗដែលគិតឃើញភ្លាមៗ ប៉ុន្តែមិនទាន់កំណត់ថ្ងៃធ្វើការងារ</p>
