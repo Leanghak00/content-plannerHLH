@@ -1,6 +1,7 @@
 // ====== 1. Database គណនីសម្ងាត់ (Username & Password) ======
 const USERS_DB = {
-    "hak": { pass: "១២៣", role: "admin", permissions: ["create", "edit", "delete"] },
+    "hak": { pass: "123", role: "admin", permissions: ["create", "edit", "delete"] },
+    "LEANGHAK":{pass:"1111",role:" admin",permissions:["create","edit","delete"]},
     "hom": { pass: "123", role: "writer", permissions: ["create", "edit"] },
     "editor": { pass: "123", role: "editor", permissions: ["edit_status"] }
 };
@@ -36,7 +37,6 @@ loginForm.addEventListener('submit', (e) => {
     if (USERS_DB[userIn] && USERS_DB[userIn].pass === passIn) {
         localStorage.setItem('local_planner_logged_user', userIn);
         loginError.classList.add('hidden');
-        // សម្អាត input ពេល login រួច
         document.getElementById('username').value = '';
         document.getElementById('password').value = '';
         checkAuth();
@@ -63,7 +63,6 @@ function checkAuth() {
             document.querySelector('.main-layout').removeAttribute('style');
         }
 
-        // ទាញទិន្នន័យពី LocalStorage របស់ម៉ាស៊ីន
         const localData = localStorage.getItem('local_planner_videos');
         contentData = localData ? JSON.parse(localData) : [];
         renderPlanner();
@@ -78,7 +77,25 @@ btnLogout.addEventListener('click', () => {
     checkAuth();
 });
 
-// បង្ហាញទិន្នន័យលើអេក្រង់ (បំបែករវាង កាលវិភាគ និង Idea Bucket)
+// មុខងារពិនិត្យមើល Deadline ថាតើ Urgent ឬទេ (សល់ទាបជាង ឬស្មើ ២ថ្ងៃ)
+function checkIsUrgent(deadlineStr, status) {
+    if (!deadlineStr || status === 'Done') return false;
+    
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    
+    const deadlineDate = new Date(deadlineStr);
+    deadlineDate.setHours(0,0,0,0);
+    
+    // គណនាគម្លាតថ្ងៃ
+    const diffTime = deadlineDate - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    // ប្រសិនបើសល់ក្រោម ២ ថ្ងៃ ឬហួសថ្ងៃកំណត់ ឱ្យសញ្ញាអាសន្ន
+    return diffDays <= 2;
+}
+
+// បង្ហាញទិន្នន័យលើអេក្រង់
 function renderPlanner() {
     daysContainer.innerHTML = '';
     ideasContainer.innerHTML = '';
@@ -110,14 +127,23 @@ function renderPlanner() {
                 }
 
                 let deadlineHTML = '';
+                let urgentClass = '';
+                const isUrgent = checkIsUrgent(task.deadline, task.status);
+                
+                if (isUrgent) {
+                    urgentClass = 'urgent-deadline-alert';
+                }
+
                 if (task.deadline) {
-                    const d = new Date(task.deadline);
-                    deadlineHTML = `<span class="tag-deadline">📅 ផុស៖ ${d.getDate()}/${d.getMonth()+1}</span>`;
+                    const parts = task.deadline.split('-');
+                    if(parts.length === 3) {
+                        deadlineHTML = `<span class="tag-deadline ${isUrgent ? 'tag-urgent' : ''}">📅 ${isUrgent ? '⚡ ប្រញាប់ខ្លាំង៖' : 'ផុស៖'} ${parts[2]}/${parts[1]}</span>`;
+                    }
                 }
 
                 tasksHTML += `
-                    <div class="task-item">
-                        <div style="flex: 1;">
+                    <div class="task-item ${urgentClass}">
+                        <div style="flex: 1; padding-right: 10px;">
                             <div class="task-title-text">${task.title}</div>
                             <div class="task-tags">
                                 <span class="tag-format">${task.format}</span>
@@ -137,7 +163,7 @@ function renderPlanner() {
         daysContainer.innerHTML += `
             <div class="day-card">
                 <div class="day-header">
-                    <span class="day-title">${day}</span>
+                    <span class="day-title">ថ្ងៃ${day}</span>
                     <span class="day-tip">${workflowTips[day]}</span>
                 </div>
                 <div>${tasksHTML}</div>
@@ -160,8 +186,18 @@ function renderPlanner() {
     } else {
         ideaTasks.forEach(task => {
             let actionButtonsHTML = '';
+            let moveSelectorHTML = '';
+
             if (currentUser.permissions.includes('create') || currentUser.permissions.includes('edit')) {
-                actionButtonsHTML += `<button onclick="moveIdeaToSchedule('${task.id}')" class="btn-move">🚀 ផ្ទេរទៅកាលវិភាគ</button>`;
+                moveSelectorHTML = `
+                    <div class="move-box">
+                        <select id="moveDaySelect-${task.id}" class="select-move-day">
+                            <option value="">-- ផ្ទេរទៅថ្ងៃ --</option>
+                            ${days.map(d => `<option value="${d}">ថ្ងៃ${d}</option>`).join('')}
+                        </select>
+                        <button onclick="executeMoveIdea('${task.id}')" class="btn-move-go">🚀</button>
+                    </div>
+                `;
                 actionButtonsHTML += `<button onclick="editTask('${task.id}')" class="btn-edit">កែ</button>`;
             }
             if (currentUser.permissions.includes('delete')) {
@@ -177,29 +213,39 @@ function renderPlanner() {
                     </div>
                     ${task.hook ? `<p style="font-size:11px; color:#f59e0b; margin: 3px 0;"><span style="color:#64748b;">Hook:</span> "${task.hook}"</p>` : ''}
                     ${task.notes ? `<p style="font-size:11px; color:#94a3b8; margin: 3px 0;"><span style="color:#475569;">Note:</span> ${task.notes}</p>` : ''}
-                    <div class="idea-btns">${actionButtonsHTML}</div>
+                    <div class="idea-btns">
+                        ${moveSelectorHTML}
+                        <div style="display:flex; gap:6px; justify-content:flex-end; width:100%;">
+                            ${actionButtonsHTML}
+                        </div>
+                    </div>
                 </div>
             `;
         });
     }
 
-    // បច្ចុប្បន្នភាពលេខស្ថិតិលើ Dashboard
-    document.getElementById('totalVideos').innerText = contentData.filter(t => t.day !== 'Idea_Bucket').length;
+    // 3. បច្ចុប្បន្នភាព Dashboard & គណនា Progress Bar
+    const totalWeeklyVideos = contentData.filter(t => t.day !== 'Idea_Bucket').length;
+    const doneWeeklyVideos = contentData.filter(t => t.day !== 'Idea_Bucket' && t.status === 'Done').length;
+    const percent = totalWeeklyVideos > 0 ? Math.round((doneWeeklyVideos / totalWeeklyVideos) * 100) : 0;
+
+    document.getElementById('totalVideos').innerText = totalWeeklyVideos;
     document.getElementById('totalIdeas').innerText = ideaTasks.length;
+    document.getElementById('progressBar').style.width = percent + '%';
+    document.getElementById('progressText').innerText = percent + '%';
 }
 
-// មុខងារផ្ទេរគំនិតវីដេអូចូលទៅកាន់ថ្ងៃណាមួយក្នុងសប្តាហ៍ (ភ្ជាប់ទៅ window ដើម្បីឱ្យ onclick ហៅដំណើរការបាន)
-window.moveIdeaToSchedule = function(id) {
-    const task = contentData.find(t => t.id === id);
-    if (!task) return;
+// មុខងារអនុវត្តការផ្ទេរគំនិតទៅកាន់កាលវិភាគ
+window.executeMoveIdea = function(id) {
+    const selectEl = document.getElementById(`moveDaySelect-${id}`);
+    const targetDay = selectEl.value;
+    if (!targetDay) return;
 
-    const targetDay = prompt("តើអ្នកចង់ផ្ទេរវីដេអូនេះទៅថ្ងៃណា?\n(វាយបញ្ចូលពាក្យ៖ ច័ន្ទ, អង្គារ, ពុធ, ព្រហស្បតិ៍, សុក្រ, សៅរ៍-អាទិត្យ)");
-    if (targetDay && days.includes(targetDay.trim())) {
-        task.day = targetDay.trim();
+    const task = contentData.find(t => t.id === id);
+    if (task) {
+        task.day = targetDay;
         localStorage.setItem('local_planner_videos', JSON.stringify(contentData));
         renderPlanner();
-    } else if (targetDay) {
-        alert("❌ ការវាយបញ្ចូលឈ្មោះថ្ងៃមិនត្រឹមត្រូវទេ! សូមព្យាយាមម្តងទៀត។");
     }
 }
 
@@ -242,7 +288,7 @@ window.editTask = function(id) {
         document.getElementById('videoDeadline').disabled = true;
         document.getElementById('videoAssignee').disabled = true;
         document.getElementById('sidebarSection').classList.remove('hidden');
-        document.querySelector('.main-layout').removeAttribute('style');
+        document.querySelector('.main-layout').style.gridTemplateColumns = "1fr";
     }
 
     document.getElementById('taskId').value = task.id;
@@ -271,6 +317,53 @@ window.deleteTask = function(id) {
             resetFormState();
         }
     }
+}
+
+// មុខងារទាញទិន្នន័យ Backup ចេញជា File JSON
+window.exportData = function() {
+    if (contentData.length === 0) {
+        alert("មិនមានទិន្នន័យសម្រាប់លុប ឬ Backup ទេ!");
+        return;
+    }
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(contentData));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `local_planner_backup_${new Date().toISOString().slice(0,10)}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+}
+
+// មុខងារហៅប្រអប់ជ្រើសរើស File Import
+window.triggerImport = function() {
+    document.getElementById('importFile').click();
+}
+
+// មុខងារអាន File JSON និងបញ្ចូលទៅ LocalStorage
+window.importData = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            if (Array.isArray(importedData)) {
+                if(confirm("តើអ្នកពិតជាចង់បញ្ចូលទិន្នន័យនេះមែនទេ? វានឹងលុបទិន្នន័យចាស់ដែលមាននៅលើម៉ាស៊ីននេះចោល។")) {
+                    contentData = importedData;
+                    localStorage.setItem('local_planner_videos', JSON.stringify(contentData));
+                    renderPlanner();
+                    alert("📥 បញ្ចូលទិន្នន័យដោយជោគជ័យ!");
+                }
+            } else {
+                alert("❌ ទម្រង់ File មិនត្រឹមត្រូវឡើយ (ត្រូវតែជា JSON របស់ប្រព័ន្ធ Local Planner)!");
+            }
+        } catch (error) {
+            alert("❌ មានបញ្ហាក្នុងការអាន File នេះ! សូមពិនិត្យមើលឡើងវិញ។");
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = ''; // Reset input file
 }
 
 function resetFormState() {
