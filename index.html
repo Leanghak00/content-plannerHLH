@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cloud Content Planner Pro</title>
+    <title>Cloud Content Planner Pro v2</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Kantumruuy+Pro:ital,wght@0,300..700;1,300..700&family=Koh+Santepheap:wght@400;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
@@ -32,12 +32,17 @@
     <div id="mainApp" class="container hidden">
         <header class="header">
             <div class="header-left-box">
-                <h1 class="logo">💻 LOCAL PLANNER</h1>
+                <h1 class="logo">💻 LOCAL PLANNER PRO</h1>
                 <p class="subtitle">គណនីកំពុងប្រើ៖ <span id="userRoleBadge" class="user-badge">...</span></p>
             </div>
             <div class="header-right">
                 <div class="search-box">
                     <input type="text" id="searchBar" placeholder="🔍 ស្វែងរកវីដេអូ ឬឈ្មោះមនុស្ស...">
+                </div>
+                <div class="backup-zone">
+                    <button onclick="exportData()" class="btn-backup">💾 Backup</button>
+                    <button onclick="triggerImport()" class="btn-import">📂 Import ទិន្នន័យ</button>
+                    <input type="file" id="importFile" accept=".json" class="hidden" onchange="importData(event)">
                 </div>
                 <button id="btnLogout" class="btn-logout">🚪 ចាកចេញ</button>
             </div>
@@ -46,6 +51,13 @@
         <div class="dashboard-grid">
             <div class="stat-card">📽️ វីដេអូក្នុងផែនការ: <span id="totalVideos" class="badge-num">0</span></div>
             <div class="stat-card text-green">💡 គំនិតវីដេអូថ្មីៗ (Ideas): <span id="totalIdeas" class="badge-num">0</span></div>
+            <div class="stat-card progress-card">
+                <span>📈 វឌ្ឍនភាពសប្តាហ៍នេះ:</span>
+                <div class="progress-bar-bg">
+                    <div id="progressBar" class="progress-bar-fill"></div>
+                </div>
+                <span id="progressText" class="progress-text">0%</span>
+            </div>
         </div>
 
         <div class="main-layout">
