@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cloud Content Planner</title>
+    <title>Cloud Content Planner Ultimate</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -76,7 +76,7 @@
         <div class="main-layout">
             
             <aside class="sidebar">
-                <h2 id="formFormTitle" class="section-title text-purple">➕ បន្ថែមគម្រោងថ្មី</h2>
+                <h2 id="formTitle" class="section-title text-purple">➕ បន្ថែមគម្រោងថ្មី</h2>
                 <form id="plannerForm" class="form-group">
                     <input type="hidden" id="editTaskId">
                     
@@ -152,7 +152,7 @@
 
             <main class="content-area">
                 
-                <div class="days-container">
+                <div class="days-container" id="daysContainer">
                     </div>
 
                 <div class="idea-section">
@@ -181,25 +181,25 @@
                 <h4>2. គំរូរចនាសម្ព័ន្ធវីដេអូអប់រំ/ចំណេះដឹង (3-Part Layout)</h4>
                 <p>• <b>Hook:</b> លើកបញ្ហាដែលជួបញឹកញាប់បំផុត។</p>
                 <p>• <b>Body:</b> បង្ហាញដំណោះស្រាយជា ៣ ចំណុចច្បាស់ៗ។</p>
-                <p>• <b>CTA:</b> ឱ្យចុច Follow ឬ Comment សួរផ្ទៀងផ្ទាត់។</p>
+                <p>• <b>CTA:</b> ឱ្យចុច Follow ឬ Comment សួរផ្ទៀងផ្ទាត់。</p>
             </div>
         </div>
     </div>
 
     <div id="mobileNavBar" class="mobile-nav-bar hidden">
-        <div class="nav-item active" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+        <div class="nav-item active" id="navSchedule">
             <span class="nav-icon">📅</span>
             <span>កាលវិភាគ</span>
         </div>
-        <div class="nav-item" onclick="document.querySelector('.idea-section').scrollIntoView({behavior:'smooth'})">
+        <div class="nav-item" id="navIdeas">
             <span class="nav-icon">💡</span>
             <span>គំនិតថ្មីៗ</span>
         </div>
-        <div class="nav-item" onclick="document.querySelector('.sidebar').scrollIntoView({behavior:'smooth'})">
+        <div class="nav-item" id="navAdd">
             <span class="nav-icon">➕</span>
             <span>ថែមវីដេអូ</span>
         </div>
-        <div class="nav-item" onclick="document.getElementById('btnLogout').click()">
+        <div class="nav-item" id="navLogout">
             <span class="nav-icon">🚪</span>
             <span>ចាកចេញ</span>
         </div>
