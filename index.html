@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cloud Content Planner Pro v2</title>
+    <title>Cloud Content Planner Ultimate</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Kantumruuy+Pro:ital,wght@0,300..700;1,300..700&family=Koh+Santepheap:wght@400;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kantumruuy+Pro:ital,wght@0,300..700;1,300..700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -13,7 +13,7 @@
         <div class="login-card">
             <div class="login-icon">🔒</div>
             <h2 class="login-title">LOCAL PLANNER</h2>
-            <p class="login-subtitle">ប្រព័ន្ធគ្រប់គ្រងគម្រោងវីដេអូការងារ (សុវត្ថិភាពខ្ពស់)</p>
+            <p class="login-subtitle">ប្រព័ន្ធគ្រប់គ្រងគម្រោងវីដេអូការងារ (Cloud Edition)</p>
             <div id="loginError" class="error-msg hidden">❌ ឈ្មោះ ឬលេខកូដសម្ងាត់មិនត្រឹមត្រូវ!</div>
             <form id="loginForm">
                 <div class="form-group-login">
@@ -32,8 +32,11 @@
     <div id="mainApp" class="container hidden">
         <header class="header">
             <div class="header-left-box">
-                <h1 class="logo">💻 LOCAL PLANNER PRO</h1>
-                <p class="subtitle">គណនីកំពុងប្រើ៖ <span id="userRoleBadge" class="user-badge">...</span></p>
+                <h1 class="logo">💻 CLOUD PLANNER PRO</h1>
+                <p class="subtitle">
+                    គណនី៖ <span id="userRoleBadge" class="user-badge">...</span> 
+                    <span id="connectionBadge" class="conn-badge status-offline">⏳ Connecting...</span>
+                </p>
             </div>
             <div class="header-right">
                 <div class="search-box">
@@ -41,9 +44,10 @@
                 </div>
                 <div class="backup-zone">
                     <button onclick="exportData()" class="btn-backup">💾 Backup</button>
-                    <button onclick="triggerImport()" class="btn-import">📂 Import ទិន្នន័យ</button>
+                    <button onclick="triggerImport()" class="btn-import">📂 Import</button>
                     <input type="file" id="importFile" accept=".json" class="hidden" onchange="importData(event)">
                 </div>
+                <button onclick="toggleTemplateModal()" class="btn-template">💡 គំរូស្គ្រីប</button>
                 <button id="btnLogout" class="btn-logout">🚪 ចាកចេញ</button>
             </div>
         </header>
@@ -131,18 +135,51 @@
             </div>
 
             <div class="content-area">
-                <h2 class="section-title text-blue">📅 លំហូរការងារប្រចាំសប្តាហ៍</h2>
+                <h2 class="section-title text-blue">📅 លំហូរការងារប្រចាំសប្តាហ៍ (Sync គ្រប់ឧបករណ៍ 🔄)</h2>
                 <div id="daysContainer" class="days-container"></div>
 
-                <div class="idea-section">
+                <div class="idea-section" ondragover="allowDrop(event)" ondrop="dropTask(event, 'Idea_Bucket')">
                     <h2 class="section-title" style="color: #f59e0b; margin-bottom: 5px;">💡 ធុងប្រមូលគំនិតវីដេអូ (Idea Bucket)</h2>
-                    <p style="color: #94a3b8; font-size: 13px;">កន្លែងសម្រាប់ទម្លាក់ Topic ថ្មីៗដែលគិតឃើញភ្លាមៗ ប៉ុន្តែមិនទាន់កំណត់ថ្ងៃធ្វើការងារ</p>
+                    <p style="color: #94a3b8; font-size: 13px;">អូសទម្លាក់កាតចូលទីនេះ ដើម្បីដកចេញពីកាលវិភាគសប្តាហ៍</p>
                     <div id="ideasContainer" class="idea-grid"></div>
+                </div>
+
+                <div class="logs-section">
+                    <h3 style="font-size:14px; margin-bottom:10px; color:#94a3b8; display:flex; justify-content:space-between;">
+                        <span>📋 កំណត់ត្រាសកម្មភាពរបស់ក្រុមការងារ (Cloud Logs)</span>
+                    </h3>
+                    <div id="logContainer" class="log-container-box"></div>
                 </div>
             </div>
         </div>
     </div>
 
+    <div id="templateModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>💡 គំរូទម្រង់ស្គ្រីបវីដេអូខ្លីៗ (Shorts Framework)</h3>
+                <span class="close-modal" onclick="toggleTemplateModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="tmpl-card">
+                    <h4>1. ទម្រង់ "ដោះស្រាយបញ្ហាភ្លាមៗ" (Problem-Solution)</h4>
+                    <p><strong>Hook:</strong> "ឈប់ធ្វើ [រឿងខុស] នេះភ្លាម បើមិនចង់ខាតលុយ/ពេល!"</p>
+                    <p><strong>Body:</strong> បង្ហាញបញ្ហា៣ចំណុច រួចប្រាប់ដំណោះស្រាយខ្លីៗងាយយល់។</p>
+                    <p><strong>CTA:</strong> "ចុច Follow ដើម្បីរៀនជំនាញថ្មីៗរាល់ថ្ងៃ!"</p>
+                </div>
+                <div class="tmpl-card">
+                    <h4>2. ទម្រង់ "ចែករំលែកអាថ៌កំបាំង" (The Secret)</h4>
+                    <p><strong>Hook:</strong> "អាថ៌កំបាំងដែល [ក្រុមមនុស្សអាជីព] មិនដែលប្រាប់អ្នកពីមុនមក..."</p>
+                    <p><strong>Body:</strong> បកស្រាយគន្លឹះលាក់កំបាំងមួយដែលប្លែក ហើយមានប្រយោជន៍ពិតប្រាកដ Laz..."</p>
+                    <p><strong>CTA:</strong> "សាកល្បងធ្វើមើល៍ រួចខមិនប្រាប់លទ្ធផលផង!"</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    
     <script src="app.js"></script>
 </body>
 </html>
