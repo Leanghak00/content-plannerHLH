@@ -4,7 +4,7 @@
 const firebaseConfig = {
     apiKey: "AIzaSyB9n8IsVFNv8uX5INh0dwOyAC8gIJhhw9c",
     authDomain: "contentplanneer.firebaseapp.com",
-    databaseURL: "https://console.firebase.google.com/project/contentplanneer/database/contentplanneer-default-rtdb/data/~2F",
+    databaseURL: "https://contentplanneer-default-rtdb.firebaseio.com/",
     projectId: "contentplanneer",
     storageBucket: "contentplanneer.firebasestorage.app",
     messagingSenderId: "1080920711361",
