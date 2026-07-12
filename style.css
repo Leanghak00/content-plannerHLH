@@ -290,83 +290,38 @@ textarea.input-field { resize: none; }
    ========================================================================== */
 @media (max-width: 768px) {
     body {
-        padding: 12px 12px 80px 12px; /* ទុកចន្លោះខាងក្រោមការពារការបាំង Bottom Nav */
+        padding: 12px 12px 80px 12px; 
         background-color: #070a12;
     }
 
-    /* រៀបចំ Header ឱ្យតូចល្មមលើទូរស័ព្ទ */
     .header {
         background: transparent;
         padding: 8px 4px;
         margin-bottom: 15px;
         border: none;
     }
-    .header-right {
-        display: none; /* លាក់ប្រព័ន្ធស្មុគស្មាញចូលក្នុងម៉ឺនុយចល័ត */
-    }
+    .header-right { display: none; }
 
-    /* ផ្ទាំង Dashboard */
-    .dashboard-grid {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-    .stat-card {
-        padding: 14px 16px;
-        border-radius: 14px;
-        font-size: 13px;
-    }
-    .progress-card {
-        grid-column: auto;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-    }
+    .dashboard-grid { grid-template-columns: 1fr; gap: 10px; }
+    .stat-card { padding: 14px 16px; border-radius: 14px; font-size: 13px; }
+    .progress-card { grid-column: auto; flex-direction: column; align-items: stretch; gap: 8px; }
     .progress-bar-bg { width: 100%; margin-left: 0; height: 6px; }
 
-    /* ប្តូរ Layout មកជាជួរឈរទោល */
-    .main-layout {
-        grid-template-columns: 1fr;
-        gap: 15px;
-    }
-    .sidebar {
-        padding: 16px;
-        border-radius: 16px;
-    }
+    .main-layout { grid-template-columns: 1fr; gap: 15px; }
+    .sidebar { padding: 16px; border-radius: 16px; }
 
-    /* កាតការងារ និងប៊ូតុងបញ្ជាម្រាមដៃ */
-    .day-card {
-        padding: 14px;
-        border-radius: 14px;
-    }
+    .day-card { padding: 14px; border-radius: 14px; }
     .day-header { padding-bottom: 8px; margin-bottom: 12px; }
     .day-title { font-size: 14px; }
 
-    .task-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-        padding: 14px;
-        border-radius: 12px;
-    }
+    .task-item { flex-direction: column; align-items: flex-start; gap: 12px; padding: 14px; border-radius: 12px; }
     .task-tags { gap: 4px; }
     .task-tags span { font-size: 10px; padding: 1px 6px; }
 
-    /* ប៊ូតុង កែ/លុប ចែកជា ២ ប្រអប់ស្មើគ្នាស្រួលចុច */
     .action-btns {
-        width: 100%;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        border-top: 1px solid rgba(255, 255, 255, 0.04);
-        padding-top: 10px;
-        margin-top: 4px;
+        width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-top: 1px solid rgba(255, 255, 255, 0.04); padding-top: 10px; margin-top: 4px;
     }
-    .btn-edit, .btn-delete {
-        text-align: center;
-        padding: 8px;
-        font-size: 12px;
-        border-radius: 8px;
-    }
+    .btn-edit, .btn-delete { text-align: center; padding: 8px; font-size: 12px; border-radius: 8px; }
 
     .idea-section { padding: 15px; border-radius: 14px; }
     .idea-grid { grid-template-columns: 1fr; gap: 10px; }
@@ -387,15 +342,7 @@ textarea.input-field { resize: none; }
         box-shadow: 0 -10px 30px rgba(0,0,0,0.3);
     }
     .nav-item {
-        color: var(--text-muted);
-        font-size: 11px;
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        cursor: pointer;
-        text-decoration: none;
-        font-weight: 600;
+        color: var(--text-muted); font-size: 11px; text-align: center; display: flex; flex-direction: column; gap: 4px; cursor: pointer; text-decoration: none; font-weight: 600;
     }
     .nav-item.active { color: var(--primary-light); }
     .nav-icon { font-size: 18px; }
