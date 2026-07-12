@@ -1,333 +1,308 @@
 // ==========================================================================
-// 1. FIREBASE INITIALIZATION & CONFIG
+// 1. FIREBASE CONFIGURATION (សូមបំពេញព័ត៌មានរបស់អ្នកនៅទីនេះ)
 // ==========================================================================
 const firebaseConfig = {
     apiKey: "AIzaSyB9n8IsVFNv8uX5INh0dwOyAC8gIJhhw9c",
     authDomain: "contentplanneer.firebaseapp.com",
-    databaseURL: "https://contentplanneer-default-rtdb.firebaseio.com/",
+    // ⚠️ ត្រូវប្រាកដថា Link ខាងក្រោមនេះត្រឹមត្រូវតាម Firebase របស់អ្នក (គ្មានសញ្ញា / នៅចុង)
+    databaseURL: "https://contentplanneer-default-rtdb.firebaseio.com/", 
     projectId: "contentplanneer",
     storageBucket: "contentplanneer.firebasestorage.app",
     messagingSenderId: "1080920711361",
     appId: "1:1080920711361:web:1b59aeee301a6d0d07b440"
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-const USERS_DB = {
-    "hak": { pass: "123", role: "admin", permissions: ["create", "edit", "delete"] },
-    "hom": { pass: "123", role: "writer", permissions: ["create", "edit"] },
-    "editor": { pass: "123", role: "editor", permissions: ["edit_status"] }
-};
-
-const days = ["ច័ន្ទ", "អង្គារ", "ពុធ", "ព្រហស្បតិ៍", "សុក្រ", "សៅរ៍-អាទិត្យ"];
-const workflowTips = {
-    "ច័ន្ទ": "🧠 គិត Topic និងសរសេរស្គ្រីប", "អង្គារ": "🎬 រៀបចំឧបករណ៍ទុក", "ពុធ": "🎥 ថ្ងៃថតវីដេអូ!",
-    "ព្រហស្បតិ៍": "✂️ ថ្ងៃកាត់តវីដេអូ", "សុក្រ": "🎯 ត្រៀម Thumbnail & Schedule", "សៅរ៍-អាទិត្យ": "🚀 វីដេអូអនឡាញ!"
-};
-
-let contentData = [];
-let isEditing = false;
-let currentUser = null;
-let currentUsername = "";
-
-// Selectors
-const loginPage = document.getElementById('loginPage');
-const mainApp = document.getElementById('mainApp');
-const loginForm = document.getElementById('loginForm');
-const loginError = document.getElementById('loginError');
-const form = document.getElementById('plannerForm');
-const daysContainer = document.getElementById('daysContainer');
-const ideasContainer = document.getElementById('ideasContainer');
-const searchBar = document.getElementById('searchBar');
-const btnLogout = document.getElementById('btnLogout');
-const btnCancel = document.getElementById('btnCancel');
-const logContainer = document.getElementById('logContainer');
-const connectionBadge = document.getElementById('connectionBadge');
+// ប្រកាសអថេរប្រើប្រាស់រួម
+let db;
+let currentUser = "";
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 // ==========================================================================
-// 2. NETWORK STATUS MONITOR (មុខងារពិនិត្យអ៊ីនធឺណិត)
+// 2. LOGIN SYSTEM INTERACTION (ប្រព័ន្ធផ្ទៀងផ្ទាត់ និងបើកបិទផ្ទាំង UI)
 // ==========================================================================
-db.ref(".info/connected").on("value", (snapshot) => {
-    if (snapshot.val() === true) {
-        connectionBadge.innerText = "📡 Connected";
-        connectionBadge.className = "conn-badge status-online";
-    } else {
-        connectionBadge.innerText = "❌ Disconnected";
-        connectionBadge.className = "conn-badge status-offline";
-    }
-});
+document.getElementById('btnLogin').addEventListener('click', () => {
+    const userVal = document.getElementById('username').value.trim();
+    const passVal = document.getElementById('password').value.trim();
+    const errorDiv = document.getElementById('loginError');
 
-// ==========================================================================
-// 3. AUTHENTICATION (WITH SESSION PERSISTENCE)
-// ==========================================================================
-loginForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const userIn = document.getElementById('username').value.trim();
-    const passIn = document.getElementById('password').value;
-
-    if (USERS_DB[userIn] && USERS_DB[userIn].pass === passIn) {
-        localStorage.setItem('local_planner_logged_user', userIn);
-        loginError.classList.add('hidden');
-        pushCloudLog(`👤 គណនី [${userIn}] បានចូលប្រើប្រាស់ប្រព័ន្ធ`);
-        checkAuth();
-    } else {
-        loginError.classList.remove('hidden');
-    }
-});
-
-function checkAuth() {
-    const loggedUser = localStorage.getItem('local_planner_logged_user');
-    if (loggedUser && USERS_DB[loggedUser]) {
-        currentUsername = loggedUser;
-        currentUser = USERS_DB[loggedUser];
-        document.getElementById('userRoleBadge').innerText = loggedUser;
+    // គណនីសាកល្បង៖ hak / 123
+    if (userVal.toLowerCase() === 'hak' && passVal === '123') {
+        currentUser = userVal;
         
-        loginPage.classList.add('hidden');
-        mainApp.classList.remove('hidden');
+        // លាក់ផ្ទាំង Login និងបើកផ្ទាំង App ចម្បង
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('appPage').classList.remove('hidden');
+        
+        // បើកបង្ហាញរបារម៉ឺនុយទូរស័ព្ទដៃបើប្រើលើទូរស័ព្ទ
+        document.getElementById('mobileNavBar').classList.remove('hidden');
+        document.getElementById('userBadge').innerText = currentUser;
 
-        const hasCreate = currentUser.permissions.includes('create');
-        document.getElementById('sidebarSection').classList.toggle('hidden', !hasCreate);
-        document.querySelector('.main-layout').style.gridTemplateColumns = hasCreate ? "320px 1fr" : "1fr";
-
-        // បើកដំណើរការ Listener ទាញទិន្នន័យពី Cloud
-        listenToCloudData();
-        listenToCloudLogs();
+        // ចាប់ផ្តើមតភ្ជាប់ទៅ Firebase Realtime Database
+        initFirebase();
     } else {
-        loginPage.classList.remove('hidden');
-        mainApp.classList.add('hidden');
+        errorDiv.classList.remove('hidden');
+        errorDiv.innerText = "❌ ឈ្មោះអ្នកប្រើប្រាស់ ឬលេខកូដសម្ងាត់មិនត្រឹមត្រូវទេ!";
     }
-}
+});
 
-btnLogout.addEventListener('click', () => {
-    pushCloudLog(`🚪 គណនី [${currentUsername}] បានចាកចេញពីប្រព័ន្ធ`);
-    localStorage.removeItem('local_planner_logged_user');
-    checkAuth();
+// ប្រព័ន្ធចាកចេញ (Logout)
+document.getElementById('btnLogout').addEventListener('click', () => {
+    location.reload(); // បង្ខំឱ្យអូសទំព័រឡើងវិញដើម្បីសម្អាត Session
 });
 
 // ==========================================================================
-// 4. FIREBASE DATA LISTENERS (REAL-TIME SYNC)
+// 3. FIREBASE CORE & CORE APP LOGIC
 // ==========================================================================
-function listenToCloudData() {
+function initFirebase() {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+
+    // ពិនិត្យស្ថានភាពអ៊ីនធឺណិត (Online/Offline Status)
+    const connStatus = document.getElementById('connStatus');
+    db.ref('.info/connected').on('value', (snap) => {
+        if (snap.val() === true) {
+            connStatus.innerText = "📡 Connected";
+            connStatus.className = "conn-badge status-online";
+        } else {
+            connStatus.innerText = "🔌 Offline";
+            connStatus.className = "conn-badge status-offline";
+        }
+    });
+
+    // ចាប់ផ្តើមទាញយកទិន្នន័យពី Cloud មកបង្ហាញលើអេក្រង់រាល់ពេលមានការផ្លាស់ប្តូរ
     db.ref('videos').on('value', (snapshot) => {
-        const data = snapshot.val();
-        contentData = data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [];
-        renderPlanner();
+        const data = snapshot.val() || {};
+        renderDashboard(data);
+        renderWorkflow(data);
     });
-}
 
-function listenToCloudLogs() {
-    db.ref('logs').limitToLast(25).on('value', (snapshot) => {
-        const data = snapshot.val();
-        const logsArray = data ? Object.keys(data).map(key => data[key]) : [];
-        logsArray.sort((a,b) => b.timestamp - a.timestamp);
-        logContainer.innerHTML = logsArray.map(l => `
-            <div class="log-item">
-                <span>${l.msg}</span>
-                <span style="color:#475569;">${l.time}</span>
-            </div>
-        `).join('');
-    });
-}
-
-function pushCloudLog(message) {
-    const time = new Date().toLocaleTimeString('km-KH', { hour: '2-digit', minute: '2-digit' });
-    db.ref('logs').push({
-        time: time,
-        msg: message,
-        timestamp: firebase.database.ServerValue.TIMESTAMP
-    });
-}
-
-// ==========================================================================
-// 5. DRAG & DROP ENGINE
-// ==========================================================================
-window.allowDrop = function(ev) { ev.preventDefault(); }
-window.dragTask = function(ev, id) { ev.dataTransfer.setData("text/plain", id); }
-window.dropTask = function(ev, targetDay) {
-    ev.preventDefault();
-    const id = ev.dataTransfer.getData("text/plain");
-    const task = contentData.find(t => t.id === id);
-    if (task && task.day !== targetDay) {
-        const oldDay = task.day === 'Idea_Bucket' ? 'Idea Bucket' : 'ថ្ងៃ' + task.day;
-        const newDay = targetDay === 'Idea_Bucket' ? 'Idea Bucket' : 'ថ្ងៃ' + targetDay;
-        
-        db.ref('videos/' + id).update({ day: targetDay });
-        pushCloudLog(`🖱️ អូសប្តូរ៖ [${currentUsername}] បានអូសវីដេអូ "${task.title}" ពី ${oldDay} ទៅ ${newDay}`);
-    }
-}
-
-// ==========================================================================
-// 6. DYNAMIC UI RENDERER
-// ==========================================================================
-function checkIsUrgent(deadlineStr, status) {
-    if (!deadlineStr || status === 'Done') return false;
-    const diffDays = Math.ceil((new Date(deadlineStr).setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
-    return diffDays <= 2;
-}
-
-function renderPlanner() {
-    daysContainer.innerHTML = ''; ideasContainer.innerHTML = '';
-    const searchQuery = searchBar.value.toLowerCase();
-
-    // 6.1 Weekly Feed
-    days.forEach(day => {
-        const dayTasks = contentData.filter(t => t.day === day && (t.title.toLowerCase().includes(searchQuery) || (t.assignee && t.assignee.toLowerCase().includes(searchQuery))));
-        let tasksHTML = dayTasks.length === 0 ? `<p style="color:#64748b; font-size:12px; font-style:italic;">មិនមានគម្រោងវីដេអូទេ...</p>` : '';
-
-        dayTasks.forEach(task => {
-            const isUrgent = checkIsUrgent(task.deadline, task.status);
-            const parts = task.deadline ? task.deadline.split('-') : [];
-            const deadlineTxt = parts.length === 3 ? `<span class="tag-deadline ${isUrgent?'tag-urgent':''}">${isUrgent?'⚡ ប្រញាប់៖':'📅 ផុស៖'} ${parts[2]}/${parts[1]}</span>` : '';
-            
-            let btns = '';
-            if (currentUser.permissions.some(p => ['create','edit','edit_status'].includes(p))) btns += `<button onclick="editTask('${task.id}')" class="btn-edit">កែ</button>`;
-            if (currentUser.permissions.includes('delete')) btns += `<button onclick="deleteTask('${task.id}')" class="btn-delete">លុប</button>`;
-
-            tasksHTML += `
-                <div class="task-item ${isUrgent?'urgent-deadline-alert':''}" draggable="true" ondragstart="dragTask(event, '${task.id}')">
-                    <div style="flex:1;">
-                        <div class="task-title-text">${task.title}</div>
-                        <div class="task-tags">
-                            <span class="tag-format">${task.format}</span>
-                            <span class="status-${task.status}">${task.status}</span>
-                            <span class="tag-assignee">👤 ${task.assignee}</span>
-                            ${deadlineTxt}
-                        </div>
-                    </div>
-                    <div class="action-btns">${btns}</div>
-                </div>`;
+    // ទាញយកប្រព័ន្ធសកម្មភាពថ្មីៗ (Live Logs)
+    db.ref('logs').limitToLast(10).on('value', (snapshot) => {
+        const logs = snapshot.val() || {};
+        const logBox = document.getElementById('logBox');
+        logBox.innerHTML = "";
+        Object.values(logs).reverse().forEach(log => {
+            const div = document.createElement('div');
+            div.className = "log-item";
+            div.innerHTML = `<span>${log.text}</span> <b style="color:#475569">${log.time}</b>`;
+            logBox.appendChild(div);
         });
-
-        daysContainer.innerHTML += `
-            <div class="day-card" ondragover="allowDrop(event)" ondrop="dropTask(event, '${day}')">
-                <div class="day-header"><span class="day-title">ថ្ងៃ${day}</span><span class="day-tip">${workflowTips[day]}</span></div>
-                <div>${tasksHTML}</div>
-            </div>`;
     });
-
-    // 6.2 Idea Feed
-    const ideaTasks = contentData.filter(t => (t.day === 'Idea_Bucket' || !t.day) && t.title.toLowerCase().includes(searchQuery));
-    if(ideaTasks.length === 0) {
-        ideasContainer.innerHTML = `<p style="color:#94a3b8; font-size:13px; font-style:italic;">មិនទាន់មានគំនិតវីដេអូនៅឡើយទេ...</p>`;
-    } else {
-        ideaTasks.forEach(task => {
-            let btns = currentUser.permissions.includes('delete') ? `<button onclick="deleteTask('${task.id}')" class="btn-delete">លុប</button>` : '';
-            btns = (currentUser.permissions.includes('create') || currentUser.permissions.includes('edit') ? `<button onclick="editTask('${task.id}')" class="btn-edit">កែ</button>` : '') + btns;
-
-            ideasContainer.innerHTML += `
-                <div class="idea-card-item" draggable="true" ondragstart="dragTask(event, '${task.id}')">
-                    <div class="idea-title-text">${task.title}</div>
-                    <span class="idea-badge">${task.format}</span> <span style="font-size:11px; color:#94a3b8;">👤 ${task.assignee}</span>
-                    <div style="display:flex; justify-content:flex-end; margin-top:10px; gap:5px;">${btns}</div>
-                </div>`;
-        });
-    }
-
-    // Progress
-    const totalW = contentData.filter(t => t.day !== 'Idea_Bucket').length;
-    const doneW = contentData.filter(t => t.day !== 'Idea_Bucket' && t.status === 'Done').length;
-    const percent = totalW > 0 ? Math.round((doneW / totalW) * 100) : 0;
-    document.getElementById('totalVideos').innerText = totalW;
-    document.getElementById('totalIdeas').innerText = ideaTasks.length;
-    document.getElementById('progressBar').style.width = percent + '%';
-    document.getElementById('progressText').innerText = percent + '%';
 }
 
-// ==========================================================================
-// 7. DB OPERATIONS (CRUD & BACKUP)
-// ==========================================================================
-form.addEventListener('submit', (e) => {
+// មុខងារបញ្ចូល ឬកែប្រែទិន្នន័យ (Form Submit)
+document.getElementById('plannerForm').addEventListener('submit', (e) => {
     e.preventDefault();
-    const id = document.getElementById('taskId').value;
+    
+    const id = document.getElementById('editTaskId').value;
     const taskData = {
-        day: document.getElementById('videoDay').value, title: document.getElementById('videoTitle').value,
-        format: document.getElementById('videoFormat').value, status: document.getElementById('videoStatus').value,
-        deadline: document.getElementById('videoDeadline').value, assignee: document.getElementById('videoAssignee').value,
-        hook: document.getElementById('videoHook').value, notes: document.getElementById('videoNotes').value
+        title: document.getElementById('taskTitle').value.trim(),
+        day: document.getElementById('taskDay').value,
+        assignee: document.getElementById('taskAssignee').value,
+        format: document.getElementById('taskFormat').value,
+        status: document.getElementById('taskStatus').value,
+        deadline: document.getElementById('taskDeadline').value,
+        notes: document.getElementById('taskNotes').value.trim(),
+        updatedBy: currentUser
     };
 
-    if (isEditing && id) {
-        db.ref('videos/' + id).set(taskData);
-        pushCloudLog(`✏️ បានកែប្រែ៖ [${currentUsername}] បានកែសម្រួលវីដេអូ "${taskData.title}"`);
-        resetFormState();
+    if (id) {
+        // ករណីកែប្រែទិន្នន័យចាស់
+        db.ref('videos/' + id).update(taskData);
+        pushLog(`✏️ ${currentUser} បានកែវីដេអូ៖ "${taskData.title}"`);
+        resetForm();
     } else {
-        const newId = Date.now().toString();
-        db.ref('videos/' + newId).set(taskData);
-        pushCloudLog(`➕ បង្កើតថ្មី៖ [${currentUsername}] បានបន្ថែមវីដេអូថ្មី "${taskData.title}"`);
+        // ករណីបង្កើតថ្មី
+        const newRef = db.ref('videos').push();
+        db.ref('videos/' + newRef.key).set(taskData);
+        pushLog(`➕ ${currentUser} បានថែមវីដេអូ៖ "${taskData.title}"`);
+        document.getElementById('plannerForm').reset();
     }
-    form.reset();
 });
 
-window.editTask = function(id) {
-    const task = contentData.find(t => t.id === id); if (!task) return;
-    if (currentUser.role === 'editor') {
-        ['videoTitle','videoHook','videoNotes'].forEach(f => document.getElementById(f).readOnly = true);
-        ['videoDeadline','videoAssignee','videoDay','videoFormat'].forEach(f => document.getElementById(f).disabled = true);
-    }
-    document.getElementById('taskId').value = task.id; document.getElementById('videoDay').value = task.day;
-    document.getElementById('videoTitle').value = task.title; document.getElementById('videoFormat').value = task.format;
-    document.getElementById('videoStatus').value = task.status; document.getElementById('videoDeadline').value = task.deadline;
-    document.getElementById('videoAssignee').value = task.assignee; document.getElementById('videoHook').value = task.hook;
-    document.getElementById('videoNotes').value = task.notes;
+// មុខងារបង្ហាញទិន្នន័យលើក្តារការងារ (Render App)
+function renderWorkflow(data) {
+    const daysContainer = document.getElementById('daysContainer');
+    const ideaContainer = document.getElementById('ideaContainer');
     
-    isEditing = true; document.getElementById('formTitle').innerText = "✏️ កែប្រែគម្រោងវីដេអូ";
-    document.getElementById('btnSubmit').innerText = "💾 រក្សាទុកទិន្នន័យ";
-    btnCancel.classList.remove('hidden'); window.scrollTo({ top: 0, behavior: 'smooth' });
-}
+    // បង្កើតគ្រោងថ្ងៃទាំង ៧
+    daysContainer.innerHTML = DAYS.map(day => `
+        <div class="day-card" id="day-${day}">
+            <div class="day-header">
+                <span class="day-title">📅 ថ្ងៃ ${translateDay(day)} (${day})</span>
+                <span class="day-tip" id="count-${day}">0 វីដេអូ</span>
+            </div>
+            <div class="task-list-zone" id="list-${day}"></div>
+        </div>
+    `).join('');
+    
+    ideaContainer.innerHTML = "";
+    const counts = {};
+    DAYS.forEach(d => counts[d] = 0);
 
-window.deleteTask = function(id) {
-    const task = contentData.find(t => t.id === id);
-    if(task && confirm(`តើអ្នកចង់លុបវីដេអូ "${task.title}" មែនទេ?`)) {
-        db.ref('videos/' + id).remove();
-        pushCloudLog(`❌ បានលុប៖ [${currentUsername}] បានលុបវីដេអូ "${task.title}"`);
-        resetFormState();
-    }
-}
+    // ចែកទិន្នន័យចូលតាមថ្ងៃនីមួយៗ
+    Object.keys(data).forEach(key => {
+        const task = data[key];
+        const isUrgent = checkUrgent(task.deadline, task.status);
+        
+        const cardHtml = `
+            <div class="task-item ${isUrgent ? 'urgent-deadline-alert' : ''}">
+                <div>
+                    <div class="task-title-text">${task.title}</div>
+                    <div class="task-tags">
+                        <span class="status-${task.status}">${task.status}</span>
+                        <span class="tag-format">${task.format}</span>
+                        <span class="tag-assignee">👤 ${task.assignee}</span>
+                        ${task.deadline ? `<span class="tag-deadline ${isUrgent ? 'tag-urgent' : ''}">⏰ ${task.deadline}</span>` : ''}
+                    </div>
+                    ${task.notes ? `<p style="font-size:12px; color:var(--text-muted); margin-top:8px; background:rgba(0,0,0,0.1); padding:6px; border-radius:6px;">📝 ${task.notes}</p>` : ''}
+                </div>
+                <div class="action-btns">
+                    <button class="btn-edit" onclick="editTask('${key}')">កែ</button>
+                    <button class="btn-delete" onclick="deleteTask('${key}', '${task.title}')">លុប</button>
+                </div>
+            </div>
+        `;
 
-window.exportData = function() {
-    if (contentData.length === 0) return alert("មិនមានទិន្នន័យឡើយ!");
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(contentData));
-    const dlAnchor = document.createElement('a'); dlAnchor.setAttribute("href", dataStr);
-    dlAnchor.setAttribute("download", `cloud_planner_backup.json`);
-    document.body.appendChild(dlAnchor); dlAnchor.click(); dlAnchor.remove();
-}
-
-window.triggerImport = function() { document.getElementById('importFile').click(); }
-window.importData = function(event) {
-    const file = event.target.files[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const imported = JSON.parse(e.target.result);
-            if (Array.isArray(imported) && confirm("បញ្ចូលទិន្នន័យទៅ Cloud? វានឹងលុបទិន្នន័យចាស់ទាំងអស់។")) {
-                db.ref('videos').remove();
-                imported.forEach(task => {
-                    const taskId = task.id || Date.now().toString() + Math.random();
-                    delete task.id;
-                    db.ref('videos/' + taskId).set(task);
-                });
-                pushCloudLog(`📥 Import៖ [${currentUsername}] បានបញ្ចូល File ទិន្នន័យទៅ Cloud`);
-                alert("📥 រួចរាល់!");
+        if (task.day === "Idea Bucket" || !DAYS.includes(task.day)) {
+            ideaContainer.innerHTML += cardHtml;
+        } else {
+            const listZone = document.getElementById(`list-${task.day}`);
+            if (listZone) {
+                listZone.innerHTML += cardHtml;
+                counts[task.day]++;
             }
-        } catch(err) { alert("❌ ទម្រង់ File មិនត្រឹមត្រូវ!"); }
+        }
+    });
+
+    // បច្ចុប្បន្នភាពលេខរាប់ចំនួនវីដេអូតាមថ្ងៃ
+    DAYS.forEach(day => {
+        const countBadge = document.getElementById(`count-${day}`);
+        if (countBadge) countBadge.innerText = `${counts[day]} វីដេអូ`;
+    });
+}
+
+// មុខងារគណនា Dashboard Stats
+function renderDashboard(data) {
+    const total = Object.keys(data).length;
+    let done = 0;
+    Object.values(data).forEach(t => { if (t.status === "Done") done++; });
+    
+    document.getElementById('statTotal').innerText = total;
+    document.getElementById('statDone').innerText = done;
+    
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    document.getElementById('progressBarFill').style.width = pct + "%";
+    document.getElementById('progressText').innerText = pct + "%";
+}
+
+// មុខងារចុចប៊ូតុង "កែ"
+window.editTask = function(id) {
+    db.ref('videos/' + id).once('value', (snap) => {
+        const task = snap.val();
+        if(!task) return;
+        document.getElementById('editTaskId').value = id;
+        document.getElementById('taskTitle').value = task.title;
+        document.getElementById('taskDay').value = task.day === "Idea Bucket" ? "Monday" : task.day;
+        document.getElementById('taskAssignee').value = task.assignee;
+        document.getElementById('taskFormat').value = task.format;
+        document.getElementById('taskStatus').value = task.status;
+        document.getElementById('taskDeadline').value = task.deadline || "";
+        document.getElementById('taskNotes').value = task.notes || "";
+        
+        document.getElementById('formTitle').innerText = "✏️ កែប្រែគម្រោង";
+        document.getElementById('btnCancelEdit').classList.remove('hidden');
+        document.querySelector('.sidebar').scrollIntoView({behavior:'smooth'});
+    });
+};
+
+// មុខងារលុបគម្រោង
+window.deleteTask = function(id, title) {
+    if (confirm(`តើអ្នកពិតជាចង់លុបវីដេអូ "${title}" នេះមែនទេ?`)) {
+        db.ref('videos/' + id).remove();
+        pushLog(`❌ ${currentUser} បានលុបវីដេអូ៖ "${title}"`);
+    }
+};
+
+function resetForm() {
+    document.getElementById('editTaskId').value = "";
+    document.getElementById('plannerForm').reset();
+    document.getElementById('formTitle').innerText = "➕ បន្ថែមគម្រោងថ្មី";
+    document.getElementById('btnCancelEdit').classList.add('hidden');
+}
+document.getElementById('btnCancelEdit').addEventListener('click', resetForm);
+
+// ==========================================================================
+// 4. HELPERS & UTILITIES (ប្រព័ន្ធជំនួយ)
+// ==========================================================================
+function translateDay(day) {
+    const map = { Monday:"ចន្ទ", Tuesday:"អង្គារ", Wednesday:"ពុធ", Thursday:"ព្រហស្បតិ៍", Friday:"សុក្រ", Saturday:"សៅរ៍", Sunday:"អាទិត្យ" };
+    return map[day] || day;
+}
+
+function checkUrgent(deadline, status) {
+    if (!deadline || status === "Done") return false;
+    const diff = new Date(deadline) - new Date();
+    return diff / (1000 * 60 * 60 * 24) <= 1; // ប្រកាសអាសន្នបើនៅសល់ក្រោម ២៤ម៉ោង
+}
+
+function pushLog(text) {
+    const time = new Date().toLocaleTimeString('km-KH', { hour: '2-digit', minute: '2-digit' });
+    if(db) db.ref('logs').push({ text, time });
+}
+
+// ស្វែងរកវីដេអូ (Live Search)
+document.getElementById('searchBar').addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('.task-item').forEach(item => {
+        const txt = item.querySelector('.task-title-text').innerText.toLowerCase();
+        item.style.display = txt.includes(query) ? "flex" : "none";
+    });
+});
+
+// SYSTEM POPUP MODAL (គំរូស្គ្រីប)
+const modal = document.getElementById('templateModal');
+document.getElementById('btnTemplates').addEventListener('click', () => modal.classList.remove('hidden'));
+document.getElementById('closeModal').addEventListener('click', () => modal.classList.add('hidden'));
+
+// 📱 MOBILE BOTTOM NAVIGATION CLICKS CONTROLLER
+const navItems = document.querySelectorAll('.nav-item');
+navItems.forEach(item => {
+    item.addEventListener('click', function() {
+        navItems.forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
+        
+        // បញ្ជាអូសទៅកន្លែងតាម ID ម៉ឺនុយទូរស័ព្ទ
+        if (this.id === "navSchedule") window.scrollTo({top:0, behavior:'smooth'});
+        if (this.id === "navIdeas") document.querySelector('.idea-section').scrollIntoView({behavior:'smooth'});
+        if (this.id === "navAdd") document.querySelector('.sidebar').scrollIntoView({behavior:'smooth'});
+    });
+});
+
+// SYSTEM BACKUP & IMPORT (Local JSON Backup)
+document.getElementById('btnBackup').addEventListener('click', () => {
+    db.ref('videos').once('value', (snap) => {
+        const blob = new Blob([JSON.stringify(snap.val() || {}, null, 2)], {type: "application/json"});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `backup-planner-${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+    });
+});
+document.getElementById('btnImport').addEventListener('click', () => document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        try {
+            const data = JSON.parse(evt.target.result);
+            if(confirm("តើអ្នកចង់បញ្ចូលទិន្នន័យ Backup នេះទៅក្នុង Cloud មែនទេ? (វានឹងបន្ថែមលើកូដចាស់)")) {
+                db.ref('videos').update(data);
+                pushLog(`📥 ${currentUser} បានធ្វើការ Import ទិន្នន័យរួមពី File Backup`);
+                alert("បញ្ចូលជោគជ័យ!");
+            }
+        } catch(err) { alert("File មិនត្រឹមត្រូវឡើយ!"); }
     };
-    reader.readAsText(file); event.target.value = '';
-}
-
-window.toggleTemplateModal = function() { document.getElementById('templateModal').classList.toggle('hidden'); }
-
-function resetFormState() {
-    isEditing = false; document.getElementById('taskId').value = "";
-    document.getElementById('formTitle').innerText = "📝 បន្ថែមវីដេអូថ្មី";
-    document.getElementById('btnSubmit').innerText = "➕ បន្ថែមគម្រោង"; btnCancel.classList.add('hidden');
-    ['videoTitle','videoHook','videoNotes'].forEach(f => document.getElementById(f).readOnly = false);
-    ['videoDeadline','videoAssignee','videoDay','videoFormat'].forEach(f => document.getElementById(f).disabled = false);
-    form.reset();
-}
-
-btnCancel.addEventListener('click', resetFormState);
-searchBar.addEventListener('input', renderPlanner);
-
-// ចាប់ផ្តើមប្រព័ន្ធ
-checkAuth();
+    reader.readAsText(file);
+});
