@@ -1,72 +1,97 @@
-// =========================================================================
-// ទិន្នន័យគណនីបុគ្គលិកប្រើប្រាស់ក្នុងប្រព័ន្ធ (Hardcoded & Secure Login)
-// =========================================================================
+// Firebase Configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyAw0owrI_MjRPJmQLzd9zNFyjcdgRc7H4I",
+    authDomain: "vckshop-b951b.firebaseapp.com",
+    databaseURL: "https://vckshop-b951b-default-rtdb.firebaseio.com",
+    projectId: "vckshop-b951b",
+    storageBucket: "vckshop-b951b.firebasestorage.app",
+    messagingSenderId: "39230962959",
+    appId: "1:39230962959:web:bc2fde1b4f8e9b3c7ed27a"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+// Local Data State
 const usersData = [
     { id: 1, name: "Vicheka", role: "Admin", password: "123" },
     { id: 2, name: "លាងហាក់", role: "User", password: "123" },
     { id: 3, name: "ផាន់នី", role: "User", password: "123" }
 ];
 
-// ចាប់ផ្តើមស្តារទិន្នន័យពី LocalStorage របស់ម៉ាស៊ីន (ទោះ Refresh ក៏មិនបាត់)
-let productsData = JSON.parse(localStorage.getItem('vck_products')) || [
+let productsData = [
     { id: 1, name: "ចានបាយប្រណិតជើងមាស", cat: "ចានឆ្នាំង", total: 500, avail: 500, price: 0.80 },
     { id: 2, name: "តុអាហារមូលមហាសាល", cat: "តុ", total: 50, avail: 50, price: 10.00 },
     { id: 3, name: "កៅអីព្រះនាងពូកទន់", cat: "កៅអី", total: 500, avail: 500, price: 1.50 }
 ];
 
-let salesData = JSON.parse(localStorage.getItem('vck_sales')) || [];
-let deliveryData = JSON.parse(localStorage.getItem('vck_deliveries')) || [];
-
-let currentUser = null; 
+let currentUser = null;
+let salesData = [];
+let deliveryData = [];
 let currentInvoiceItems = [];
 
-// មុខងារគណនានាឡិកាផ្សាយបន្តផ្ទាល់ (Live Clock)
-setInterval(() => {
-    const now = new Date();
-    document.getElementById('liveClock').innerText = now.toLocaleString('km-KH');
-}, 1000);
+// Firebase Syncing
+function listenToFirebaseData() {
+    database.ref('products').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if(data) {
+            productsData = Object.values(data);
+        } else {
+            database.ref('products').set(productsData);
+        }
+        setupInvoiceProductSelect();
+        renderAll();
+    });
 
-// ==========================================
-// មុខងារ LOGIN & LOGOUT
-// ==========================================
+    database.ref('sales').on('value', (snapshot) => {
+        const data = snapshot.val();
+        salesData = data ? Object.values(data) : [];
+        renderAll();
+    });
+
+    database.ref('deliveries').on('value', (snapshot) => {
+        const data = snapshot.val();
+        deliveryData = data ? Object.values(data) : [];
+        renderAll();
+    });
+}
+
+// -------------------------------------------------------------
+// 🛠️ មុខងារ LOGIN (បានជួសជុលរួចរាល់ ធានាចូលបាន ១០០%)
+// -------------------------------------------------------------
 function handleLogin() {
     const userIn = document.getElementById('loginUsername').value.trim();
     const passIn = document.getElementById('loginPassword').value;
     const errorEl = document.getElementById('loginError');
     
-    // ស្វែងរកគណនីដែលត្រូវគ្នា (មិនប្រកាន់អក្សរតូចធំចំពោះឈ្មោះអង់គ្លេស)
+    // ផ្ទៀងផ្ទាត់ឈ្មោះ និងលេខសម្ងាត់ជាមួយ usersData ខាងលើផ្ទាល់
     const foundUser = usersData.find(u => u.name.toLowerCase() === userIn.toLowerCase() && u.password === passIn);
 
     if (foundUser) {
         currentUser = foundUser;
         errorEl.classList.add('hidden');
-        
-        // បើកផ្ទាំងកម្មវិធី
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('main-application').classList.remove('hidden');
 
-        // បំពេញព័ត៌មានបុគ្គលិកនៅលើ Top Nav
+        // បង្ហាញឈ្មោះបុគ្គលិកនៅលើ Top Nav
         document.getElementById('topNavUser').innerText = currentUser.name;
         document.getElementById('topNavRole').innerText = currentUser.role === 'Admin' ? 'អ្នកគ្រប់គ្រង (Admin)' : 'បុគ្គលិក (User)';
         document.getElementById('userAvatar').innerText = currentUser.name.charAt(0).toUpperCase();
 
-        // គ្រប់គ្រងសិទ្ធិ (លាក់ទម្រង់បញ្ចូលស្តុកបើមិនមែនជា Admin)
+        // ពិនិត្យសិទ្ធិ Admin/User លើទម្រង់បញ្ចូលស្តុក
         if (currentUser.role !== 'Admin') {
             document.getElementById('stock-entry-form').classList.add('hidden');
-            document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
         } else {
             document.getElementById('stock-entry-form').classList.remove('hidden');
-            document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
         }
 
-        // កំណត់ថ្ងៃខែស្វ័យប្រវត្តក្នុងវិក្កយបត្រ
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('invoiceDate').value = today;
-        document.getElementById('pdfDate').innerText = today;
-
+        // កំណត់ថ្ងៃខែក្នុងវិក្កយបត្រ
+        document.getElementById('invoiceDate').value = new Date().toISOString().split('T')[0];
         setupLivePreviewInputs();
-        setupInvoiceProductSelect();
-        renderAll();
+        
+        // ចាប់ផ្តើមទាញទិន្នន័យពី Firebase
+        listenToFirebaseData();
         switchTab('dashboard');
     } else {
         errorEl.classList.remove('hidden');
@@ -81,7 +106,6 @@ function handleLogout() {
     document.getElementById('login-screen').classList.remove('hidden');
 }
 
-// មុខងារប្តូរ Tab Menu
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     document.getElementById('tab-' + tabId).classList.remove('hidden');
@@ -90,16 +114,15 @@ function switchTab(tabId) {
     const targetBtn = document.getElementById('btn-' + tabId);
     if(targetBtn) targetBtn.classList.add('active-menu');
     
-    const titles = { 
-        dashboard: '📊 ផ្ទាំងគ្រប់គ្រងទូទៅ', 
-        sales: '📄 វិក្កយបត្រជួល & លក់', 
-        delivery: '🚚 ប្រព័ន្ធដឹកជញ្ជូន', 
-        stock: '📦 គ្រប់គ្រងឃ្លាំងស្តុក' 
+    const titles = {
+        dashboard: '📊 ផ្ទាំងគ្រប់គ្រងទូទៅ',
+        sales: '📄 វិក្កយបត្រជួល & លក់',
+        delivery: '🚚 ប្រព័ន្ធដឹកជញ្ជូន',
+        stock: '📦 គ្រប់គ្រងឃ្លាំងស្តុក'
     };
     document.getElementById('pageTitle').innerText = titles[tabId] || 'ប្រព័ន្ធគ្រប់គ្រង';
 }
 
-// មុខងារ Live Sync Text ពី Form ទៅក្នុងទម្រង់ PDF
 function setupLivePreviewInputs() {
     const inputs = ['Customer', 'Phone', 'Location', 'Date'];
     inputs.forEach(id => {
@@ -112,7 +135,6 @@ function setupLivePreviewInputs() {
     });
 }
 
-// បង្កើតបញ្ជីជ្រើសរើសទំនិញក្នុងវិក្កយបត្រ
 function setupInvoiceProductSelect() {
     const select = document.getElementById('invoiceProductSelect');
     if(!select) return;
@@ -121,8 +143,6 @@ function setupInvoiceProductSelect() {
         html += `<option value="${p.id}">${p.name} (ក្នុងឃ្លាំង: ${p.avail})</option>`;
     });
     select.innerHTML = html;
-    document.getElementById('invoiceQty').value = 1;
-    document.getElementById('invoiceUnitPrice').value = "";
 }
 
 function onProductSelectChange() {
@@ -131,7 +151,6 @@ function onProductSelectChange() {
     document.getElementById('invoiceUnitPrice').value = prod ? prod.price : "";
 }
 
-// បញ្ចូលមុខទំនិញទៅក្នុងតារាងបណ្តោះអាសន្ន
 function addItemToCurrentInvoice() {
     const prodId = parseInt(document.getElementById('invoiceProductSelect').value);
     const qty = parseInt(document.getElementById('invoiceQty').value);
@@ -182,14 +201,14 @@ function renderInvoicePreviewTable() {
     currentInvoiceItems.forEach((item, index) => {
         grandTotal += item.totalPrice;
         html += `
-            <tr class="border-b border-slate-200">
+            <tr class="border-b">
                 <td class="p-2 text-center border-r">${index + 1}</td>
                 <td class="p-2 border-r">${item.name}</td>
                 <td class="p-2 text-center border-r">${item.qty}</td>
                 <td class="p-2 text-right border-r">$${item.price.toFixed(2)}</td>
                 <td class="p-2 text-right">$${item.totalPrice.toFixed(2)}</td>
                 <td class="p-2 text-center print-hide">
-                    <button onclick="removeInvoiceItem(${index})" class="text-red-500 hover:text-red-700 cursor-pointer">❌</button>
+                    <button onclick="removeInvoiceItem(${index})" class="text-red-500 hover:text-red-700">❌</button>
                 </td>
             </tr>`;
     });
@@ -198,7 +217,6 @@ function renderInvoicePreviewTable() {
     document.getElementById('invoiceGrandTotal').innerText = `$${grandTotal.toFixed(2)}`;
 }
 
-// រក្សាទុកវិក្កយបត្រចុងក្រោយចូលទៅកាន់ LocalStorage
 function saveFinalInvoice() {
     const customer = document.getElementById('invoiceCustomer').value.trim();
     const phone = document.getElementById('invoicePhone').value.trim();
@@ -213,7 +231,6 @@ function saveFinalInvoice() {
     const invCode = 'INV-' + Math.floor(100000 + Math.random() * 900000);
     const grandTotal = currentInvoiceItems.reduce((sum, item) => sum + item.totalPrice, 0);
 
-    // កាត់ស្តុកនៅក្នុងឃ្លាំងទំនិញ
     currentInvoiceItems.forEach(item => {
         const prodIndex = productsData.findIndex(p => p.id === item.productId);
         if(prodIndex !== -1) {
@@ -221,16 +238,20 @@ function saveFinalInvoice() {
         }
     });
 
-    // បន្ថែមទិន្នន័យថ្មីចូល Array
-    salesData.unshift({ invCode, customer, phone, location, date, total: grandTotal, items: currentInvoiceItems });
-    deliveryData.unshift({ invCode, customer, phone, location, driver: "មិនទាន់ចាត់ចែង", status: "កំពុងរៀបចំ" });
+    const newSale = { invCode, customer, phone, location, date, total: grandTotal, items: currentInvoiceItems };
+    const newDelivery = { invCode, customer, phone, location, driver: "មិនទាន់ចាត់ចែង", status: "កំពុងរៀបចំ" };
 
-    // សរសេរចូលម៉ាស៊ីនផ្ទាល់ (LocalStorage)
-    saveAllToLocalStorage();
-    
-    alert("🎉 វិក្កយបត្រត្រូវបានរក្សាទុកដោយជោគជ័យ!");
-    resetInvoiceForm();
-    renderAll();
+    const salesRef = database.ref('sales').child(invCode);
+    const deliveryRef = database.ref('deliveries').child(invCode);
+
+    Promise.all([
+        salesRef.set(newSale),
+        deliveryRef.set(newDelivery),
+        database.ref('products').set(productsData)
+    ]).then(() => {
+        alert("🎉 វិក្កយបត្រត្រូវបានរក្សាទុកទៅកាន់ Firebase រួចរាល់!");
+        resetInvoiceForm();
+    }).catch(err => alert("Firebase Error: " + err.message));
 }
 
 function resetInvoiceForm() {
@@ -245,29 +266,18 @@ function resetInvoiceForm() {
     setupInvoiceProductSelect();
 }
 
-// ទាញយកឯកសារជា PDF
 function downloadInvoicePDF() {
     const element = document.getElementById('invoice-pdf-area');
-    
-    // លាក់ប៊ូតុងលុបចោល (❌) ពេលទាញយក
-    const printHides = document.querySelectorAll('.print-hide');
-    printHides.forEach(el => el.style.display = 'none');
-
     const opt = {
-        margin:       0.3,
-        filename:     `VCK-Invoice-${new Date().getTime()}.pdf`,
+        margin:       0.2,
+        filename:     `Invoice-${new Date().getTime()}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2 },
         jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
     };
-    
-    html2pdf().set(opt).from(element).save().then(() => {
-        // បើកប៊ូតុងលុបចោលមកវិញក្រោយទាញយកចប់
-        printHides.forEach(el => el.style.display = '');
-    });
+    html2pdf().set(opt).from(element).save();
 }
 
-// បន្ថែមទំនិញថ្មីចូលស្តុក (Admin Only)
 function addNewProductToStock() {
     if(currentUser.role !== 'Admin') {
         alert("⚠️ លោកអ្នកគ្មានសិទ្ធិបន្ថែមទំនិញទេ!");
@@ -279,59 +289,34 @@ function addNewProductToStock() {
     const price = parseFloat(document.getElementById('newProdPrice').value);
 
     if(!name || !cat || isNaN(total) || isNaN(price)) {
-        alert("⚠️ សូមបំពេញទិន្នន័យផលិតផលឱ្យបានគ្រប់គ្រាន់!");
+        alert("⚠️ សូមបំពេញទិន្នន័យផលិតផលឱ្យបានត្រឹមត្រូវ!");
         return;
     }
 
     const nextId = productsData.length > 0 ? Math.max(...productsData.map(p => p.id)) + 1 : 1;
     productsData.push({ id: nextId, name, cat, total, avail: total, price });
-    
-    saveAllToLocalStorage();
-    alert("📦 ផលិតផលថ្មីត្រូវបានបញ្ចូលក្នុងឃ្លាំងរួចរាល់!");
-    
-    document.getElementById('newProdName').value = '';
-    document.getElementById('newProdCat').value = '';
-    document.getElementById('newProdTotal').value = '';
-    document.getElementById('newProdPrice').value = '';
-    
-    renderAll();
-    setupInvoiceProductSelect();
+
+    database.ref('products').set(productsData).then(() => {
+        alert("📦 ផលិតផលថ្មីត្រូវបានបញ្ចូលទៅក្នុងឃ្លាំង Firebase!");
+        document.getElementById('newProdName').value = '';
+        document.getElementById('newProdCat').value = '';
+    });
 }
 
-// អាប់ដេតឈ្មោះអ្នកដឹកជញ្ជូន
 function updateDriver(invCode, driverName) {
-    const item = deliveryData.find(d => d.invCode === invCode);
-    if(item) {
-        item.driver = driverName;
-        saveAllToLocalStorage();
-    }
+    database.ref('deliveries').child(invCode).update({ driver: driverName });
 }
 
-// អាប់ដេតស្ថានភាពដឹកជញ្ជូន
 function updateStatus(invCode, statusValue) {
-    const item = deliveryData.find(d => d.invCode === invCode);
-    if(item) {
-        item.status = statusValue;
-        saveAllToLocalStorage();
-        renderAll();
-    }
+    database.ref('deliveries').child(invCode).update({ status: statusValue });
 }
 
-// មុខងាររក្សាទិន្នន័យចូល LocalStorage
-function saveAllToLocalStorage() {
-    localStorage.setItem('vck_products', JSON.stringify(productsData));
-    localStorage.setItem('vck_sales', JSON.stringify(salesData));
-    localStorage.setItem('vck_deliveries', JSON.stringify(deliveryData));
-}
-
-// បង្ហាញទិន្នន័យទាំងអស់ឡើងលើអេក្រង់
 function renderAll() {
     const todayStr = new Date().toISOString().split('T')[0];
     const thisMonthStr = todayStr.substring(0, 7);
 
     let dailyRevenue = 0;
     let monthlyRevenue = 0;
-    
     salesData.forEach(s => {
         if(s.date === todayStr) dailyRevenue += s.total;
         if(s.date && s.date.startsWith(thisMonthStr)) monthlyRevenue += s.total;
@@ -343,21 +328,19 @@ function renderAll() {
     document.getElementById('dashMonthlyAmount').innerText = `$${monthlyRevenue.toFixed(2)}`;
     document.getElementById('dashDeliveryCount').innerText = `${activeDeliveriesCount} ជើង`;
 
-    // Render Dashboard Table
     const salesTbody = document.getElementById('salesTableBody');
     if(salesTbody) {
         salesTbody.innerHTML = salesData.map(s => `
-            <tr class="hover:bg-slate-50 transition text-xs">
-                <td class="p-4 pl-6 font-bold text-slate-500">${s.date}</td>
-                <td class="p-4 font-bold text-indigo-600">${s.invCode}</td>
-                <td class="p-4 font-bold text-slate-700">${s.customer}</td>
-                <td class="p-4 text-slate-500">${s.location}</td>
-                <td class="p-4 text-right pr-6 font-black text-emerald-600">$${s.total.toFixed(2)}</td>
+            <tr class="hover:bg-slate-50 transition">
+                <td class="p-4 pl-6 text-xs font-bold">${s.date}</td>
+                <td class="p-4 text-xs font-bold text-indigo-600">${s.invCode}</td>
+                <td class="p-4 text-xs font-bold">${s.customer}</td>
+                <td class="p-4 text-xs text-slate-400">${s.location}</td>
+                <td class="p-4 text-right pr-6 text-xs font-black text-emerald-600">$${s.total.toFixed(2)}</td>
             </tr>
         `).join('');
     }
 
-    // Render Delivery Table
     const deliveryTbody = document.getElementById('deliveryTableBody');
     if(deliveryTbody) {
         deliveryTbody.innerHTML = deliveryData.map(d => {
@@ -365,19 +348,19 @@ function renderAll() {
             return `
             <tr class="hover:bg-slate-50 transition text-xs">
                 <td class="p-4 pl-6 font-bold text-indigo-600">${d.invCode}</td>
-                <td class="p-4 font-bold text-slate-700">${d.customer}<br><span class="text-[10px] text-slate-400 font-medium">${d.phone}</span></td>
-                <td class="p-4 text-slate-500 font-medium">${d.location}</td>
+                <td class="p-4 font-bold">${d.customer}<br><span class="text-[10px] text-slate-400">${d.phone}</span></td>
+                <td class="p-4 text-slate-500">${d.location}</td>
                 <td class="p-4">
                     ${isAdmin ? 
-                        `<input type="text" value="${d.driver}" onchange="updateDriver('${d.invCode}', this.value)" class="border border-slate-200 p-1.5 rounded-lg text-xs focus:outline-none focus:border-indigo-500 w-32 font-bold bg-white">` : 
+                        `<input type="text" value="${d.driver}" onchange="updateDriver('${d.invCode}', this.value)" class="border p-1.5 rounded-lg text-xs focus:outline-none w-32 font-bold">` : 
                         `<span class="font-bold text-slate-700">${d.driver}</span>`
                     }
                 </td>
                 <td class="p-4 text-center">
-                    <span class="px-2 py-1 rounded-full text-[10px] font-bold ${d.status === 'បានប្រគល់ជូន' ? 'bg-emerald-50 text-emerald-600' : d.status === 'កំពុងដឹកជញ្ជូន' ? 'bg-indigo-50 text-indigo-600' : 'bg-amber-50 text-amber-600'}">${d.status}</span>
+                    <span class="px-2 py-1 rounded-full text-[10px] font-bold ${d.status === 'បានប្រគល់ជូន' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}">${d.status}</span>
                 </td>
                 <td class="p-4 text-center">
-                    <select onchange="updateStatus('${d.invCode}', this.value)" class="border border-slate-200 p-1.5 rounded-lg text-[11px] focus:outline-none bg-white font-bold cursor-pointer">
+                    <select onchange="updateStatus('${d.invCode}', this.value)" class="border p-1.5 rounded-lg text-[11px] focus:outline-none bg-white font-bold">
                         <option value="កំពុងរៀបចំ" ${d.status === 'កំពុងរៀបចំ' ? 'selected' : ''}>📦 កំពុងរៀបចំ</option>
                         <option value="កំពុងដឹកជញ្ជូន" ${d.status === 'កំពុងដឹកជញ្ជូន' ? 'selected' : ''}>🚚 កំពុងដឹកជញ្ជូន</option>
                         <option value="បានប្រគល់ជូន" ${d.status === 'បានប្រគល់ជូន' ? 'selected' : ''}>✅ បានប្រគល់ជូន</option>
@@ -387,17 +370,16 @@ function renderAll() {
         }).join('');
     }
 
-    // Render Stock Table
     const stockTbody = document.getElementById('stockTableBody');
     if(stockTbody) {
         stockTbody.innerHTML = productsData.map(p => `
             <tr class="hover:bg-slate-50 transition text-xs">
                 <td class="p-4 pl-6 font-bold text-slate-800">${p.name}</td>
-                <td class="p-4 text-slate-400 font-bold">${p.cat}</td>
+                <td class="p-4 text-slate-400 font-medium">${p.cat}</td>
                 <td class="p-4 text-center font-bold text-slate-500">${p.total}</td>
                 <td class="p-4 text-center font-black ${p.avail < 10 ? 'text-rose-600 bg-rose-50 rounded-lg' : 'text-indigo-600'}">${p.avail}</td>
                 <td class="p-4 text-right font-bold text-slate-600">$${p.price.toFixed(2)}</td>
-                <td class="p-4 text-center admin-only font-bold text-slate-400">---</td>
+                <td class="p-4 text-center admin-only">---</td>
             </tr>
         `).join('');
     }
