@@ -1,12 +1,12 @@
 // Firebase Configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyAw0owrI_MjRPJmQLzd9zNFyjcdgRc7H4I",
-    authDomain: "vckshop-b951b.firebaseapp.com",
-    databaseURL: "https://vckshop-b951b-default-rtdb.firebaseio.com",
-    projectId: "vckshop-b951b",
-    storageBucket: "vckshop-b951b.firebasestorage.app",
-    messagingSenderId: "39230962959",
-    appId: "1:39230962959:web:bc2fde1b4f8e9b3c7ed27a"
+     apiKey: "AIzaSyB9n8IsVFNv8uX5INh0dwOyAC8gIJhhw9c",
+  authDomain: "contentplanneer.firebaseapp.com",
+  databaseURL: "https://contentplanneer-default-rtdb.firebaseio.com",
+  projectId: "contentplanneer",
+  storageBucket: "contentplanneer.firebasestorage.app",
+  messagingSenderId: "1080920711361",
+  appId: "1:1080920711361:web:1b59aeee301a6d0d07b440",
 };
 
 // Initialize Firebase
