@@ -3,213 +3,316 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cloud Content Planner Ultimate</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Kantumruuy+Pro:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
-    
+    <title>ប្រព័ន្ធគ្រប់គ្រងហាងសម្ភារៈតុការ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
-<body>
+<body class="text-slate-700 bg-slate-50 antialiased">
 
-    <div id="loginPage" class="login-container">
-        <div class="login-card">
-            <div class="login-icon">🔒</div>
-            <h2 class="login-title">CLOUD PLANNER</h2>
-            <p class="login-subtitle">សូមបញ្ចូលគណនីរបស់អ្នកដើម្បីគ្រប់គ្រងទិន្នន័យរួម</p>
-            
-            <div id="loginError" class="error-msg hidden"></div>
-            
-            <div class="form-group-login">
-                <label class="label">ឈ្មោះអ្នកប្រើប្រាស់ (Username)</label>
-                <input type="text" id="username" class="input-field" placeholder="ឧទាហរណ៍៖ hak">
+    <div id="login-screen" class="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 p-4">
+        <div class="bg-white/95 backdrop-blur-md p-6 md:p-8 rounded-3xl shadow-2xl w-full max-w-md border border-white/20">
+            <div class="text-center mb-6">
+                <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
+                    <span class="text-3xl">🎪</span>
+                </div>
+                <h2 class="text-xl md:text-2xl font-bold text-slate-800 mt-4">ឡូហ្គីនចូលប្រព័ន្ធ</h2>
+                <p class="text-xs text-slate-400 mt-1">ផ្គត់ផ្គង់សម្ភារៈតុការចានប្រណិតទាន់សម័យ</p>
             </div>
-            
-            <div class="form-group-login">
-                <label class="label">លេខកូដសម្ងាត់ (Password)</label>
-                <input type="password" id="password" class="input-field" placeholder="••••••••">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">ឈ្មោះអ្នកប្រើប្រាស់</label>
+                    <input type="text" id="loginUsername" placeholder="ឈ្មោះ..." class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">លេខសម្ងាត់</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••" class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:outline-none">
+                </div>
+                <button onclick="handleLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold p-3 rounded-xl transition shadow-lg shadow-indigo-600/20">
+                    📥 ចូលប្រើប្រាស់
+                </button>
+                <p id="loginError" class="text-red-500 text-xs text-center font-bold hidden bg-red-50 py-2 rounded-lg">❌ ឈ្មោះ ឬលេខសម្ងាត់មិនត្រឹមត្រូវទេ!</p>
             </div>
-            
-            <button id="btnLogin" class="btn-login">ចូលប្រើប្រាស់ប្រព័ន្ធ</button>
         </div>
     </div>
 
-    <div id="appPage" class="container hidden">
+    <div id="main-application" class="flex flex-col md:flex-row h-screen overflow-hidden hidden">
         
-        <header class="header">
-            <div>
-                <h1 class="logo">CLOUD CONTENT PLANNER</h1>
-                <p class="subtitle">រៀបចំគម្រោងវីដេអូក្រុមការងារ <span id="userBadge" class="user-badge">-</span> <span id="connStatus" class="conn-badge status-offline">📡 Connecting...</span></p>
-            </div>
-            <div class="header-right">
-                <div class="search-box">
-                    <input type="text" id="searchBar" placeholder="🔍 ស្វែងរកចំណងជើងវីដេអូ...">
+        <div class="w-full md:w-64 bg-slate-900 text-slate-300 flex flex-row md:flex-col justify-between p-3 md:p-4 shadow-xl border-b md:border-b-0 md:border-r border-slate-800 overflow-x-auto md:overflow-x-visible shrink-0">
+            <div class="flex flex-row md:flex-col items-center md:items-stretch space-x-4 md:space-x-0 md:space-y-6 w-full">
+                <div class="flex items-center space-x-2 md:space-x-3 py-1 md:py-3 border-b-0 md:border-b border-slate-800 whitespace-nowrap">
+                    <span class="text-xl md:text-2xl bg-indigo-600/10 p-1 md:p-1.5 rounded-lg">🎪</span>
+                    <h1 class="text-xs md:text-sm font-bold text-white leading-tight">ផ្គត់ផ្គង់សម្ភារៈតុការ<br><span class="hidden md:inline text-[11px] text-indigo-400 font-normal">ចានប្រណិតទាន់សម័យ</span></h1>
                 </div>
-                <div class="backup-zone">
-                    <button id="btnBackup" class="btn-backup">📥 Backup</button>
-                    <button id="btnImport" class="btn-import">📤 Import</button>
-                    <button id="btnTemplates" class="btn-template">📑 គំរូស្គ្រីប</button>
-                </div>
-                <button id="btnLogout" class="btn-logout">ចាកចេញ</button>
+                
+                <nav class="flex flex-row md:flex-col space-x-1 md:space-x-0 md:space-y-1 overflow-x-auto md:overflow-x-visible whitespace-nowrap scrollbar-none">
+                    <button onclick="switchTab('dashboard')" id="btn-dashboard" class="flex items-center space-x-2 py-2 px-3 md:py-3 md:px-4 rounded-xl text-left text-xs md:text-sm hover:bg-slate-800 hover:text-white">
+                        <span>📊</span> <span class="text-xs md:text-sm">ផ្ទាំងទូទៅ</span>
+                    </button>
+                    <button onclick="switchTab('sales')" id="btn-sales" class="flex items-center space-x-2 py-2 px-3 md:py-3 md:px-4 rounded-xl text-left text-xs md:text-sm hover:bg-slate-800 hover:text-white">
+                        <span>📄</span> <span class="text-xs md:text-sm">វិក្កយបត្រ</span>
+                    </button>
+                    <button onclick="switchTab('delivery')" id="btn-delivery" class="flex items-center space-x-2 py-2 px-3 md:py-3 md:px-4 rounded-xl text-left text-xs md:text-sm hover:bg-slate-800 hover:text-white">
+                        <span>🚚</span> <span class="text-xs md:text-sm">ដឹកជញ្ជូន</span>
+                    </button>
+                    <button onclick="switchTab('stock')" id="btn-stock" class="flex items-center space-x-2 py-2 px-3 md:py-3 md:px-4 rounded-xl text-left text-xs md:text-sm hover:bg-slate-800 hover:text-white">
+                        <span>📦</span> <span class="text-xs md:text-sm">ឃ្លាំងស្តុក</span>
+                    </button>
+                </nav>
             </div>
-        </header>
-
-        <div class="dashboard-grid">
-            <div class="stat-card">
-                <span>📊 គម្រោងសរុបសប្តាហ៍នេះ</span>
-                <span id="statTotal" class="badge-num">0</span>
-            </div>
-            <div class="stat-card text-green">
-                <span>✅ ផលិតរួចរាល់ (Done)</span>
-                <span id="statDone" class="badge-num">0</span>
-            </div>
-            <div class="stat-card progress-card">
-                <span>📈 វឌ្ឍនភាពការងារក្រុម (Progress)</span>
-                <div class="progress-bar-bg">
-                    <div id="progressBarFill" class="progress-bar-fill"></div>
-                </div>
-                <span id="progressText" class="progress-text">0%</span>
+            
+            <div class="pl-4 md:pl-0 shrink-0">
+                <button onclick="handleLogout()" class="bg-slate-800 hover:bg-red-600 hover:text-white text-slate-400 font-bold py-2 px-3 md:p-3 rounded-xl text-[10px] md:text-xs transition whitespace-nowrap">
+                    🚪 ចាកចេញ
+                </button>
             </div>
         </div>
 
-        <div class="main-layout">
-            
-            <aside class="sidebar">
-                <h2 id="formTitle" class="section-title text-purple">➕ បន្ថែមគម្រោងថ្មី</h2>
-                <form id="plannerForm" class="form-group">
-                    <input type="hidden" id="editTaskId">
-                    
-                    <div>
-                        <label class="label">ចំណងជើងវីដេអូ</label>
-                        <input type="text" id="taskTitle" class="input-field" placeholder="វាយចំណងជើងវីដេអូនៅទីនេះ..." required>
+        <div class="flex-1 flex flex-col overflow-y-auto">
+            <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 md:px-8 py-3 md:py-4 flex justify-between items-center sticky top-0 z-10 shadow-sm">
+                <h2 id="pageTitle" class="text-sm md:text-lg font-bold text-slate-800">ផ្ទាំងគ្រប់គ្រងទូទៅ</h2>
+                <div class="flex items-center space-x-2 md:space-x-4">
+                    <div class="text-right">
+                        <p class="text-xs md:text-sm font-bold text-slate-900" id="topNavUser">Username</p>
+                        <p class="text-[9px] md:text-[11px] text-indigo-500 font-bold" id="topNavRole">Role</p>
                     </div>
-                    
-                    <div class="grid-2">
-                        <div>
-                            <label class="label">ថ្ងៃផលិត</label>
-                            <select id="taskDay" class="input-field">
-                                <option value="Monday">ចន្ទ (Monday)</option>
-                                <option value="Tuesday">អង្គារ (Tuesday)</option>
-                                <option value="Wednesday">ពុធ (Wednesday)</option>
-                                <option value="Thursday">ព្រហស្បតិ៍ (Thursday)</option>
-                                <option value="Friday">សុក្រ (Friday)</option>
-                                <option value="Saturday">សៅរ៍ (Saturday)</option>
-                                <option value="Sunday">អាទិត្យ (Sunday)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="label">អ្នកទទួលខុសត្រូវ</label>
-                            <select id="taskAssignee" class="input-field">
-                                <option value="Hak">Hak</option>
-                                <option value="Hom">Hom</option>
-                                <option value="Editor">Editor</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="grid-2">
-                        <div>
-                            <label class="label">ទម្រង់វីដេអូ</label>
-                            <select id="taskFormat" class="input-field">
-                                <option value="Long Video">វីដេអូវែង (Long)</option>
-                                <option value="Shorts / Reel">វីដេអូខ្លី (Shorts)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="label">ស្ថានភាពការងារ</label>
-                            <select id="taskStatus" class="input-field">
-                                <option value="Scripting">📝 តែងស្គ្រីប (Scripting)</option>
-                                <option value="Shooting">🎥 កំពុងថត (Shooting)</option>
-                                <option value="Editing">💻 កំពុងកាត់ (Editing)</option>
-                                <option value="Done">✅ រួចរាល់ (Done)</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <label class="label">ថ្ងៃកំណត់បញ្ចប់ (Deadline)</label>
-                        <input type="date" id="taskDeadline" class="input-field">
-                    </div>
-                    
-                    <div>
-                        <label class="label">កំណត់ចំណាំបន្ថែម (Notes)</label>
-                        <textarea id="taskNotes" class="input-field" rows="3" placeholder="ព័ត៌មានលម្អិត ឬលីងឯកសារយោង..."></textarea>
-                    </div>
-                    
-                    <div class="form-buttons">
-                        <button type="submit" id="btnSubmitForm" class="btn-submit">រក្សាទុកគម្រោង</button>
-                        <button type="button" id="btnCancelEdit" class="btn-cancel hidden">បោះបង់</button>
-                    </div>
-                </form>
-
-                <div class="logs-section" style="margin-top: 20px;">
-                    <h3 class="label" style="color: var(--purple);">🔔 សកម្មភាពថ្មីៗ (Live Logs)</h3>
-                    <div id="logBox" class="log-container-box">
-                        </div>
+                    <div id="userAvatar" class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xs md:font-bold shadow-md">?</div>
                 </div>
-            </aside>
+            </header>
 
-            <main class="content-area">
-                
-                <div class="days-container" id="daysContainer">
+            <main class="p-4 md:p-8 flex-1 max-w-7xl w-full mx-auto">
+
+                <div id="tab-dashboard" class="tab-content space-y-4 md:space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                        <div class="dash-card bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-200/60 flex items-center justify-between">
+                            <div>
+                                <p class="text-[11px] md:text-xs font-bold text-slate-400 uppercase">ចំណូលថ្ងៃនេះ</p>
+                                <p class="text-xl md:text-2xl font-bold text-slate-800 mt-1" id="dashDailyAmount">$0.00</p>
+                            </div>
+                            <div class="p-3 bg-emerald-50 rounded-xl text-xl text-emerald-600">💵</div>
+                        </div>
+                        <div class="dash-card bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-200/60 flex items-center justify-between">
+                            <div>
+                                <p class="text-[11px] md:text-xs font-bold text-slate-400 uppercase">ចំណូលក្នុងខែ</p>
+                                <p class="text-xl md:text-2xl font-bold text-indigo-600 mt-1" id="dashMonthlyAmount">$0.00</p>
+                            </div>
+                            <div class="p-3 bg-indigo-50 rounded-xl text-xl text-indigo-600">📈</div>
+                        </div>
+                        <div class="dash-card bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-200/60 flex items-center justify-between">
+                            <div>
+                                <p class="text-[11px] md:text-xs font-bold text-slate-400 uppercase">ជើងដឹកថ្ងៃនេះ</p>
+                                <p class="text-xl md:text-2xl font-bold text-amber-600 mt-1" id="dashDeliveryCount">0 ជើង</p>
+                            </div>
+                            <div class="p-3 bg-amber-50 rounded-xl text-xl text-amber-600">🚚</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-sales" class="tab-content hidden space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        
+                        <div class="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-200/60 space-y-4 lg:col-span-1">
+                            <h3 class="text-xs font-bold text-indigo-600 uppercase border-b pb-2">🧾 បំពេញព័ត៌មានវិក្កយបត្រ</h3>
+                            
+                            <div class="space-y-2.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-400">ឈ្មោះអតិថិជន</label>
+                                    <input type="text" id="invoiceCustomer" placeholder="ឈ្មោះអតិថិជន..." class="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none mt-1">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-400">លេខទូរស័ព្ទ</label>
+                                    <input type="text" id="invoicePhone" placeholder="លេខទូរស័ព្ទ..." class="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none mt-1">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-400">ទីតាំងកម្មវិធី</label>
+                                    <input type="text" id="invoiceLocation" placeholder="ខេត្ត/ក្រុង, ខណ្ឌ, ផ្លូវ..." class="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none mt-1">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-400">កាលបរិច្ឆេទប្រគល់សម្ភារៈ</label>
+                                    <input type="date" id="invoiceDate" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none mt-1">
+                                </div>
+                            </div>
+
+                            <div class="border-t pt-3 space-y-3 bg-slate-50 p-3 rounded-xl border border-dashed">
+                                <h4 class="text-xs font-bold text-slate-700">➕ ជ្រើសរើសមុខទំនិញ</h4>
+                                <div>
+                                    <select id="invoiceProductSelect" onchange="onProductSelectChange()" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs bg-white focus:outline-none"></select>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-400">តម្លៃរាយ ($) (កែបាន)</label>
+                                        <input type="number" id="invoiceUnitPrice" step="0.01" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs mt-1 font-bold text-indigo-600 bg-white focus:outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-400">ចំនួនកម្ម៉ង់</label>
+                                        <input type="number" id="invoiceQty" value="1" min="1" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs mt-1 font-bold focus:outline-none">
+                                    </div>
+                                </div>
+                                <button onclick="addItemToCurrentInvoice()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs p-2.5 rounded-xl transition">
+                                    + បញ្ចូលទៅក្នុងវិក្កយបត្រ
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col justify-between lg:col-span-2 overflow-hidden">
+                            <div class="overflow-hidden">
+                                <div class="flex justify-between items-center border-b pb-2 mb-4">
+                                    <h3 class="text-xs font-bold text-slate-400 uppercase">📋 ទិដ្ឋភាពវិក្កយបត្រ Preview</h3>
+                                    <button onclick="downloadInvoicePDF()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+                                        📥 PDF
+                                    </button>
+                                </div>
+
+                                <div class="table-container">
+                                    <div id="invoice-pdf-area" class="bg-white p-4 md:p-6 border rounded-xl shadow-inner font-khmer min-w-[600px]">
+                                        <div class="text-center space-y-1 mb-4 border-b-2 border-indigo-600 pb-3">
+                                            <h2 class="text-base font-black text-indigo-600 uppercase">ផ្គត់ផ្គង់សម្ភារៈតុការចានប្រណិតទាន់សម័យ</h2>
+                                            <p class="text-[10px] text-slate-400">ទូរស័ព្ទ៖ 012 345 678 / 098 765 432</p>
+                                        </div>
+
+                                        <div class="grid grid-cols-2 gap-4 mb-4 bg-slate-50 p-3 rounded-lg border text-[11px]">
+                                            <div class="space-y-1">
+                                                <p><span class="text-slate-400">អតិថិជន៖</span> <span id="pdfCustomer" class="font-bold text-slate-800">-</span></p>
+                                                <p><span class="text-slate-400">ទូរស័ព្ទ៖</span> <span id="pdfPhone" class="font-bold text-slate-800">-</span></p>
+                                            </div>
+                                            <div class="space-y-1 text-right">
+                                                <p><span class="text-slate-400">កាលបរិច្ឆេទ៖</span> <span id="pdfDate" class="font-bold text-slate-800">-</span></p>
+                                                <p><span class="text-slate-400">ទីតាំង៖</span> <span id="pdfLocation" class="font-bold text-slate-800">-</span></p>
+                                            </div>
+                                        </div>
+
+                                        <table class="w-full text-left border text-[11px]">
+                                            <thead>
+                                                <tr class="bg-slate-100 text-slate-700 border-b font-bold">
+                                                    <th class="p-2.5 text-center w-12 border-r">លរ</th>
+                                                    <th class="p-2.5 border-r">ឈ្មោះទំនិញ</th>
+                                                    <th class="p-2.5 text-center w-20 border-r">ចំនួន</th>
+                                                    <th class="p-2.5 text-right w-24 border-r">តម្លៃរាយ</th>
+                                                    <th class="p-2.5 text-right w-28">សរុប</th>
+                                                    <th class="p-2 text-center print-hide w-12">លុប</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="invoiceItemsTableBody" class="divide-y font-medium text-slate-600">
+                                                </tbody>
+                                        </table>
+
+                                        <div class="mt-4 flex justify-end">
+                                            <div class="text-right space-y-1">
+                                                <p class="text-[10px] font-bold text-slate-400 uppercase">ទឹកប្រាក់សរុបរួម (Grand Total)</p>
+                                                <p class="text-xl font-black text-emerald-600" id="invoiceGrandTotal">$0.00</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="border-t pt-4 mt-4 flex justify-end">
+                                <button onclick="saveFinalInvoice()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-6 py-3 rounded-xl transition shadow-md">
+                                    💾 រក្សាទុកវិក្កយបត្រ & ចេញជើងដឹក
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
-                <div class="idea-section">
-                    <h2 class="section-title text-blue">💡 ធុងប្រមូលគំនិតវីដេអូ (Idea Bucket)</h2>
-                    <p class="subtitle" style="margin-top:-12px; margin-bottom:15px;">សម្រាប់បោះគំនិតទុកចោល មិនទាន់កំណត់ថ្ងៃផលិត</p>
-                    <div id="ideaContainer" class="idea-grid">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
+                        <div class="p-4 bg-slate-50 border-b">
+                            <h4 class="font-bold text-slate-700 text-xs md:text-sm">📊 ប្រវត្តិវិក្កយបត្រទាំងអស់</h4>
                         </div>
+                        <div class="table-container">
+                            <table class="w-full text-left text-sm min-w-[600px]">
+                                <thead>
+                                    <tr class="bg-slate-50 text-slate-400 font-bold text-xs uppercase border-b">
+                                        <th class="p-4 pl-6">កាលបរិច្ឆេទ</th>
+                                        <th class="p-4">កូដវិក្កយបត្រ</th>
+                                        <th class="p-4">អតិថិជន</th>
+                                        <th class="p-4">ទីតាំង</th>
+                                        <th class="p-4 text-right pr-6">ទឹកប្រាក់សរុប</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="salesTableBody" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-delivery" class="tab-content hidden space-y-6">
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/60">
+                        <h3 class="text-xs md:text-sm font-bold text-slate-800">🚚 ប្រព័ន្ធគ្រប់គ្រង និងចាត់ចែងជើងដឹកជញ្ជូន</h3>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
+                        <div class="table-container">
+                            <table class="w-full text-left text-sm min-w-[750px]">
+                                <thead>
+                                    <tr class="bg-slate-50 text-slate-400 font-bold text-xs uppercase border-b">
+                                        <th class="p-4 pl-6">កូដវិក្កយបត្រ</th>
+                                        <th class="p-4">អតិថិជន / ទូរស័ព្ទ</th>
+                                        <th class="p-4">ទីតាំងដៅ</th>
+                                        <th class="p-4">អ្នកដឹកទំនិញ (Admin កំណត់)</th>
+                                        <th class="p-4 text-center">ស្ថានភាពជើងដឹក</th>
+                                        <th class="p-4 text-center rounded-tr-xl">សកម្មភាពបុគ្គលិក</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="deliveryTableBody" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-stock" class="tab-content hidden space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-200/60 space-y-4 lg:col-span-1">
+                            <h3 class="text-xs font-bold text-indigo-600 uppercase border-b pb-2">📦 បន្ថែមទំនិញថ្មីចូលឃ្លាំង</h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-400">ឈ្មោះទំនិញ</label>
+                                    <input type="text" id="newProdName" placeholder="ឈ្មោះទំនិញ..." class="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none mt-1">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-400">ប្រភេទ</label>
+                                    <input type="text" id="newProdCat" placeholder="ឧ. ចានឆ្នាំង, តុ, កៅអី..." class="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none mt-1">
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-400">ចំនួនសរុប</label>
+                                        <input type="number" id="newProdTotal" value="50" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none mt-1">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-400">តម្លៃជួល/លក់ ($)</label>
+                                        <input type="number" id="newProdPrice" value="1.5" step="0.01" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none mt-1">
+                                    </div>
+                                </div>
+                                <button onclick="addNewProductToStock()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs p-2.5 rounded-xl transition">
+                                    + រក្សាទុកចូលក្នុងស្តុក
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden lg:col-span-2">
+                            <div class="table-container">
+                                <table class="w-full text-left text-sm min-w-[550px]">
+                                    <thead>
+                                        <tr class="bg-slate-50 text-slate-400 font-bold text-xs uppercase border-b">
+                                            <th class="p-4 pl-6">ឈ្មោះសម្ភារៈ</th>
+                                            <th class="p-4">ប្រភេទ</th>
+                                            <th class="p-4 text-center">ស្តុកសរុប</th>
+                                            <th class="p-4 text-center">ក្នុងឃ្លាំង</th>
+                                            <th class="p-4 text-right">តម្លៃរាយដើម</th>
+                                            <th class="p-4 text-center admin-only">សកម្មភាព</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="stockTableBody" class="divide-y divide-slate-100"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </main>
         </div>
     </div>
 
-    <div id="templateModal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 style="color: #fff;">📑 គំរូទម្រង់សរសេរស្គ្រីបលឿន</h3>
-                <span id="closeModal" class="close-modal">&times;</span>
-            </div>
-            <div class="tmpl-card">
-                <h4>1. ទម្រង់បើកឆាកទាក់ទាញ (Hook 3 វិនាទីដំបូង)</h4>
-                <p>• "កុំអាលចុចរំលង បើអ្នកមិនទាន់ដឹងរឿងនេះ..."</p>
-                <p>• "នេះជាអាថ៌កំបាំងដែលគេមិនដែលប្រាប់អ្នក..."</p>
-            </div>
-            <div class="tmpl-card" style="border-left-color: var(--purple);">
-                <h4>2. គំរូរចនាសម្ព័ន្ធវីដេអូអប់រំ/ចំណេះដឹង (3-Part Layout)</h4>
-                <p>• <b>Hook:</b> លើកបញ្ហាដែលជួបញឹកញាប់បំផុត។</p>
-                <p>• <b>Body:</b> បង្ហាញដំណោះស្រាយជា ៣ ចំណុចច្បាស់ៗ។</p>
-                <p>• <b>CTA:</b> ឱ្យចុច Follow ឬ Comment សួរផ្ទៀងផ្ទាត់。</p>
-            </div>
-        </div>
-    </div>
-
-    <div id="mobileNavBar" class="mobile-nav-bar hidden">
-        <div class="nav-item active" id="navSchedule">
-            <span class="nav-icon">📅</span>
-            <span>កាលវិភាគ</span>
-        </div>
-        <div class="nav-item" id="navIdeas">
-            <span class="nav-icon">💡</span>
-            <span>គំនិតថ្មីៗ</span>
-        </div>
-        <div class="nav-item" id="navAdd">
-            <span class="nav-icon">➕</span>
-            <span>ថែមវីដេអូ</span>
-        </div>
-        <div class="nav-item" id="navLogout">
-            <span class="nav-icon">🚪</span>
-            <span>ចាកចេញ</span>
-        </div>
-    </div>
-
-    <input type="file" id="importFile" class="hidden" accept=".json">
-
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-    
-    <script src="app.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
