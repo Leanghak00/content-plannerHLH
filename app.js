@@ -1,11 +1,10 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION (សូមបំពេញព័ត៌មានរបស់អ្នកនៅទីនេះ)
+// 1. FIREBASE CONFIGURATION (កំណត់រចនាសម្ព័ន្ធ Firebase របស់អ្នក)
 // ==========================================================================
 const firebaseConfig = {
     apiKey: "AIzaSyB9n8IsVFNv8uX5INh0dwOyAC8gIJhhw9c",
     authDomain: "contentplanneer.firebaseapp.com",
-    // ⚠️ ត្រូវប្រាកដថា Link ខាងក្រោមនេះត្រឹមត្រូវតាម Firebase របស់អ្នក (គ្មានសញ្ញា / នៅចុង)
-    databaseURL: "https://contentplanneer-default-rtdb.firebaseio.com/", 
+    databaseURL: "https://contentplanneer-default-rtdb.firebaseio.com", // លុបសញ្ញា / នៅចុងដើម្បីកុំឱ្យ Error លីង
     projectId: "contentplanneer",
     storageBucket: "contentplanneer.firebasestorage.app",
     messagingSenderId: "1080920711361",
@@ -18,17 +17,28 @@ let currentUser = "";
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 // ==========================================================================
-// 2. LOGIN SYSTEM INTERACTION (ប្រព័ន្ធផ្ទៀងផ្ទាត់ និងបើកបិទផ្ទាំង UI)
+// 2. MULTI-USER LOGIN SYSTEM (ប្រព័ន្ធគណនីអ្នកប្រើប្រាស់ទាំង ៣)
 // ==========================================================================
 document.getElementById('btnLogin').addEventListener('click', () => {
-    const userVal = document.getElementById('username').value.trim();
+    const userVal = document.getElementById('username').value.trim().toLowerCase();
     const passVal = document.getElementById('password').value.trim();
     const errorDiv = document.getElementById('loginError');
 
-    // គណនីសាកល្បង៖ hak / 123
-    if (userVal.toLowerCase() === 'hak' && passVal === '123') {
-        currentUser = userVal;
-        
+    // បង្កើតលក្ខខណ្ឌសម្រាប់ User ទាំង ៣ (hak, hom, editor)
+    let loginSuccess = false;
+
+    if (userVal === 'hak' && passVal === '123') {
+        currentUser = "Hak";
+        loginSuccess = true;
+    } else if (userVal === 'hom' && passVal === '123') {
+        currentUser = "Hom";
+        loginSuccess = true;
+    } else if (userVal === 'editor' && passVal === '123') {
+        currentUser = "Editor";
+        loginSuccess = true;
+    }
+
+    if (loginSuccess) {
         // លាក់ផ្ទាំង Login និងបើកផ្ទាំង App ចម្បង
         document.getElementById('loginPage').classList.add('hidden');
         document.getElementById('appPage').classList.remove('hidden');
@@ -76,7 +86,7 @@ function initFirebase() {
         renderWorkflow(data);
     });
 
-    // ទាញយកប្រព័ន្ធសកម្មភាពថ្មីៗ (Live Logs)
+    // ทាញយកប្រព័ន្ធសកម្មភាពថ្មីៗ (Live Logs)
     db.ref('logs').limitToLast(10).on('value', (snapshot) => {
         const logs = snapshot.val() || {};
         const logBox = document.getElementById('logBox');
