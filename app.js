@@ -4,7 +4,7 @@
 const firebaseConfig = {
     apiKey: "AIzaSyB9n8IsVFNv8uX5INh0dwOyAC8gIJhhw9c",
     authDomain: "contentplanneer.firebaseapp.com",
-    databaseURL: "https://contentplanneer-default-rtdb.firebaseio.com", // លុបសញ្ញា / នៅចុងដើម្បីកុំឱ្យ Error លីង
+    databaseURL: "https://contentplanneer-default-rtdb.firebaseio.com", 
     projectId: "contentplanneer",
     storageBucket: "contentplanneer.firebasestorage.app",
     messagingSenderId: "1080920711361",
@@ -17,26 +17,18 @@ let currentUser = "";
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 // ==========================================================================
-// 2. MULTI-USER LOGIN SYSTEM (ប្រព័ន្ធគណនីអ្នកប្រើប្រាស់ទាំង ៣)
+// 2. MULTI-USER LOGIN SYSTEM (ប្រព័ន្ធគណនី និងកត់ត្រាការ Login/Logout)
 // ==========================================================================
 document.getElementById('btnLogin').addEventListener('click', () => {
     const userVal = document.getElementById('username').value.trim().toLowerCase();
     const passVal = document.getElementById('password').value.trim();
     const errorDiv = document.getElementById('loginError');
 
-    // បង្កើតលក្ខខណ្ឌសម្រាប់ User ទាំង ៣ (hak, hom, editor)
     let loginSuccess = false;
 
-    if (userVal === 'hak' && passVal === '123') {
-        currentUser = "Hak";
-        loginSuccess = true;
-    } else if (userVal === 'hom' && passVal === '123') {
-        currentUser = "Hom";
-        loginSuccess = true;
-    } else if (userVal === 'editor' && passVal === '123') {
-        currentUser = "Editor";
-        loginSuccess = true;
-    }
+    if (userVal === 'hak' && passVal === '123') { currentUser = "Hak"; loginSuccess = true; }
+    else if (userVal === 'hom' && passVal === '123') { currentUser = "Hom"; loginSuccess = true; }
+    else if (userVal === 'editor' && passVal === '123') { currentUser = "Editor"; loginSuccess = true; }
 
     if (loginSuccess) {
         // លាក់ផ្ទាំង Login និងបើកផ្ទាំង App ចម្បង
@@ -49,6 +41,12 @@ document.getElementById('btnLogin').addEventListener('click', () => {
 
         // ចាប់ផ្តើមតភ្ជាប់ទៅ Firebase Realtime Database
         initFirebase();
+        
+        // 🚨 កត់ត្រាសកម្មភាព៖ មានអ្នក Login ចូលប្រព័ន្ធ
+        setTimeout(() => {
+            pushLog(`🔑 ${currentUser} បានកត់ឈ្មោះចូលប្រើប្រព័ន្ធ (Login)`);
+        }, 1000); // ពន្យារពេល ១វិនាទីដើម្បីឱ្យ Firebase ភ្ជាប់រង់ចាំរួចរាល់
+        
     } else {
         errorDiv.classList.remove('hidden');
         errorDiv.innerText = "❌ ឈ្មោះអ្នកប្រើប្រាស់ ឬលេខកូដសម្ងាត់មិនត្រឹមត្រូវទេ!";
@@ -57,8 +55,22 @@ document.getElementById('btnLogin').addEventListener('click', () => {
 
 // ប្រព័ន្ធចាកចេញ (Logout)
 document.getElementById('btnLogout').addEventListener('click', () => {
-    location.reload(); // បង្ខំឱ្យអូសទំព័រឡើងវិញដើម្បីសម្អាត Session
+    // 🚨 កត់ត្រាសកម្មភាព៖ មានអ្នកចាកចេញពីប្រព័ន្ធ
+    pushLog(`🚪 ${currentUser} បានចាកចេញពីប្រព័ន្ធ (Logout)`);
+    
+    // ទុកពេលឱ្យកូដបញ្ជូនទិន្នន័យទៅ Cloud បន្តិច រួចទើបអូសទំព័រឡើងវិញ (Reload)
+    setTimeout(() => {
+        location.reload();
+    }, 500);
 });
+
+// ប្រព័ន្ធចាកចេញសម្រាប់ម៉ឺនុយលើទូរស័ព្ទ (Mobile Nav Logout)
+if(document.getElementById('navLogout')) {
+    document.getElementById('navLogout').addEventListener('click', () => {
+        pushLog(`🚪 ${currentUser} បានចាកចេញពីប្រព័ន្ធតាមទូរស័ព្ទ`);
+        setTimeout(() => { location.reload(); }, 500);
+    });
+}
 
 // ==========================================================================
 // 3. FIREBASE CORE & CORE APP LOGIC
@@ -86,7 +98,7 @@ function initFirebase() {
         renderWorkflow(data);
     });
 
-    // ทាញយកប្រព័ន្ធសកម្មភាពថ្មីៗ (Live Logs)
+    // ទាញយកប្រព័ន្ធសកម្មភាពថ្មីៗ (Live Logs)
     db.ref('logs').limitToLast(10).on('value', (snapshot) => {
         const logs = snapshot.val() || {};
         const logBox = document.getElementById('logBox');
@@ -119,13 +131,15 @@ document.getElementById('plannerForm').addEventListener('submit', (e) => {
     if (id) {
         // ករណីកែប្រែទិន្នន័យចាស់
         db.ref('videos/' + id).update(taskData);
-        pushLog(`✏️ ${currentUser} បានកែវីដេអូ៖ "${taskData.title}"`);
+        // 🚨 កត់ត្រាសកម្មភាព៖ កែប្រែគម្រោងវីដេអូ
+        pushLog(`✏️ ${currentUser} បានកែវីដេអូ៖ "${taskData.title}" (ស្ថានភាព៖ ${taskData.status})`);
         resetForm();
     } else {
         // ករណីបង្កើតថ្មី
         const newRef = db.ref('videos').push();
         db.ref('videos/' + newRef.key).set(taskData);
-        pushLog(`➕ ${currentUser} បានថែមវីដេអូ៖ "${taskData.title}"`);
+        // 🚨 កត់ត្រាសកម្មភាព៖ បន្ថែមគម្រោងវីដេអូថ្មី
+        pushLog(`➕ ${currentUser} បានថែមវីដេអូ៖ "${taskData.title}" ទៅកាន់ថ្ងៃ ${translateDay(taskData.day)}`);
         document.getElementById('plannerForm').reset();
     }
 });
@@ -230,6 +244,7 @@ window.editTask = function(id) {
 window.deleteTask = function(id, title) {
     if (confirm(`តើអ្នកពិតជាចង់លុបវីដេអូ "${title}" នេះមែនទេ?`)) {
         db.ref('videos/' + id).remove();
+        // 🚨 កត់ត្រាសកម្មភាព៖ លុបវីដេអូ
         pushLog(`❌ ${currentUser} បានលុបវីដេអូ៖ "${title}"`);
     }
 };
@@ -243,7 +258,7 @@ function resetForm() {
 document.getElementById('btnCancelEdit').addEventListener('click', resetForm);
 
 // ==========================================================================
-// 4. HELPERS & UTILITIES (ប្រព័ន្ធជំនួយ)
+// 4. HELPERS & UTILITIES (ប្រព័ន្ធជំនួយ និងកត់ត្រាផ្សេងៗ)
 // ==========================================================================
 function translateDay(day) {
     const map = { Monday:"ចន្ទ", Tuesday:"អង្គារ", Wednesday:"ពុធ", Thursday:"ព្រហស្បតិ៍", Friday:"សុក្រ", Saturday:"សៅរ៍", Sunday:"អាទិត្យ" };
@@ -253,9 +268,10 @@ function translateDay(day) {
 function checkUrgent(deadline, status) {
     if (!deadline || status === "Done") return false;
     const diff = new Date(deadline) - new Date();
-    return diff / (1000 * 60 * 60 * 24) <= 1; // ប្រកាសអាសន្នបើនៅសល់ក្រោម ២៤ម៉ោង
+    return diff / (1000 * 60 * 60 * 24) <= 1; 
 }
 
+// មុខងាររុញព័ត៌មានសកម្មភាពទៅ Firebase (Push Logs)
 function pushLog(text) {
     const time = new Date().toLocaleTimeString('km-KH', { hour: '2-digit', minute: '2-digit' });
     if(db) db.ref('logs').push({ text, time });
@@ -272,7 +288,10 @@ document.getElementById('searchBar').addEventListener('input', (e) => {
 
 // SYSTEM POPUP MODAL (គំរូស្គ្រីប)
 const modal = document.getElementById('templateModal');
-document.getElementById('btnTemplates').addEventListener('click', () => modal.classList.remove('hidden'));
+document.getElementById('btnTemplates').addEventListener('click', () => {
+    modal.classList.remove('hidden');
+    pushLog(`📑 ${currentUser} បានបើកមើល "គំរូស្គ្រីបវីដេអូ"`); // 🚨 កត់ត្រាសកម្មភាពបើកមើលស្គ្រីប
+});
 document.getElementById('closeModal').addEventListener('click', () => modal.classList.add('hidden'));
 
 // 📱 MOBILE BOTTOM NAVIGATION CLICKS CONTROLLER
@@ -282,7 +301,6 @@ navItems.forEach(item => {
         navItems.forEach(i => i.classList.remove('active'));
         this.classList.add('active');
         
-        // បញ្ជាអូសទៅកន្លែងតាម ID ម៉ឺនុយទូរស័ព្ទ
         if (this.id === "navSchedule") window.scrollTo({top:0, behavior:'smooth'});
         if (this.id === "navIdeas") document.querySelector('.idea-section').scrollIntoView({behavior:'smooth'});
         if (this.id === "navAdd") document.querySelector('.sidebar').scrollIntoView({behavior:'smooth'});
@@ -297,8 +315,12 @@ document.getElementById('btnBackup').addEventListener('click', () => {
         a.href = URL.createObjectURL(blob);
         a.download = `backup-planner-${new Date().toISOString().slice(0,10)}.json`;
         a.click();
+        
+        // 🚨 កត់ត្រាសកម្មភាព៖ Backup ទិន្នន័យទុក
+        pushLog(`📥 ${currentUser} បានទាញយក File Backup នៃទិន្នន័យរួមទុក`);
     });
 });
+
 document.getElementById('btnImport').addEventListener('click', () => document.getElementById('importFile').click());
 document.getElementById('importFile').addEventListener('change', (e) => {
     const file = e.target.files[0];
@@ -309,7 +331,8 @@ document.getElementById('importFile').addEventListener('change', (e) => {
             const data = JSON.parse(evt.target.result);
             if(confirm("តើអ្នកចង់បញ្ចូលទិន្នន័យ Backup នេះទៅក្នុង Cloud មែនទេ? (វានឹងបន្ថែមលើកូដចាស់)")) {
                 db.ref('videos').update(data);
-                pushLog(`📥 ${currentUser} បានធ្វើការ Import ទិន្នន័យរួមពី File Backup`);
+                // 🚨 កត់ត្រាសកម្មភាព៖ Import ទិន្នន័យចូលវិញ
+                pushLog(`📤 ${currentUser} បានធ្វើការ Import ទិន្នន័យរួមឡើងវិញពី File Backup`);
                 alert("បញ្ចូលជោគជ័យ!");
             }
         } catch(err) { alert("File មិនត្រឹមត្រូវឡើយ!"); }
