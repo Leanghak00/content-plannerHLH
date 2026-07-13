@@ -2,7 +2,7 @@
 // កូដភ្ជាប់ Firebase (សូមយកព័ត៌មានពី Firebase Console របស់អ្នកមកដាក់ជំនួសត្រង់នេះ)
 // =========================================================================
 const firebaseConfig = {
-    apiKey: "AIzaSyAw0owrI_MjRPJmQLzd9zNFyjcdgRc7H4I",
+  apiKey: "AIzaSyAw0owrI_MjRPJmQLzd9zNFyjcdgRc7H4I",
   authDomain: "vckshop-b951b.firebaseapp.com",
   databaseURL: "https://vckshop-b951b-default-rtdb.firebaseio.com",
   projectId: "vckshop-b951b",
