@@ -183,6 +183,7 @@ function renderInvoicePreviewTable() {
     document.getElementById('invoiceGrandTotal').innerText = `$${grandTotal.toFixed(2)}`;
 }
 
+// មុខងាររក្សាទុក និងទាញយក PDF ស្វ័យប្រវត្ត
 function saveFinalInvoice() {
     const customer = document.getElementById('invoiceCustomer').value.trim();
     const phone = document.getElementById('invoicePhone').value.trim();
@@ -208,7 +209,10 @@ function saveFinalInvoice() {
     productsData.forEach(p => { productsObj[p.id] = p; });
     
     database.ref('products').set(productsObj).then(() => {
-        alert("🎉 រក្សាទុកចូលរបាយការណ៍លក់ និងប្រព័ន្ធដឹកជញ្ជូនជោគជ័យ!");
+        // 📥 បញ្ជាឱ្យទាញយក PDF ដោយយកលេខកូដវិក្កយបត្រធ្វើជាឈ្មោះ File
+        downloadInvoicePDF(invCode);
+        
+        alert("🎉 រក្សាទុកចូលរបាយការណ៍លក់ និងទាញយក PDF ជោគជ័យ!");
         resetInvoiceForm();
         switchTab('dashboard');
     });
@@ -237,9 +241,22 @@ function resetInvoiceForm() {
     renderInvoicePreviewTable();
 }
 
-function downloadInvoicePDF() {
+// មុខងារកែប្រែថ្មី៖ អាចទទួលយកឈ្មោះឯកសារមកដាក់ឌីណាមិកបាន
+function downloadInvoicePDF(filename) {
     const element = document.getElementById('invoice-pdf-area');
-    html2pdf().set({ margin: 0.5, filename: 'Invoice.pdf', html2canvas: { scale: 2 }, jsPDF: { format: 'letter' } }).from(element).save();
+    if (!element) return alert("⚠️ រកមិនឃើញតំបន់វិក្កយបត្រ (#invoice-pdf-area) ទេ!");
+    
+    // បើគ្មានការបញ្ជូនឈ្មោះមកទេ វានឹងយកពាក្យ Invoice-ថ្ងៃខែ ជំនួសវិញ
+    if (!filename || typeof filename !== 'string') {
+        filename = 'Invoice-' + new Date().toISOString().split('T')[0];
+    }
+
+    html2pdf().set({ 
+        margin: 0.5, 
+        filename: filename + '.pdf', 
+        html2canvas: { scale: 2 }, 
+        jsPDF: { format: 'letter' } 
+    }).from(element).save();
 }
 
 function addNewProductToStock() {
@@ -402,7 +419,6 @@ function renderAll() {
                 // លក្ខខណ្ឌបង្ហាញប៊ូតុងលុប៖ លុះត្រាតែជា Admin ទើបលោតចេញមក
                 let actionTd = '';
                 if (currentUser && currentUser.role === 'Admin') {
-                    // ប្រសិនបើ invCode គ្មាន (ស្មើ "-") គឺយកកាលបរិច្ឆេទ ឬកូដសម្គាល់ផ្សេងមកលុប ឬបើគ្មានកូដច្បាស់លាស់ មិនបាច់បង្ហាញប៊ូតុងលុបទេ
                     if(s.invCode && s.invCode !== '-') {
                         actionTd = `<td class="p-3 text-center pr-6"><button onclick="deleteInvoice('${s.invCode}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-2 py-1 rounded font-bold text-[11px] cursor-pointer transition">🗑️ លុប</button></td>`;
                     } else {
@@ -473,5 +489,29 @@ function renderAll() {
                 </tr>
             `).join('');
         }
+    }
+}
+
+// មុខងារស្វែងរកទំនិញក្នុងស្តុក
+function searchStockFunction() {
+    let input = document.getElementById("searchStockInput");
+    let filter = input.value.toLowerCase();
+    let tableBody = document.getElementById("stockTableBody");
+    let tr = tableBody.getElementsByTagName("tr");
+
+    for (let i = 0; i < tr.length; i++) {
+        let tdName = tr[i].getElementsByTagName("td")[1];
+        let tdCategory = tr[i].getElementsByTagName("td")[2];
+        
+        if (tdName || tdCategory) {
+            let txtValueName = tdName.textContent || tdName.innerText;
+            let txtValueCategory = tdCategory.textContent || tdCategory.innerText;
+            
+            if (txtValueName.toLowerCase().indexOf(filter) > -1 || txtValueCategory.toLowerCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+            } else {
+                tr[i].style.display = "none";
+            }
+        }       
     }
 }
