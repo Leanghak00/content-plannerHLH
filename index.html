@@ -5,22 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VCK SHOP Pro v2.5</title>
     
-    <!-- ១. ភ្ជាប់ Font Battambang (BTB) ពី Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@100;300;400;700;900&display=swap" rel="stylesheet">
 
-    <!-- Tailwind CSS v4 -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     
-    <!-- Firebase SDK v8 -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
-    <!-- html2pdf.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-    <!-- ២. បង្ខំឱ្យរាល់ Element ទាំងអស់ប្រើប្រាស់ Font Battambang -->
     <style>
         * {
             font-family: 'Battambang', sans-serif !important;
@@ -31,11 +26,46 @@
             color: #f8fafc !important; 
             border-left: 4px solid #4f46e5; 
         }
+
+        /* កូដដោះស្រាយបញ្ហា Tailwind v4 មិនស្គាល់ពណ៌ពេលទាញយកជា PDF (html2canvas Compatibility) */
+        #invoice-pdf-area, #modalInvoiceContent {
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+        }
+        #invoice-pdf-area .bg-slate-50, #modalInvoiceContent .bg-slate-50 {
+            background-color: #f8fafc !important;
+        }
+        #invoice-pdf-area .bg-slate-100, #modalInvoiceContent .bg-slate-100 {
+            background-color: #f1f5f9 !important;
+        }
+        #invoice-pdf-area .text-slate-800, #modalInvoiceContent .text-slate-800 {
+            color: #1e293b !important;
+        }
+        #invoice-pdf-area .text-slate-500, #modalInvoiceContent .text-slate-500 {
+            color: #64748b !important;
+        }
+        #invoice-pdf-area .text-slate-400, #modalInvoiceContent .text-slate-400 {
+            color: #94a3b8 !important;
+        }
+        #invoice-pdf-area .text-indigo-600, #modalInvoiceContent .text-indigo-600 {
+            color: #4f46e5 !important;
+        }
+        #invoice-pdf-area .text-emerald-600, #modalInvoiceContent .text-emerald-600 {
+            color: #059669 !important;
+        }
+        #invoice-pdf-area .border-slate-200, #modalInvoiceContent .border-slate-200 {
+            border: 1px solid #e2e8f0 !important;
+        }
+        #invoice-pdf-area .border-slate-100, #modalInvoiceContent .border-slate-100 {
+            border: 1px solid #f1f5f9 !important;
+        }
+        #invoice-pdf-area .divide-slate-200 > *, #modalInvoiceContent .divide-slate-200 > * {
+            border-color: #e2e8f0 !important;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
 
-    <!-- ផ្ទាំងចូលប្រព័ន្ធ (Login Screen) -->
     <div id="login-screen" class="flex items-center justify-center min-h-screen p-4">
         <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100">
             <div class="text-center mb-8">
@@ -64,10 +94,8 @@
         </div>
     </div>
 
-    <!-- ផ្ទាំងកម្មវិធីចម្បង (Main App) -->
     <div id="main-application" class="hidden flex flex-col md:flex-row min-h-screen">
         
-        <!-- Sidebar Navigation -->
         <aside class="w-full md:w-64 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800">
             <div class="p-5 border-b border-slate-800">
                 <h2 class="font-black text-white text-lg tracking-wide">VCK SYSTEM</h2>
@@ -96,14 +124,12 @@
             </div>
         </aside>
 
-        <!-- Main Content Area -->
         <main class="flex-1 flex flex-col overflow-x-hidden">
             <header class="bg-white border-b border-slate-200 px-6 py-4">
                 <h2 id="pageTitle" class="font-black text-base text-slate-800">📊 ផ្ទាំងគ្រប់គ្រងទូទៅ</h2>
             </header>
 
             <div class="p-6 flex-1 overflow-y-auto">
-                <!-- Tab: Dashboard -->
                 <section id="tab-dashboard" class="tab-content hidden space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
@@ -133,7 +159,7 @@
                                         <th class="p-4">អតិថិជន</th>
                                         <th class="p-4">ទីទិសដៅដឹក</th>
                                         <th class="p-4 text-right">សរុបទឹកប្រាក់</th>
-                                        <th id="th-dashboard-action" class="p-4 text-center pr-6 hidden">សកម្មភាព</th>
+                                        <th class="p-4 text-center pr-6">សកម្មភាព</th>
                                     </tr>
                                 </thead>
                                 <tbody id="salesTableBody" class="divide-y divide-slate-50"></tbody>
@@ -142,7 +168,6 @@
                     </div>
                 </section>
 
-                <!-- Tab: Sales & Invoice -->
                 <section id="tab-sales" class="tab-content hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                         <h3 class="font-black text-sm text-slate-800 border-b pb-3">✍️ បង្កើតវិក្កយបត្រថ្មី</h3>
@@ -230,7 +255,6 @@
                     </div>
                 </section>
 
-                <!-- Tab: វិក្កយបត្រវីរៈប៊ុនថាំ -->
                 <section id="tab-vireakbuntham" class="tab-content hidden space-y-6">
                     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm max-w-2xl mx-auto space-y-4">
                         <div class="border-b pb-3">
@@ -264,13 +288,12 @@
 
                     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden max-w-5xl mx-auto">
                         <div class="p-4 border-b border-slate-100 bg-slate-50">
-                            <h3 class="font-black text-sm text-slate-800">📂វិក្កយបត្រ វីរៈប៊ុនថាំ</h3>
+                            <h3 class="font-black text-sm text-slate-800">📂 វិក្កយបត្រ វីរៈប៊ុនថាំ</h3>
                         </div>
                         <div class="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4" id="vireakBunthamImagesGrid"></div>
                     </div>
                 </section>
 
-                <!-- Tab: Delivery -->
                 <section id="tab-delivery" class="tab-content hidden bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
@@ -290,7 +313,6 @@
                     </div>
                 </section>
 
-                <!-- Tab: Stock -->
                 <section id="tab-stock" class="tab-content hidden space-y-6">
                     <div id="stock-entry-form" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                         <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
@@ -321,9 +343,14 @@
                     </div>
 
                     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                        <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                            <h3 class="font-black text-sm text-slate-800">📋 បញ្ជីសារពើភ័ណ្ឌទំនិញក្នុងស្តុក</h3>
+                        <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                            <h3 class="font-black text-sm text-slate-800">📋 ទំនិញក្នុងស្តុក</h3>
+                            <div class="relative w-full sm:w-72">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 text-sm">🔍</span>
+                                <input type="text" id="searchStockInput" onkeyup="searchStockFunction()" placeholder="ស្វែងរកឈ្មោះ ឬ ប្រភេទ..." class="w-full border border-slate-200 pl-9 pr-3 py-2 rounded-xl text-xs font-bold focus:outline-none focus:border-indigo-500 bg-white transition shadow-sm">
+                            </div>
                         </div>
+                        
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse">
                                 <thead>
@@ -344,6 +371,17 @@
                 </section>
             </div>
         </main>
+    </div>
+
+    <div id="invoiceModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white p-6 rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4 border-b pb-3">
+                <h3 class="font-black text-sm text-slate-800" id="modalTitle">📄 ព័ត៌មានវិក្កយបត្រ</h3>
+                <button onclick="document.getElementById('invoiceModal').classList.add('hidden')" class="text-slate-400 font-black cursor-pointer hover:text-slate-600 text-lg">✕</button>
+            </div>
+            <div id="modalInvoiceContent" class="space-y-4"></div>
+            <button onclick="printModalContent()" class="w-full mt-6 bg-indigo-600 text-white p-3 rounded-xl font-bold text-xs cursor-pointer hover:bg-indigo-700 transition">🖨️ ទាញយកជា PDF</button>
+        </div>
     </div>
 
     <script src="app.js"></script>
