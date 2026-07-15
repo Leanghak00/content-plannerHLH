@@ -207,13 +207,32 @@
                         </div>
 
                         <div class="border-t pt-4 space-y-3">
-                            <h4 class="text-xs font-black text-slate-700">🛒 បញ្ចូលមុខទំនិញ</h4>
-                            <select id="invoiceProductSelect" onchange="onProductSelectChange()" class="w-full border border-slate-200 p-2 rounded-lg text-xs font-bold bg-white"></select>
-                            <div class="grid grid-cols-2 gap-3">
-                                <input type="number" id="invoiceQty" value="1" min="1" class="w-full border border-slate-200 p-2 rounded-lg text-xs text-center font-bold">
-                                <input type="number" step="0.01" id="invoiceUnitPrice" class="w-full border border-slate-200 p-2 rounded-lg text-xs text-right font-bold">
-                            </div>
-                            <button onclick="addItemToCurrentInvoice()" class="w-full bg-slate-800 text-white p-2 rounded-lg text-xs font-bold cursor-pointer">➕ បញ្ចូលទៅក្នុងបញ្ជី</button>
+  <div class="border-t pt-4 space-y-3">
+    
+    <div>
+ <div class="p-4 border rounded-lg bg-slate-50">
+    <h3 class="font-bold mb-2">🛒 បញ្ចូលមុខទំនិញ</h3>
+    
+    <input type="text" id="invoiceProductInput" list="productList" 
+           oninput="autoFillProductPrice()" placeholder="ជ្រើសរើសឈ្មោះទំនិញ..." 
+           class="border p-2 w-full mb-2 rounded">
+    <datalist id="productList"></datalist>
+
+    <input type="text" id="invoiceUnitPrice" readonly placeholder="តម្លៃឯកតា ($)" 
+           class="border p-2 w-full mb-2 rounded bg-gray-100">
+
+    <input type="number" id="invoiceQty" value="1" min="1" placeholder="ចំនួន" 
+           class="border p-2 w-full mb-4 rounded">
+
+    <input type="hidden" id="invoiceProductIdHidden">
+
+    <button type="button" onclick="addItemToCurrentInvoice()" 
+            class="w-full bg-indigo-600 text-white p-2 rounded">
+        + បញ្ចូលទៅក្នុងវិក្កយបត្រ
+    </button>
+</div>
+    </div>
+</div>
                         </div>
                     </div>
 
@@ -400,7 +419,9 @@
             <button onclick="printModalContent()" class="w-full mt-6 bg-indigo-600 text-white p-3 rounded-xl font-bold text-xs cursor-pointer hover:bg-indigo-700 transition">🖨️ ទាញយកជា PDF</button>
         </div>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <script src="app.js"></script>
+    
 </body>
 </html>
