@@ -1,3 +1,7 @@
+// ==========================================
+// VCK System - Main Application Javascript (Full Version)
+// ==========================================
+
 // Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyAw0owrI_MjRPJmQLzd9zNFyjcdgRc7H4I",
@@ -127,11 +131,47 @@ function setupLivePreviewInputs() {
 }
 
 function setupInvoiceProductSelect() {
-    const select = document.getElementById('invoiceProductSelect');
-    if (!select) return;
-    let html = `<option value="">--- ជ្រើសរើសទំនិញ ---</option>`;
-    productsData.forEach(p => { html += `<option value="${p.id}">${p.name} (សល់ ${p.avail})</option>`; });
-    select.innerHTML = html;
+    const dataList = document.getElementById('productList');
+    if (!dataList) return;
+    
+    let html = '';
+    productsData.forEach(p => {
+        // បង្ហាញឈ្មោះ + ស្តុកសល់
+        const displayLabel = `${p.name} (សល់: ${p.avail})`;
+        html += `<option value="${p.name}" data-price="${p.price}" data-id="${p.id}" data-avail="${p.avail}">${displayLabel}</option>`;
+    });
+    dataList.innerHTML = html;
+}
+function autoFillProductPrice() {
+    const input = document.getElementById('invoiceProductInput');
+    const dataList = document.getElementById('productList');
+    const priceInput = document.getElementById('invoiceUnitPrice');
+    const hiddenId = document.getElementById('invoiceProductIdHidden');
+    const qtyInput = document.getElementById('invoiceQty');
+    
+    // រកមើលទំនិញដែលបានជ្រើសរើស
+    const selectedOption = Array.from(dataList.options).find(opt => opt.value === input.value);
+    
+    if (selectedOption) {
+        const price = selectedOption.getAttribute('data-price');
+        const id = selectedOption.getAttribute('data-id');
+        const avail = parseInt(selectedOption.getAttribute('data-avail'));
+        
+        // បំពេញតម្លៃ
+        priceInput.value = price;
+        hiddenId.value = id;
+        
+        // កំណត់ចំនួនអតិបរមាដែលអាចលក់បានតាមស្តុក
+        qtyInput.max = avail;
+        
+        if (avail <= 0) {
+            alert("⚠️ ទំនិញនេះអស់ពីស្តុកហើយ!");
+        }
+    } else {
+        // បើវាយខុស ឬលុបចោល
+        priceInput.value = '';
+        hiddenId.value = '';
+    }
 }
 
 function onProductSelectChange() {
@@ -141,24 +181,49 @@ function onProductSelectChange() {
 }
 
 function addItemToCurrentInvoice() {
-    const prodId = parseInt(document.getElementById('invoiceProductSelect').value);
+    // ១. ទាញយកទិន្នន័យពី Input
+    const productId = document.getElementById('invoiceProductIdHidden').value;
+    const productName = document.getElementById('invoiceProductInput').value;
     const qty = parseInt(document.getElementById('invoiceQty').value);
-    const customPrice = parseFloat(document.getElementById('invoiceUnitPrice').value);
-    const prod = productsData.find(p => p.id === prodId);
+    const price = parseFloat(document.getElementById('invoiceUnitPrice').value);
 
-    if (!prod || isNaN(qty) || qty <= 0 || qty > prod.avail) return alert("⚠️ ស្តុកមិនគ្រប់គ្រាន់ ឬទិន្នន័យមិនត្រឹមត្រូវ!");
+    // ២. រកមើលទំនិញក្នុង productsData ដើម្បីផ្ទៀងផ្ទាត់
+    const product = productsData.find(p => p.id == productId);
 
-    const existing = currentInvoiceItems.find(item => item.productId === prodId);
-    if (existing) {
-        if (existing.qty + qty > prod.avail) return alert("⚠️ លើសពីស្តុកដែលមាន!");
-        existing.qty += qty;
-        existing.totalPrice = existing.qty * customPrice;
+    // ៣. ការត្រួតពិនិត្យ (Validation)
+    if (!product) return alert("⚠️ សូមជ្រើសរើសទំនិញពីបញ្ជីឱ្យបានត្រឹមត្រូវ!");
+    if (isNaN(qty) || qty <= 0) return alert("⚠️ សូមបញ្ចូលចំនួនឱ្យបានត្រឹមត្រូវ!");
+    if (qty > product.avail) return alert(`⚠️ ស្តុកមិនគ្រប់គ្រាន់! សល់តែ ${product.avail} ទេ។`);
+
+    // ៤. ពិនិត្យមើលថាតើទំនិញនេះមានក្នុងវិក្កយបត្ររួចហើយឬនៅ
+    const existingItem = currentInvoiceItems.find(item => item.productId == productId);
+
+    if (existingItem) {
+        // បើមានហើយ បូកបន្ថែមចំនួន
+        if (existingItem.qty + qty > product.avail) {
+            return alert("⚠️ បូកបញ្ចូលទាំងរបស់ចាស់ លើសពីស្តុកដែលមាន!");
+        }
+        existingItem.qty += qty;
+        existingItem.totalPrice = existingItem.qty * existingItem.price;
     } else {
-        currentInvoiceItems.push({ productId: prod.id, name: prod.name, qty, price: customPrice, totalPrice: qty * customPrice });
+        // បើមិនទាន់មាន បន្ថែមចូល Array ថ្មី
+        currentInvoiceItems.push({
+            productId: product.id,
+            name: product.name,
+            qty: qty,
+            price: price,
+            totalPrice: qty * price
+        });
     }
-    renderInvoicePreviewTable();
-}
 
+    // ៥. សម្អាត Input និងបង្ហាញតារាងឡើងវិញ
+    document.getElementById('invoiceProductInput').value = '';
+    document.getElementById('invoiceUnitPrice').value = '';
+    document.getElementById('invoiceQty').value = '1';
+    document.getElementById('invoiceProductIdHidden').value = '';
+
+    renderInvoicePreviewTable(); // មុខងារនេះបង្ហាញទិន្នន័យក្នុងតារាង HTML
+}
 function removeInvoiceItem(index) {
     currentInvoiceItems.splice(index, 1);
     renderInvoicePreviewTable();
@@ -166,6 +231,7 @@ function removeInvoiceItem(index) {
 
 function renderInvoicePreviewTable() {
     const tbody = document.getElementById('invoiceItemsTableBody');
+    if (!tbody) return;
     let html = '', grandTotal = 0;
     currentInvoiceItems.forEach((item, index) => {
         grandTotal += item.totalPrice;
@@ -241,22 +307,63 @@ function resetInvoiceForm() {
     renderInvoicePreviewTable();
 }
 
-// មុខងារកែប្រែថ្មី៖ អាចទទួលយកឈ្មោះឯកសារមកដាក់ឌីណាមិកបាន
-function downloadInvoicePDF(filename) {
-    const element = document.getElementById('invoice-pdf-area');
-    if (!element) return alert("⚠️ រកមិនឃើញតំបន់វិក្កយបត្រ (#invoice-pdf-area) ទេ!");
-    
-    // បើគ្មានការបញ្ជូនឈ្មោះមកទេ វានឹងយកពាក្យ Invoice-ថ្ងៃខែ ជំនួសវិញ
-    if (!filename || typeof filename !== 'string') {
-        filename = 'Invoice-' + new Date().toISOString().split('T')[0];
-    }
+// =========================================================
+// ៨. មុខងារទាញយកជា PDF (កម្រិតខ្ពស់ - មានប្រព័ន្ធការពារកំហុស)
+// =========================================================
+function downloadInvoicePDF() {
+    if (typeof html2pdf === 'undefined') return alert("⚠️ មិនឃើញ Library html2pdf!");
 
-    html2pdf().set({ 
+    // ១. យកទិន្នន័យពីវិក្កយបត្របច្ចុប្បន្ន
+    const customer = document.getElementById('invoiceCustomer')?.value || 'N/A';
+    const date = document.getElementById('invoiceDate')?.value || '-';
+    
+    // ២. បង្កើត HTML ស្អាតៗសម្រាប់ PDF (ប្រើ CSS សាមញ្ញៗ មិនប្រើ Tailwind)
+    let htmlContent = `
+        <div style="border-bottom: 1px solid #ccc; margin-bottom: 20px;">
+            <p><strong>អតិថិជន:</strong> ${customer}</p>
+            <p><strong>កាលបរិច្ឆេទ:</strong> ${date}</p>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <thead>
+                <tr style="background-color: #f2f2f2;">
+                    <th style="border: 1px solid #000; padding: 8px;">ទំនិញ</th>
+                    <th style="border: 1px solid #000; padding: 8px;">ចំនួន</th>
+                    <th style="border: 1px solid #000; padding: 8px;">តម្លៃ</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${currentInvoiceItems.map(item => `
+                    <tr>
+                        <td style="border: 1px solid #000; padding: 8px;">${item.name}</td>
+                        <td style="border: 1px solid #000; padding: 8px; text-align: center;">${item.qty}</td>
+                        <td style="border: 1px solid #000; padding: 8px; text-align: right;">$${item.price.toFixed(2)}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+        <div style="text-align: right; margin-top: 20px;">
+            <h3>សរុប: ${document.getElementById('invoiceGrandTotal')?.innerText || '$0.00'}</h3>
+        </div>
+    `;
+
+    // ៣. បញ្ចូលទៅក្នុង Container សម្រាប់ Print
+    const exportDiv = document.getElementById('pdf-export-container');
+    document.getElementById('pdf-content-data').innerHTML = htmlContent;
+    exportDiv.style.display = 'block'; // បង្ហាញដើម្បីឱ្យ Library មើលឃើញ
+
+    // ៤. ទាញយក PDF
+    const opt = { 
         margin: 0.5, 
-        filename: filename + '.pdf', 
+        filename: 'Invoice-' + Date.now() + '.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2 }, 
-        jsPDF: { format: 'letter' } 
-    }).from(element).save();
+        jsPDF: { format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(exportDiv).save().then(() => {
+        // បន្ទាប់ពីទាញយកចប់ លាក់វាវិញ
+        exportDiv.style.display = 'none';
+    });
 }
 
 function addNewProductToStock() {
