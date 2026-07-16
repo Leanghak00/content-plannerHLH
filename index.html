@@ -105,12 +105,17 @@
             </div>
 
             <nav class="flex-1 p-4 space-y-1.5">
+                
+                
                 <button id="btn-dashboard" onclick="switchTab('dashboard')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold hover:bg-slate-800 transition text-left cursor-pointer">📊 ផ្ទាំងគ្រប់គ្រងទូទៅ</button>
+                
                 <button id="btn-sales" onclick="switchTab('sales')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold hover:bg-slate-800 transition text-left cursor-pointer">📄 វិក្កយបត្រ</button>
                 <button id="btn-vireakbuntham" onclick="switchTab('vireakbuntham')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold hover:bg-slate-800 transition text-left cursor-pointer">🚌 វិក្កយបត្រវីរៈប៊ុនថាំ</button>
                 <button id="btn-delivery" onclick="switchTab('delivery')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold hover:bg-slate-800 transition text-left cursor-pointer">🚚 ប្រព័ន្ធដឹកជញ្ជូន</button>
                 <button id="btn-stock" onclick="switchTab('stock')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold hover:bg-slate-800 transition text-left cursor-pointer">📦 គ្រប់គ្រងឃ្លាំងស្តុក</button>
+                
             </nav>
+            
 
             <div class="p-4 border-t border-slate-800 bg-slate-950/40 flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -119,10 +124,13 @@
                         <h4 id="topNavUser" class="text-xs font-bold text-white">-</h4>
                         <p id="topNavRole" class="text-[10px] text-slate-400">-</p>
                     </div>
+                    
                 </div>
                 <button onclick="handleLogout()" class="text-slate-400 hover:text-rose-400 p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer" title="ចាកចេញ">🚪</button>
             </div>
+            
         </aside>
+        
 
         <main class="flex-1 flex flex-col overflow-x-hidden">
             <header class="bg-white border-b border-slate-200 px-6 py-4">
@@ -131,6 +139,7 @@
 
             <div class="p-6 flex-1 overflow-y-auto">
                 <section id="tab-dashboard" class="tab-content hidden space-y-6">
+                    
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
                             <div>
@@ -171,7 +180,9 @@
                 <section id="tab-sales" class="tab-content hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                         <h3 class="font-black text-sm text-slate-800 border-b pb-3">✍️ បង្កើតវិក្កយបត្រថ្មី</h3>
+                        
                         <div class="grid grid-cols-2 gap-3">
+                            
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-400 mb-1">ឈ្មោះអតិថិជន *</label>
                                 <input type="text" id="invoiceCustomer" class="w-full border border-slate-200 p-2 rounded-lg text-xs font-bold">
@@ -204,14 +215,17 @@
                                 <option value="ផាន់នី">ផាន់នី</option>
                                 <option value="សុភាព">សុភាព</option>
                             </select>
+                            
                         </div>
 
                         <div class="border-t pt-4 space-y-3">
+                            
   <div class="border-t pt-4 space-y-3">
     
     <div>
  <div class="p-4 border rounded-lg bg-slate-50">
     <h3 class="font-bold mb-2">🛒 បញ្ចូលមុខទំនិញ</h3>
+    
     
     <input type="text" id="invoiceProductInput" list="productList" 
            oninput="autoFillProductPrice()" placeholder="ជ្រើសរើសឈ្មោះទំនិញ..." 
@@ -330,25 +344,70 @@
                     </div>
                 </section>
 
-                <section id="tab-delivery" class="tab-content hidden bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-slate-50 text-[10px] font-bold text-slate-400 border-b">
-                                    <th class="p-4 pl-6">លេខវិក្កយបត្រ</th>
-                                    <th class="p-4">ព័ត៌មានអតិថិជន</th>
-                                    <th class="p-4">ចេញពីទីតាំង</th>
-                                    <th class="p-4">ទិសដៅទៅដល់</th>
-                                    <th class="p-4">អ្នកដឹកជញ្ជូន</th>
-                                    <th class="p-4 text-center">ស្ថានភាព</th>
-                                    <th class="p-4 text-center">ប្តូរស្ថានភាព</th>
-                                </tr>
-                            </thead>
-                            <tbody id="deliveryTableBody" class="divide-y"></tbody>
-                        </table>
-                    </div>
-                </section>
+               <section id="tab-delivery" class="tab-content hidden space-y-6">
+    
+    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 border-b border-slate-100 pb-3">
+            <div>
+                <h3 class="font-black text-sm text-slate-800">📊 ស្ថិតិជើងដឹកជញ្ជូនប្រចាំថ្ងៃ</h3>
+                <p class="text-xs text-slate-400 mt-0.5">ចំនួនជើងដែលបានដឹកជោគជ័យ និងកំពុងដឹកតាមកាលបរិច្ឆេទ</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <label class="text-[11px] font-bold text-slate-500 whitespace-nowrap">ជ្រើសរើសថ្ងៃខែ៖</label>
+                <input type="date" id="deliveryStatDate" onchange="updateDeliveryStatsByDate()" class="border border-slate-200 p-2 rounded-xl text-xs font-bold bg-slate-50 focus:outline-none focus:border-indigo-500">
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">លោក លាងហាក់</p>
+                    <h4 id="stat-driver-1" class="text-xl font-black text-indigo-650 mt-1">0 ជើង</h4>
+                </div>
+                <span class="text-2xl bg-indigo-50 p-2 rounded-lg">🛵</span>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">លោក ផាន់នី</p>
+                    <h4 id="stat-driver-2" class="text-xl font-black text-emerald-600 mt-1">0 ជើង</h4>
+                </div>
+                <span class="text-2xl bg-emerald-50 p-2 rounded-lg">🛵</span>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">លោក សុភាព</p>
+                    <h4 id="stat-driver-3" class="text-xl font-black text-amber-500 mt-1">0 ជើង</h4>
+                </div>
+                <span class="text-2xl bg-amber-50 p-2 rounded-lg">🛵</span>
+            </div>
+        </div>
+    </div>
 
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-100 bg-slate-50/50">
+            <h3 class="font-black text-sm text-slate-800">📋 បញ្ជីមុខងារចាត់ចែង និងប្រវត្តិដឹកជញ្ជូន</h3>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 text-[10px] font-bold text-slate-400 border-b">
+                        <th class="p-4 pl-6">ថ្ងៃខែ</th>
+                        <th class="p-4">លេខវិក្កយបត្រ</th>
+                        <th class="p-4">ព័ត៌មានអតិថិជន</th>
+                        <th class="p-4">ចេញពីទីតាំង</th>
+                        <th class="p-4">ទិសដៅទៅដល់</th>
+                        <th class="p-4">អ្នកដឹកជញ្ជូន</th>
+                        <th class="p-4 text-center">ស្ថានភាព</th>
+                        <th class="p-4 text-center">សកម្មភាព</th>
+                    </tr>
+                </thead>
+                <tbody id="deliveryTableBody" class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</section>
                 <section id="tab-stock" class="tab-content hidden space-y-6">
                     <div id="stock-entry-form" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                         <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
