@@ -74,6 +74,11 @@ function initSystemAfterLogin() {
     const today = new Date().toISOString().split('T')[0];
     if (document.getElementById('invoiceDate')) document.getElementById('invoiceDate').value = today;
     if (document.getElementById('pdfDate')) document.getElementById('pdfDate').innerText = today;
+    
+    // កំណត់ថ្ងៃនេះឱ្យទៅ Input ជ្រើសរើសថ្ងៃខែនៃស្ថិតិដឹកជញ្ជូន
+    if (document.getElementById('deliveryStatDate')) {
+        document.getElementById('deliveryStatDate').value = today;
+    }
 
     setupLivePreviewInputs();
     listenToFirebaseData();
@@ -136,12 +141,12 @@ function setupInvoiceProductSelect() {
     
     let html = '';
     productsData.forEach(p => {
-        // បង្ហាញឈ្មោះ + ស្តុកសល់
         const displayLabel = `${p.name} (សល់: ${p.avail})`;
         html += `<option value="${p.name}" data-price="${p.price}" data-id="${p.id}" data-avail="${p.avail}">${displayLabel}</option>`;
     });
     dataList.innerHTML = html;
 }
+
 function autoFillProductPrice() {
     const input = document.getElementById('invoiceProductInput');
     const dataList = document.getElementById('productList');
@@ -149,7 +154,6 @@ function autoFillProductPrice() {
     const hiddenId = document.getElementById('invoiceProductIdHidden');
     const qtyInput = document.getElementById('invoiceQty');
     
-    // រកមើលទំនិញដែលបានជ្រើសរើស
     const selectedOption = Array.from(dataList.options).find(opt => opt.value === input.value);
     
     if (selectedOption) {
@@ -157,18 +161,14 @@ function autoFillProductPrice() {
         const id = selectedOption.getAttribute('data-id');
         const avail = parseInt(selectedOption.getAttribute('data-avail'));
         
-        // បំពេញតម្លៃ
         priceInput.value = price;
         hiddenId.value = id;
-        
-        // កំណត់ចំនួនអតិបរមាដែលអាចលក់បានតាមស្តុក
         qtyInput.max = avail;
         
         if (avail <= 0) {
             alert("⚠️ ទំនិញនេះអស់ពីស្តុកហើយ!");
         }
     } else {
-        // បើវាយខុស ឬលុបចោល
         priceInput.value = '';
         hiddenId.value = '';
     }
@@ -181,32 +181,26 @@ function onProductSelectChange() {
 }
 
 function addItemToCurrentInvoice() {
-    // ១. ទាញយកទិន្នន័យពី Input
     const productId = document.getElementById('invoiceProductIdHidden').value;
     const productName = document.getElementById('invoiceProductInput').value;
     const qty = parseInt(document.getElementById('invoiceQty').value);
     const price = parseFloat(document.getElementById('invoiceUnitPrice').value);
 
-    // ២. រកមើលទំនិញក្នុង productsData ដើម្បីផ្ទៀងផ្ទាត់
     const product = productsData.find(p => p.id == productId);
 
-    // ៣. ការត្រួតពិនិត្យ (Validation)
     if (!product) return alert("⚠️ សូមជ្រើសរើសទំនិញពីបញ្ជីឱ្យបានត្រឹមត្រូវ!");
     if (isNaN(qty) || qty <= 0) return alert("⚠️ សូមបញ្ចូលចំនួនឱ្យបានត្រឹមត្រូវ!");
     if (qty > product.avail) return alert(`⚠️ ស្តុកមិនគ្រប់គ្រាន់! សល់តែ ${product.avail} ទេ។`);
 
-    // ៤. ពិនិត្យមើលថាតើទំនិញនេះមានក្នុងវិក្កយបត្ររួចហើយឬនៅ
     const existingItem = currentInvoiceItems.find(item => item.productId == productId);
 
     if (existingItem) {
-        // បើមានហើយ បូកបន្ថែមចំនួន
         if (existingItem.qty + qty > product.avail) {
             return alert("⚠️ បូកបញ្ចូលទាំងរបស់ចាស់ លើសពីស្តុកដែលមាន!");
         }
         existingItem.qty += qty;
         existingItem.totalPrice = existingItem.qty * existingItem.price;
     } else {
-        // បើមិនទាន់មាន បន្ថែមចូល Array ថ្មី
         currentInvoiceItems.push({
             productId: product.id,
             name: product.name,
@@ -216,14 +210,14 @@ function addItemToCurrentInvoice() {
         });
     }
 
-    // ៥. សម្អាត Input និងបង្ហាញតារាងឡើងវិញ
     document.getElementById('invoiceProductInput').value = '';
     document.getElementById('invoiceUnitPrice').value = '';
     document.getElementById('invoiceQty').value = '1';
     document.getElementById('invoiceProductIdHidden').value = '';
 
-    renderInvoicePreviewTable(); // មុខងារនេះបង្ហាញទិន្នន័យក្នុងតារាង HTML
+    renderInvoicePreviewTable();
 }
+
 function removeInvoiceItem(index) {
     currentInvoiceItems.splice(index, 1);
     renderInvoicePreviewTable();
@@ -249,7 +243,6 @@ function renderInvoicePreviewTable() {
     document.getElementById('invoiceGrandTotal').innerText = `$${grandTotal.toFixed(2)}`;
 }
 
-// មុខងាររក្សាទុក និងទាញយក PDF ស្វ័យប្រវត្ត
 function saveFinalInvoice() {
     const customer = document.getElementById('invoiceCustomer').value.trim();
     const phone = document.getElementById('invoicePhone').value.trim();
@@ -275,23 +268,18 @@ function saveFinalInvoice() {
     productsData.forEach(p => { productsObj[p.id] = p; });
     
     database.ref('products').set(productsObj).then(() => {
-        // 📥 បញ្ជាឱ្យទាញយក PDF ដោយយកលេខកូដវិក្កយបត្រធ្វើជាឈ្មោះ File
         downloadInvoicePDF(invCode);
-        
         alert("🎉 រក្សាទុកចូលរបាយការណ៍លក់ និងទាញយក PDF ជោគជ័យ!");
         resetInvoiceForm();
         switchTab('dashboard');
     });
 }
 
-// មុខងារសម្រាប់ Admin លុបវិក្កយបត្រចេញពីប្រព័ន្ធ
 function deleteInvoice(invCode) {
     if (!currentUser || currentUser.role !== 'Admin') return alert("⚠️ អ្នកគ្មានសិទ្ធិលុបវិក្កយបត្រនេះទេ!");
     
     if (confirm(`⚠️ តើអ្នកពិតជាចង់លុបវិក្កយបត្រលេខ ${invCode} នេះមែនទេ? ទិន្នន័យនឹងត្រូវបាត់បង់ទាំងស្រុងពីប្រព័ន្ធ!`)) {
-        // លុបពី sales
         database.ref('sales').child(invCode).remove();
-        // លុបពី deliveries
         database.ref('deliveries').child(invCode).remove().then(() => {
             alert("🗑️ បានលុបវិក្កយបត្រដោយជោគជ័យ!");
         });
@@ -307,17 +295,12 @@ function resetInvoiceForm() {
     renderInvoicePreviewTable();
 }
 
-// =========================================================
-// ៨. មុខងារទាញយកជា PDF (កម្រិតខ្ពស់ - មានប្រព័ន្ធការពារកំហុស)
-// =========================================================
 function downloadInvoicePDF() {
     if (typeof html2pdf === 'undefined') return alert("⚠️ មិនឃើញ Library html2pdf!");
 
-    // ១. យកទិន្នន័យពីវិក្កយបត្របច្ចុប្បន្ន
     const customer = document.getElementById('invoiceCustomer')?.value || 'N/A';
     const date = document.getElementById('invoiceDate')?.value || '-';
     
-    // ២. បង្កើត HTML ស្អាតៗសម្រាប់ PDF (ប្រើ CSS សាមញ្ញៗ មិនប្រើ Tailwind)
     let htmlContent = `
         <div style="border-bottom: 1px solid #ccc; margin-bottom: 20px;">
             <p><strong>អតិថិជន:</strong> ${customer}</p>
@@ -346,12 +329,10 @@ function downloadInvoicePDF() {
         </div>
     `;
 
-    // ៣. បញ្ចូលទៅក្នុង Container សម្រាប់ Print
     const exportDiv = document.getElementById('pdf-export-container');
     document.getElementById('pdf-content-data').innerHTML = htmlContent;
-    exportDiv.style.display = 'block'; // បង្ហាញដើម្បីឱ្យ Library មើលឃើញ
+    exportDiv.style.display = 'block';
 
-    // ៤. ទាញយក PDF
     const opt = { 
         margin: 0.5, 
         filename: 'Invoice-' + Date.now() + '.pdf',
@@ -361,7 +342,6 @@ function downloadInvoicePDF() {
     };
 
     html2pdf().set(opt).from(exportDiv).save().then(() => {
-        // បន្ទាប់ពីទាញយកចប់ លាក់វាវិញ
         exportDiv.style.display = 'none';
     });
 }
@@ -492,8 +472,48 @@ function deleteVbInvoice(id) {
     if (confirm("⚠️ ចង់លុបរូបភាពវិក្កយបត្រនេះមែនទេ?")) database.ref('vireak_buntham_invoices').child(id).remove();
 }
 
-function updateDriver(invCode, driver) { database.ref('deliveries').child(invCode).update({ driver }); }
-function updateStatus(invCode, status) { database.ref('deliveries').child(invCode).update({ status }); }
+// មុខងារចាត់ចែងអ្នកដឹកជញ្ជូន
+function updateDriver(invCode, driver) { 
+    database.ref('deliveries/' + invCode).update({ driver }).then(() => {
+        const delivery = deliveryData.find(d => d.invCode === invCode);
+        if (delivery) delivery.driver = driver;
+        updateDeliveryStatsByDate(); // គណនាស្ថិតិឡើងវិញភ្លាមៗ
+    }); 
+}
+
+// មុខងារធ្វើបច្ចុប្បន្នភាពស្ថានភាពជើងដឹកជញ្ជូន (លោតចូលកាតស្ថិតិពេល "បានប្រគល់ជូន")
+function updateStatus(invCode, status) { 
+    database.ref('deliveries/' + invCode).update({ status }).then(() => {
+        const delivery = deliveryData.find(d => d.invCode === invCode);
+        if (delivery) delivery.status = status;
+        updateDeliveryStatsByDate(); // គណនាស្ថិតិឡើងវិញភ្លាមៗ
+    }); 
+}
+
+// មុខងារគណនា និងបង្ហាញស្ថិតិជើងដឹកជញ្ជូនដែលបាន "បានប្រគល់ជូន" តាមកាលបរិច្ឆេទ
+function updateDeliveryStatsByDate() {
+    const statDateInput = document.getElementById('deliveryStatDate');
+    if (!statDateInput) return;
+    
+    const selectedDate = statDateInput.value;
+    const driverCounts = { "លាងហាក់": 0, "ផាន់នី": 0, "សុភាព": 0 };
+
+    deliveryData.forEach(d => {
+        const matchedSale = salesData.find(s => s.invCode === d.invCode);
+        const deliveryDate = matchedSale ? matchedSale.date : '';
+
+        // លក្ខខណ្ឌ៖ ចំថ្ងៃជ្រើសរើស, ឈ្មោះត្រូវ និងស្ថានភាពគឺ "បានប្រគល់ជូន"
+        if (deliveryDate === selectedDate && 
+            driverCounts.hasOwnProperty(d.driver) && 
+            d.status === 'បានប្រគល់ជូន') {
+            driverCounts[d.driver]++;
+        }
+    });
+
+    if (document.getElementById('stat-driver-1')) document.getElementById('stat-driver-1').innerText = `${driverCounts["លាងហាក់"]} ជើង`;
+    if (document.getElementById('stat-driver-2')) document.getElementById('stat-driver-2').innerText = `${driverCounts["ផាន់នី"]} ជើង`;
+    if (document.getElementById('stat-driver-3')) document.getElementById('stat-driver-3').innerText = `${driverCounts["សុភាព"]} ជើង`;
+}
 
 function renderAll() {
     const today = new Date().toISOString().split('T')[0];
@@ -502,9 +522,7 @@ function renderAll() {
 
     salesData.forEach(s => {
         const amt = parseFloat(s.total) || 0; 
-        if (s.date === today) {
-            dailySum += amt;
-        }
+        if (s.date === today) dailySum += amt;
         if (s.date && typeof s.date === 'string' && s.date.substring(0, 7) === currentMonth) {
             monthlySum += amt;
         }
@@ -522,21 +540,17 @@ function renderAll() {
         } else {
             salesTbody.innerHTML = salesData.map(s => {
                 const totalAmt = parseFloat(s.total) || 0;
-                
-                // លក្ខខណ្ឌបង្ហាញប៊ូតុងលុប៖ លុះត្រាតែជា Admin ទើបលោតចេញមក
                 let actionTd = '';
                 if (currentUser && currentUser.role === 'Admin') {
-                    if(s.invCode && s.invCode !== '-') {
-                        actionTd = `<td class="p-3 text-center pr-6"><button onclick="deleteInvoice('${s.invCode}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-2 py-1 rounded font-bold text-[11px] cursor-pointer transition">🗑️ លុប</button></td>`;
-                    } else {
-                        actionTd = `<td class="p-3 text-center pr-6 text-slate-300">-</td>`;
-                    }
+                    actionTd = (s.invCode && s.invCode !== '-') ? 
+                        `<td class="p-3 text-center pr-6"><button onclick="deleteInvoice('${s.invCode}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-2 py-1 rounded font-bold text-[11px] cursor-pointer transition">🗑️ លុប</button></td>` : 
+                        `<td class="p-3 text-center pr-6 text-slate-300">-</td>`;
                 }
 
                 return `
                     <tr class="text-xs hover:bg-slate-50">
                         <td class="p-3 pl-6">${s.date || '-'}</td>
-                        <td class="p-3 text-indigo-600 font-bold">${s.invCode || '-'}</td>
+                        <td class="p-3 text-indigo-600 font-bold cursor-pointer" onclick="viewInvoice('${s.invCode}')">${s.invCode || '-'}</td>
                         <td class="p-3 font-medium">${s.customer || '-'}</td>
                         <td class="p-3 text-slate-500">${s.location || '-'}</td>
                         <td class="p-3 text-right font-bold text-emerald-600">$${totalAmt.toFixed(2)}</td>
@@ -550,32 +564,42 @@ function renderAll() {
     // បង្ហាញតារាងប្រព័ន្ធដឹកជញ្ជូន
     const deliveryTbody = document.getElementById('deliveryTableBody');
     if (deliveryTbody) {
-        deliveryTbody.innerHTML = deliveryData.map(d => `
-            <tr class="text-xs hover:bg-slate-50">
-                <td class="p-3 pl-6 font-bold text-indigo-600">${d.invCode || '-'}</td>
-                <td class="p-3 font-bold">${d.customer || '-'}</td>
-                <td class="p-3 font-medium text-slate-600">${d.fromLoc || 'ភ្នំពេញ'}</td>
-                <td class="p-3 font-medium text-indigo-600">${d.location || '-'}</td>
-                <td class="p-3">
-                    <select onchange="updateDriver('${d.invCode}', this.value)" class="border border-slate-200 p-1 rounded text-xs bg-white font-bold text-slate-700">
-                        <option value="មិនទាន់ចាត់ចែង" ${d.driver === 'មិនទាន់ចាត់ចែង' ? 'selected' : ''}>--- ជ្រើសរើសអ្នកដឹក ---</option>
-                        <option value="លាងហាក់" ${d.driver === 'លាងហាក់' ? 'selected' : ''}>លាងហាក់</option>
-                        <option value="ផាន់នី" ${d.driver === 'ផាន់នី' ? 'selected' : ''}>ផាន់នី</option>
-                        <option value="សុភាព" ${d.driver === 'សុភាព' ? 'selected' : ''}>សុភាព</option>
-                    </select>
-                </td>
-                <td class="p-3 text-center">
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${d.status === 'បានប្រគល់ជូន' ? 'bg-emerald-50 text-emerald-600' : d.status === 'កំពុងដឹក' ? 'bg-indigo-50 text-indigo-600' : 'bg-amber-50 text-amber-600'}">${d.status || 'កំពុងរៀបចំ'}</span>
-                </td>
-                <td class="p-3 text-center">
-                    <select onchange="updateStatus('${d.invCode}', this.value)" class="border border-slate-200 p-1 rounded text-xs bg-white text-slate-700">
-                        <option value="កំពុងរៀបចំ" ${d.status === 'កំពុងរៀបចំ' ? 'selected' : ''}>កំពុងរៀបចំ</option>
-                        <option value="កំពុងដឹក" ${d.status === 'កំពុងដឹក' ? 'selected' : ''}>កំពុងដឹក</option>
-                        <option value="បានប្រគល់ជូន" ${d.status === 'បានប្រគល់ជូន' ? 'selected' : ''}>បានប្រគល់ជូន</option>
-                    </select>
-                </td>
-            </tr>
-        `).join('');
+        if (deliveryData.length === 0) {
+            deliveryTbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-xs font-bold text-slate-400">🚚 មិនទាន់មានជើងដឹកជញ្ជូនទេ</td></tr>`;
+        } else {
+            deliveryTbody.innerHTML = deliveryData.map(d => {
+                const matchedSale = salesData.find(s => s.invCode === d.invCode);
+                const dDate = matchedSale ? matchedSale.date : today;
+
+                return `
+                    <tr class="text-xs hover:bg-slate-50">
+                        <td class="p-4 pl-6 text-slate-500">${dDate}</td>
+                        <td class="p-4 font-bold text-indigo-600 cursor-pointer" onclick="viewInvoice('${d.invCode}')">${d.invCode || '-'}</td>
+                        <td class="p-4 font-bold">${d.customer || '-'} ${d.phone ? `(${d.phone})` : ''}</td>
+                        <td class="p-4 font-medium text-slate-600">${d.fromLoc || 'ភ្នំពេញ'}</td>
+                        <td class="p-4 font-medium text-indigo-600">${d.location || '-'}</td>
+                        <td class="p-4">
+                            <select onchange="updateDriver('${d.invCode}', this.value)" class="border border-slate-200 p-1.5 rounded-xl text-xs bg-white font-bold text-slate-700 focus:outline-none">
+                                <option value="មិនទាន់ចាត់ចែង" ${d.driver === 'មិនទាន់ចាត់ចែង' ? 'selected' : ''}>--- ជ្រើសរើស ---</option>
+                                <option value="លាងហាក់" ${d.driver === 'លាងហាក់' ? 'selected' : ''}>លាងហាក់</option>
+                                <option value="ផាន់នី" ${d.driver === 'ផាន់នី' ? 'selected' : ''}>ផាន់នី</option>
+                                <option value="សុភាព" ${d.driver === 'សុភាព' ? 'selected' : ''}>សុភាព</option>
+                            </select>
+                        </td>
+                        <td class="p-4 text-center">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${d.status === 'បានប្រគល់ជូន' ? 'bg-emerald-50 text-emerald-600' : d.status === 'កំពុងដឹក' ? 'bg-indigo-50 text-indigo-600' : 'bg-amber-50 text-amber-600'}">${d.status || 'កំពុងរៀបចំ'}</span>
+                        </td>
+                        <td class="p-4 text-center">
+                            <select onchange="updateStatus('${d.invCode}', this.value)" class="border border-slate-200 p-1.5 rounded-xl text-xs bg-white text-slate-700 focus:outline-none">
+                                <option value="កំពុងរៀបចំ" ${d.status === 'កំពុងរៀបចំ' ? 'selected' : ''}>កំពុងរៀបចំ</option>
+                                <option value="កំពុងដឹក" ${d.status === 'កំពុងដឹក' ? 'selected' : ''}>កំពុងដឹក</option>
+                                <option value="បានប្រគល់ជូន" ${d.status === 'បានប្រគល់ជូន' ? 'selected' : ''}>បានប្រគល់ជូន</option>
+                            </select>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
     }
 
     // បង្ហាញតារាងគ្រប់គ្រងឃ្លាំងស្តុក
@@ -597,6 +621,9 @@ function renderAll() {
             `).join('');
         }
     }
+
+    // ហៅមុខងារធ្វើបច្ចុប្បន្នភាពស្ថិតិ Cards ខាងលើ
+    updateDeliveryStatsByDate();
 }
 
 // មុខងារស្វែងរកទំនិញក្នុងស្តុក
@@ -621,4 +648,54 @@ function searchStockFunction() {
             }
         }       
     }
+}
+
+// មុខងារចុចមើលព័ត៌មានលម្អិតនៃវិក្កយបត្រ (ទាញចេញពី Node 'sales')
+function viewInvoice(invoiceId) {
+    database.ref('sales/' + invoiceId).once('value').then((snapshot) => {
+        const data = snapshot.val();
+        if (!data) return alert("រកមិនឃើញវិក្កយបត្រនេះទេ!");
+
+        const modal = document.getElementById('invoiceModal');
+        const content = document.getElementById('modalInvoiceContent');
+        
+        content.innerHTML = `
+            <div class="border-b pb-3 mb-4">
+                <p class="text-xs font-bold text-slate-500">វិក្កយបត្រលេខ: <span class="text-slate-800">${data.invCode || invoiceId}</span></p>
+                <p class="text-xs font-bold text-slate-500">អតិថិជន: <span class="text-slate-800">${data.customer || '-'}</span></p>
+                <p class="text-xs font-bold text-slate-500">ទិសដៅ: <span class="text-slate-800">${data.location || '-'}</span></p>
+                <p class="text-xs font-bold text-slate-500">កាលបរិច្ឆេទ: <span class="text-slate-800">${data.date || '-'}</span></p>
+            </div>
+            <table class="w-full text-xs border border-slate-200">
+                <thead class="bg-slate-100">
+                    <tr>
+                        <th class="p-2 border-r text-left">ទំនិញ</th>
+                        <th class="p-2 border-r">ចំនួន</th>
+                        <th class="p-2 text-right">តម្លៃរាយ</th>
+                        <th class="p-2 text-right">សរុប</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y text-center">
+                    ${data.items ? data.items.map(item => `
+                        <tr>
+                            <td class="p-2 border-r text-left font-medium">${item.name}</td>
+                            <td class="p-2 border-r font-bold">${item.qty}</td>
+                            <td class="p-2 border-r text-right">$${parseFloat(item.price).toFixed(2)}</td>
+                            <td class="p-2 text-right font-bold text-slate-700">$${parseFloat(item.totalPrice).toFixed(2)}</td>
+                        </tr>
+                    `).join('') : '<tr><td colspan="4" class="p-2">គ្មានទិន្នន័យ</td></tr>'}
+                </tbody>
+            </table>
+            <div class="text-right mt-4 p-3 bg-indigo-50 rounded-xl">
+                <p class="text-xs font-bold text-indigo-600">សរុបទាំងអស់: $${parseFloat(data.total).toFixed(2) || '0.00'}</p>
+            </div>
+        `;
+        modal.classList.remove('hidden');
+    });
+}
+
+// មុខងារសម្រាប់បិទផ្ទាំង Modal វិក្កយបត្រ
+function closeInvoiceModal() {
+    const modal = document.getElementById('invoiceModal');
+    if (modal) modal.classList.add('hidden');
 }
