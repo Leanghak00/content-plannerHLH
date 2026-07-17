@@ -532,7 +532,7 @@ function renderAll() {
     if(document.getElementById('dashMonthlyAmount')) document.getElementById('dashMonthlyAmount').innerText = `$${monthlySum.toFixed(2)}`;
 
     // បង្ហាញតារាងរបាយការណ៍លក់
-    const salesTbody = document.getElementById('salesTableBody');
+  const salesTbody = document.getElementById('salesTableBody');
     if (salesTbody) {
         if (salesData.length === 0) {
             const cols = (currentUser && currentUser.role === 'Admin') ? 6 : 5;
@@ -543,7 +543,11 @@ function renderAll() {
                 let actionTd = '';
                 if (currentUser && currentUser.role === 'Admin') {
                     actionTd = (s.invCode && s.invCode !== '-') ? 
-                        `<td class="p-3 text-center pr-6"><button onclick="deleteInvoice('${s.invCode}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-2 py-1 rounded font-bold text-[11px] cursor-pointer transition">🗑️ លុប</button></td>` : 
+                        `<td class="p-3 text-center pr-6 flex justify-center gap-1.5">
+                            <button onclick="viewInvoice('${s.invCode}')" class="bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-600 p-1 rounded transition text-[11px] cursor-pointer shadow-sm" title="មើលលម្អិត">👁️</button>
+                            <button onclick="printInvoiceFromDashboard('${s.invCode}')" class="bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-600 p-1 rounded transition text-[11px] cursor-pointer shadow-sm" title="បោះពុម្ភវិក្កយបត្រ">🖨️</button>
+                            <button onclick="deleteInvoice('${s.invCode}')" class="bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 p-1 rounded transition text-[11px] cursor-pointer shadow-sm" title="លុប">🗑️</button>
+                         </td>` : 
                         `<td class="p-3 text-center pr-6 text-slate-300">-</td>`;
                 }
 
@@ -560,7 +564,6 @@ function renderAll() {
             }).join('');
         }
     }
-
     // បង្ហាញតារាងប្រព័ន្ធដឹកជញ្ជូន
     const deliveryTbody = document.getElementById('deliveryTableBody');
     if (deliveryTbody) {
@@ -601,9 +604,8 @@ function renderAll() {
             }).join('');
         }
     }
-
     // បង្ហាញតារាងគ្រប់គ្រងឃ្លាំងស្តុក
-    const stockTbody = document.getElementById('stockTableBody');
+   const stockTbody = document.getElementById('stockTableBody');
     if (stockTbody) {
         if (productsData.length === 0) {
             stockTbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-xs font-bold text-slate-400">📦 មិនទាន់មានទំនិញទេ</td></tr>`;
