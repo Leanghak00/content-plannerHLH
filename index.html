@@ -344,8 +344,9 @@
                     </div>
                 </section>
 
-               <section id="tab-delivery" class="tab-content hidden space-y-6">
+     <section id="tab-delivery" class="tab-content hidden space-y-6">
     
+    <!-- ផ្នែកស្ថិតិជើងដឹកជញ្ជូនប្រចាំថ្ងៃ -->
     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 border-b border-slate-100 pb-3">
             <div>
@@ -354,6 +355,7 @@
             </div>
             <div class="flex items-center gap-2">
                 <label class="text-[11px] font-bold text-slate-500 whitespace-nowrap">ជ្រើសរើសថ្ងៃខែ៖</label>
+                <!-- ប្រអប់ជ្រើសរើសថ្ងៃខែសម្រាប់ Filter ទិន្នន័យ -->
                 <input type="date" id="deliveryStatDate" onchange="updateDeliveryStatsByDate()" class="border border-slate-200 p-2 rounded-xl text-xs font-bold bg-slate-50 focus:outline-none focus:border-indigo-500">
             </div>
         </div>
@@ -383,8 +385,9 @@
         </div>
     </div>
 
+    <!-- ផ្នែកបញ្ជីប្រវត្តិដឹកជញ្ជូន (ទម្រង់ដើម) -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-4 border-b border-slate-100 bg-slate-50/50">
+        <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
             <h3 class="font-black text-sm text-slate-800">📋 បញ្ជីមុខងារចាត់ចែង និងប្រវត្តិដឹកជញ្ជូន</h3>
         </div>
         
@@ -403,7 +406,8 @@
                     </tr>
                 </thead>
                 <tbody id="deliveryTableBody" class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
-                    </tbody>
+                    <!-- ទិន្នន័យនឹងលោតមកពី Firebase តាមរយៈការហៅអនុគមន៍ renderAll() -->
+                </tbody>
             </table>
         </div>
     </div>
