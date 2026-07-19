@@ -517,12 +517,21 @@ function updateDeliveryStatsByDate() {
 
 function renderAll() {
     const today = new Date().toISOString().split('T')[0];
+    
+    // ចាប់យកថ្ងៃខែពីប្រអប់ជ្រើសរើស (បើទើបបើកដំបូង វានឹងកំណត់យកថ្ងៃនេះស្វ័យប្រវត្តិ)
+    const dateInput = document.getElementById('searchDate');
+    if (dateInput && !dateInput.value) {
+        dateInput.value = today;
+    }
+    const selectedDate = dateInput ? dateInput.value : today;
+
     let dailySum = 0, monthlySum = 0;
     const currentMonth = today.substring(0, 7);
 
+    // 1. គណនាផលសរុប (រក្សាទុកការគណនាដដែល)
     salesData.forEach(s => {
         const amt = parseFloat(s.total) || 0; 
-        if (s.date === today) dailySum += amt;
+        if (s.date === today) dailySum += amt; // ទឹកប្រាក់ប្រចាំថ្ងៃនេះពិតប្រាកដ
         if (s.date && typeof s.date === 'string' && s.date.substring(0, 7) === currentMonth) {
             monthlySum += amt;
         }
@@ -531,14 +540,22 @@ function renderAll() {
     if(document.getElementById('dashDailyAmount')) document.getElementById('dashDailyAmount').innerText = `$${dailySum.toFixed(2)}`;
     if(document.getElementById('dashMonthlyAmount')) document.getElementById('dashMonthlyAmount').innerText = `$${monthlySum.toFixed(2)}`;
 
-    // បង្ហាញតារាងរបាយការណ៍លក់
-  const salesTbody = document.getElementById('salesTableBody');
+    // 2. ច្រោះយកតែវិក្កយបត្រណាដែលត្រូវនឹងថ្ងៃដែលបានជ្រើសរើស (Selected Date)
+    let filteredSales = salesData.filter(s => s.date === selectedDate);
+
+    // 3. តម្រៀបវិក្កយបត្រដែលទើបបង្កើតចុងក្រោយគេ ឱ្យឡើងមកលើគេបង្អស់ (Newest First)
+    filteredSales.sort((a, b) => {
+        return b.invCode.localeCompare(a.invCode);
+    });
+
+    // 4. បង្ហាញទិន្នន័យទៅលើតារាងរបាយការណ៍លក់
+    const salesTbody = document.getElementById('salesTableBody');
     if (salesTbody) {
-        if (salesData.length === 0) {
+        if (filteredSales.length === 0) {
             const cols = (currentUser && currentUser.role === 'Admin') ? 6 : 5;
-            salesTbody.innerHTML = `<tr><td colspan="${cols}" class="p-6 text-center text-xs font-bold text-slate-400">📝 មិនទាន់មានទិន្នន័យលក់ទេ</td></tr>`;
+            salesTbody.innerHTML = `<tr><td colspan="${cols}" class="p-6 text-center text-xs font-bold text-slate-400">📝 មិនទាន់មានទិន្នន័យលក់សម្រាប់ថ្ងៃទី ${selectedDate} ទេ</td></tr>`;
         } else {
-            salesTbody.innerHTML = salesData.map(s => {
+            salesTbody.innerHTML = filteredSales.map(s => {
                 const totalAmt = parseFloat(s.total) || 0;
                 let actionTd = '';
                 if (currentUser && currentUser.role === 'Admin') {
@@ -564,7 +581,8 @@ function renderAll() {
             }).join('');
         }
     }
-    // បង្ហាញតារាងប្រព័ន្ធដឹកជញ្ជូន
+
+    // ផ្នែកតារាងដឹកជញ្ជូន និង ឃ្លាំងស្តុក រក្សាទុកដដែល...
     const deliveryTbody = document.getElementById('deliveryTableBody');
     if (deliveryTbody) {
         if (deliveryData.length === 0) {
@@ -573,7 +591,6 @@ function renderAll() {
             deliveryTbody.innerHTML = deliveryData.map(d => {
                 const matchedSale = salesData.find(s => s.invCode === d.invCode);
                 const dDate = matchedSale ? matchedSale.date : today;
-
                 return `
                     <tr class="text-xs hover:bg-slate-50">
                         <td class="p-4 pl-6 text-slate-500">${dDate}</td>
@@ -599,13 +616,12 @@ function renderAll() {
                                 <option value="បានប្រគល់ជូន" ${d.status === 'បានប្រគល់ជូន' ? 'selected' : ''}>បានប្រគល់ជូន</option>
                             </select>
                         </td>
-                    </tr>
-                `;
+                    </tr>`;
             }).join('');
         }
     }
-    // បង្ហាញតារាងគ្រប់គ្រងឃ្លាំងស្តុក
-   const stockTbody = document.getElementById('stockTableBody');
+
+    const stockTbody = document.getElementById('stockTableBody');
     if (stockTbody) {
         if (productsData.length === 0) {
             stockTbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-xs font-bold text-slate-400">📦 មិនទាន់មានទំនិញទេ</td></tr>`;
@@ -624,7 +640,6 @@ function renderAll() {
         }
     }
 
-    // ហៅមុខងារធ្វើបច្ចុប្បន្នភាពស្ថិតិ Cards ខាងលើ
     updateDeliveryStatsByDate();
 }
 
