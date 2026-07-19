@@ -177,85 +177,74 @@
                     </div>
                 </section>
 
-                <section id="tab-sales" class="tab-content hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <div class="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+              <section id="tab-sales" class="tab-content hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <!-- ផ្នែកបញ្ចូលទិន្នន័យ (ឆ្វេង) -->
+                    <div class="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4 h-fit">
                         <h3 class="font-black text-sm text-slate-800 border-b pb-3">✍️ បង្កើតវិក្កយបត្រថ្មី</h3>
                         
                         <div class="grid grid-cols-2 gap-3">
-                            
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-400 mb-1">ឈ្មោះអតិថិជន *</label>
-                                <input type="text" id="invoiceCustomer" class="w-full border border-slate-200 p-2 rounded-lg text-xs font-bold">
+                                <input type="text" id="invoiceCustomer" class="w-full border border-slate-200 p-2 rounded-lg text-xs font-bold focus:outline-none focus:border-indigo-500">
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-400 mb-1">លេខទូរស័ព្ទ *</label>
-                                <input type="text" id="invoicePhone" class="w-full border border-slate-200 p-2 rounded-lg text-xs font-bold">
+                                <input type="text" id="invoicePhone" class="w-full border border-slate-200 p-2 rounded-lg text-xs font-bold focus:outline-none focus:border-indigo-500">
                             </div>
                         </div>
+
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-400 mb-1">ចេញពីទីតាំង *</label>
-                                <input type="text" id="invoiceFromLocation" value="ភ្នំពេញ" class="w-full border border-slate-200 p-2 rounded-lg text-xs font-bold">
+                                <input type="text" id="invoiceFromLocation" value="ភ្នំពេញ" class="w-full border border-slate-200 p-2 rounded-lg text-xs font-bold focus:outline-none focus:border-indigo-500">
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-400 mb-1">ទិសដៅទៅដល់ *</label>
-                                <input type="text" id="invoiceLocation" class="w-full border border-slate-200 p-2 rounded-lg text-xs font-bold">
+                                <input type="text" id="invoiceLocation" class="w-full border border-slate-200 p-2 rounded-lg text-xs font-bold focus:outline-none focus:border-indigo-500">
                             </div>
                         </div>
+
                         <div>
                             <label class="block text-[10px] font-bold text-slate-400 mb-1">កាលបរិច្ឆេទ</label>
-                            <input type="date" id="invoiceDate" class="w-full border border-slate-200 p-2 rounded-lg text-xs font-bold">
+                            <input type="date" id="invoiceDate" class="w-full border border-slate-200 p-2 rounded-lg text-xs font-bold focus:outline-none focus:border-indigo-500">
                         </div>
 
                         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
                             <label class="block text-[10px] font-bold text-indigo-600 mb-1">👤 មុខងារចាត់ចែងអ្នកដឹកជញ្ជូន (Admin Only)</label>
-                            <select id="invoiceDriverSelect" class="w-full border border-slate-200 p-2 rounded-lg text-xs font-bold bg-white text-slate-700">
+                            <select id="invoiceDriverSelect" class="w-full border border-slate-200 p-2 rounded-lg text-xs font-bold bg-white text-slate-700 focus:outline-none focus:border-indigo-500">
                                 <option value="មិនទាន់ចាត់ចែង">--- ជ្រើសរើសអ្នកដឹក ---</option>
                                 <option value="លាងហាក់">លាងហាក់</option>
                                 <option value="ផាន់នី">ផាន់នី</option>
                                 <option value="សុភាព">សុភាព</option>
                             </select>
-                            
                         </div>
 
-                        <div class="border-t pt-4 space-y-3">
+                        <div class="p-4 border border-slate-200 rounded-xl bg-slate-50 space-y-2">
+                            <h3 class="font-bold text-xs text-slate-700 mb-2">🛒 បញ្ចូលមុខទំនិញ</h3>
                             
-  <div class="border-t pt-4 space-y-3">
-    
-    <div>
- <div class="p-4 border rounded-lg bg-slate-50">
-    <h3 class="font-bold mb-2">🛒 បញ្ចូលមុខទំនិញ</h3>
-    
-    
-    <input type="text" id="invoiceProductInput" list="productList" 
-           oninput="autoFillProductPrice()" placeholder="ជ្រើសរើសឈ្មោះទំនិញ..." 
-           class="border p-2 w-full mb-2 rounded">
-    <datalist id="productList"></datalist>
+                            <input type="text" id="invoiceProductInput" list="productList" oninput="autoFillProductPrice()" placeholder="ជ្រើសរើសឈ្មោះទំនិញ..." class="border border-slate-200 p-2 w-full text-xs rounded bg-white focus:outline-none focus:border-indigo-500">
+                            <datalist id="productList"></datalist>
 
-    <input type="text" id="invoiceUnitPrice" readonly placeholder="តម្លៃឯកតា ($)" 
-           class="border p-2 w-full mb-2 rounded bg-gray-100">
+                            <input type="text" id="invoiceUnitPrice" readonly placeholder="តម្លៃឯកតា ($)" class="border border-slate-200 p-2 w-full text-xs rounded bg-gray-100 font-bold text-right">
 
-    <input type="number" id="invoiceQty" value="1" min="1" placeholder="ចំនួន" 
-           class="border p-2 w-full mb-4 rounded">
+                            <input type="number" id="invoiceQty" value="1" min="1" placeholder="ចំនួន" class="border border-slate-200 p-2 w-full text-xs rounded bg-white font-bold text-center focus:outline-none focus:border-indigo-500">
 
-    <input type="hidden" id="invoiceProductIdHidden">
+                            <input type="hidden" id="invoiceProductIdHidden">
 
-    <button type="button" onclick="addItemToCurrentInvoice()" 
-            class="w-full bg-indigo-600 text-white p-2 rounded">
-        + បញ្ចូលទៅក្នុងវិក្កយបត្រ
-    </button>
-</div>
-    </div>
-</div>
+                            <button type="button" onclick="addItemToCurrentInvoice()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white p-2.5 rounded-lg font-bold text-xs transition cursor-pointer mt-2 shadow-sm">
+                                + បញ្ចូលទៅក្នុងវិក្កយបត្រ
+                            </button>
                         </div>
                     </div>
 
+                    <!-- ផ្នែកបង្ហាញផ្ទាំងទិដ្ឋភាពវិក្កយបត្រ (ស្តាំ) -->
                     <div class="lg:col-span-7 space-y-4">
-                        <div class="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm" id="invoice-pdf-area">
+                        <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm" id="invoice-pdf-area">
                             <div class="text-center border-b pb-4 mb-4">
-                                <h2 class="text-xl font-black text-slate-800 tracking-wide">ផ្គត់ផ្គង់សម្ភារៈតុការចានប្រណិតទាន់សម័យ</h2>
-                                <p class="text-[9px] text-slate-400 mt-0.5">វិក្កយបត្រទូទាត់ប្រាក់ / INVOICE</p>
+                                <h2 class="text-base font-black text-slate-800 tracking-wide">ផ្គត់ផ្គង់សម្ភារៈតុការចានប្រណិតទាន់សម័យ</h2>
+                                <p class="text-[9px] text-slate-400 mt-0.5 font-bold">វិក្កយបត្រទូទាត់ប្រាក់ / INVOICE</p>
                             </div>
+                            
                             <div class="grid grid-cols-2 text-xs mb-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
                                 <div class="space-y-1">
                                     <p class="text-slate-500"><strong>អតិថិជន៖</strong> <span id="pdfCustomer" class="font-bold text-slate-800">-</span></p>
@@ -266,21 +255,24 @@
                                     <p class="text-slate-500"><strong>ថ្ងៃខែ៖</strong> <span id="pdfDate" class="font-bold text-slate-800">-</span></p>
                                 </div>
                             </div>
-                            <table class="w-full text-xs border border-slate-200 mb-4">
-                                <thead class="bg-slate-100 font-bold text-slate-700">
-                                    <tr class="border-b">
-                                        <th class="p-2.5 text-center border-r w-10">ល.រ</th>
-                                        <th class="p-2.5 text-left border-r">ឈ្មោះទំនិញ</th>
-                                        <th class="p-2.5 text-center border-r w-16">ចំនួន</th>
-                                        <th class="p-2.5 text-right border-r w-24">តម្លៃរាយ</th>
-                                        <th class="p-2.5 text-right w-24">សរុប</th>
-                                        <th class="p-2.5 text-center w-12 print-hide" id="th-action">លុប</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="invoiceItemsTableBody" class="divide-y divide-slate-200"></tbody>
-                            </table>
                             
-                            <div class="flex justify-between items-end mt-6 pt-4 border-t border-slate-100">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs border border-slate-200 mb-4 text-left border-collapse">
+                                    <thead class="bg-slate-100 font-bold text-slate-700 border-b">
+                                        <tr>
+                                            <th class="p-2 text-center border-r border-slate-250 w-10">ល.រ</th>
+                                            <th class="p-2 border-r border-slate-250">ឈ្មោះទំនិញ</th>
+                                            <th class="p-2 text-center border-r border-slate-250 w-16">ចំនួន</th>
+                                            <th class="p-2 text-right border-r border-slate-250 w-24">តម្លៃរាយ</th>
+                                            <th class="p-2 text-right border-r border-slate-250 w-24">សរុប</th>
+                                            <th class="p-2 text-center w-12 print-hide" id="th-action">លុប</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="invoiceItemsTableBody" class="divide-y divide-slate-200"></tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="flex justify-between items-end mt-6 pt-4 border-t border-slate-150">
                                 <div class="flex gap-4">
                                     <div class="flex flex-col items-center">
                                         <span class="text-[8px] text-slate-400 font-bold mb-1">ABA USD ($)</span>
@@ -304,7 +296,6 @@
                         </div>
                     </div>
                 </section>
-
                 <section id="tab-vireakbuntham" class="tab-content hidden space-y-6">
                     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm max-w-2xl mx-auto space-y-4">
                         <div class="border-b pb-3">
