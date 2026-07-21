@@ -268,6 +268,10 @@ function saveFinalInvoice() {
     productsData.forEach(p => { productsObj[p.id] = p; });
     
     database.ref('products').set(productsObj).then(() => {
+        
+        // 🚀 ហៅ Telegram ដោយបញ្ជូន driver ចូលផងដែរ
+        sendTelegramNotification(invCode, customer, phone, location, date, driver, grandTotal, currentInvoiceItems);
+
         downloadInvoicePDF(invCode);
         alert("🎉 រក្សាទុកចូលរបាយការណ៍លក់ និងទាញយក PDF ជោគជ័យ!");
         resetInvoiceForm();
@@ -715,4 +719,44 @@ function viewInvoice(invoiceId) {
 function closeInvoiceModal() {
     const modal = document.getElementById('invoiceModal');
     if (modal) modal.classList.add('hidden');
+}
+/// ==========================================
+// Telegram Integration Config
+// ==========================================
+const TELEGRAM_BOT_TOKEN = "8830737719:AAHYaFzRQYAFwPXHhYexgTdVGYOGrenYIKE"; // ជំនួសដោយ Bot Token របស់អ្នក
+const TELEGRAM_CHAT_ID = "-5482283441"; // ជំនួសដោយ Chat ID របស់អ្នក
+
+// មុខងារផ្ញើសារអក្សរទៅ Telegram (បន្ថែម driver)
+function sendTelegramNotification(invCode, customer, phone, location, date, driver, total, items) {
+    let itemsText = items.map((item, idx) => 
+        `  ${idx + 1}. ${item.name} x${item.qty} = $${item.totalPrice.toFixed(2)}`
+    ).join('\n');
+
+    let message = `🧾 *វិក្កយបត្រថ្មី (NEW INVOICE)*\n` +
+                  `------------------------------\n` +
+                  `🆔 *លេខវិក្កយបត្រ:* \`${invCode}\` \n` +
+                  `👤 *អតិថិជន:* ${customer}\n` +
+                  `📞 *លេខទូរស័ព្ទ:* ${phone || 'គ្មាន'}\n` +
+                  `📍 *ទីតាំង:* ${location}\n` +
+                  `🛵 *អ្នកដឹកជញ្ជូន:* ${driver || 'មិនទាន់ចាត់ចែង'}\n` +
+                  `📅 *កាលបរិច្ឆេទ:* ${date}\n` +
+                  `------------------------------\n` +
+                  `📦 *មុខទំនិញ:*\n${itemsText}\n` +
+                  `------------------------------\n` +
+                  `💰 *ទូទាត់សរុប:* *$${total.toFixed(2)}*`;
+
+    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+
+    fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            chat_id: TELEGRAM_CHAT_ID,
+            text: message,
+            parse_mode: 'Markdown'
+        })
+    })
+    .then(response => response.json())
+    .then(data => console.log('Telegram Alert Sent:', data))
+    .catch(error => console.error('Telegram Error:', error));
 }
