@@ -26,6 +26,9 @@ const usersData = [
 let productsData = [], currentUser = null, salesData = [], deliveryData = [], currentInvoiceItems = [], vbInvoicesData = [];
 let localStream = null;
 
+const TELEGRAM_BOT_TOKEN = "8830737719:AAHYaFzRQYAFwPXHhYexgTdVGYOGrenYIKE"; 
+const TELEGRAM_CHAT_ID = "-5482283441"; 
+
 window.addEventListener('DOMContentLoaded', () => {
     const savedUser = localStorage.getItem('vck_current_user');
     if (savedUser) {
@@ -65,8 +68,7 @@ function initSystemAfterLogin() {
     if (document.getElementById('pdfDate')) document.getElementById('pdfDate').innerText = today;
     if (document.getElementById('deliveryStatDate')) document.getElementById('deliveryStatDate').value = today;
 
-    // បើកបង្ហាញជួរឈរ "សកម្មភាព" ក្នុងតារាង Dashboard បើសិនជា Admin
-   const dashCards = document.getElementById('dash-cards-container');
+    const dashCards = document.getElementById('dash-cards-container');
     const thTotal = document.getElementById('th-dashboard-total');
     const thAction = document.getElementById('th-dashboard-action');
 
@@ -81,7 +83,8 @@ function initSystemAfterLogin() {
     }
 
     if (currentUser.role !== 'Admin') {
-        document.getElementById('stock-entry-form').classList.add('hidden');
+        const stockForm = document.getElementById('stock-entry-form');
+        if (stockForm) stockForm.classList.add('hidden');
     }
 
     setupLivePreviewInputs();
@@ -99,12 +102,22 @@ function handleLogout() {
 function switchTab(tabId) {
     stopCamera();
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-    document.getElementById('tab-' + tabId).classList.remove('hidden');
+    
+    const targetTab = document.getElementById('tab-' + tabId);
+    if (targetTab) targetTab.classList.remove('hidden');
+
     document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active-menu'));
     const targetBtn = document.getElementById('btn-' + tabId);
     if (targetBtn) targetBtn.classList.add('active-menu');
     
-    const titles = { 'dashboard': '📊 ផ្ទាំងគ្រប់គ្រងទូទៅ', 'sales': '📄 វិក្កយបត្រលក់សម្ភារៈ', 'vireakbuntham': '🚌 វិក្កយបត្រវីរៈប៊ុនថាំ', 'delivery': '🚚 ប្រព័ន្ធដឹកជញ្ជូន', 'stock': '📦 គ្រប់គ្រងឃ្លាំងស្តុក' };
+    const titles = { 
+        'dashboard': '📊 ផ្ទាំងគ្រប់គ្រងទូទៅ', 
+        'sales': '📄 វិក្កយបត្រលក់សម្ភារៈ', 
+        'vireakbuntham': '🚌 វិក្កយបត្រវីរៈប៊ុនថាំ', 
+        'delivery': '🚚 ប្រព័ន្ធដឹកជញ្ជូន', 
+        'stock': '📦 គ្រប់គ្រងឃ្លាំងស្តុក',
+        'customer-history': '👥 ប្រវត្តិទិញរបស់អតិថិជន'
+    };
     document.getElementById('pageTitle').innerText = titles[tabId] || 'VCK System';
 }
 
@@ -135,7 +148,10 @@ function listenToFirebaseData() {
 function setupLivePreviewInputs() {
     ['Customer', 'Phone', 'Location', 'Date'].forEach(id => {
         const el = document.getElementById('invoice' + id);
-        if (el) el.addEventListener('input', (e) => document.getElementById('pdf' + id).innerText = e.target.value || '-');
+        if (el) el.addEventListener('input', (e) => {
+            const pdfEl = document.getElementById('pdf' + id);
+            if (pdfEl) pdfEl.innerText = e.target.value || '-';
+        });
     });
 }
 
@@ -176,12 +192,6 @@ function autoFillProductPrice() {
         priceInput.value = '';
         hiddenId.value = '';
     }
-}
-
-function onProductSelectChange() {
-    const prodId = parseInt(document.getElementById('invoiceProductSelect').value);
-    const prod = productsData.find(p => p.id === prodId);
-    document.getElementById('invoiceUnitPrice').value = prod ? prod.price : "";
 }
 
 function addItemToCurrentInvoice() {
@@ -260,9 +270,17 @@ function saveFinalInvoice() {
     const invCode = 'INV-' + Math.floor(100000 + Math.random() * 900000);
     const grandTotal = currentInvoiceItems.reduce((sum, item) => sum + item.totalPrice, 0);
 
+    const lowStockAlerts = [];
+
     currentInvoiceItems.forEach(item => {
         const p = productsData.find(prod => prod.id === item.productId);
-        if (p) p.avail -= item.qty;
+        if (p) {
+            p.avail -= item.qty;
+            // 🚨 ពិនិត្យប្រសិនបើស្តុកនៅសល់ ≤ 5
+            if (p.avail <= 5) {
+                lowStockAlerts.push({ name: p.name, avail: p.avail });
+            }
+        }
     });
 
     database.ref('sales').child(invCode).set({ invCode, customer, phone, location, date, total: grandTotal, items: currentInvoiceItems });
@@ -273,6 +291,12 @@ function saveFinalInvoice() {
     
     database.ref('products').set(productsObj).then(() => {
         sendTelegramNotification(invCode, customer, phone, location, date, driver, grandTotal, currentInvoiceItems);
+        
+        // 🚨 ប្រសិនបើមានទំនិញជិតអស់ស្តុក ផ្ញើសារ Alert ទៅ Telegram ភ្លាមៗ
+        if (lowStockAlerts.length > 0) {
+            sendLowStockTelegramAlert(lowStockAlerts);
+        }
+
         downloadInvoicePDF(invCode);
         alert("🎉 រក្សាទុកចូលរបាយការណ៍លក់ និងទាញយក PDF ជោគជ័យ!");
         resetInvoiceForm();
@@ -280,10 +304,109 @@ function saveFinalInvoice() {
     });
 }
 
+// 🚨 អនុគមន៍ផ្ញើសារស្វ័យប្រវត្តិពេលស្តុកជិតអស់ទៅ Telegram
+function sendLowStockTelegramAlert(items) {
+    let itemsListText = items.map(i => `⚠️ *${i.name}* ➔ នៅសល់ត្រឹមតែ *${i.avail}* ប៉ុណ្ណោះ!`).join('\n');
+    let message = `🚨 *ការជូនដំណឹង៖ ទំនិញជិតអស់ពីស្តុក (LOW STOCK ALERT)*\n` +
+                  `------------------------------\n` +
+                  `${itemsListText}\n` +
+                  `------------------------------\n` +
+                  `សូមពិនិត្យ និងបំពេញស្តុកបន្ថែម!`;
+
+    fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            chat_id: TELEGRAM_CHAT_ID,
+            text: message,
+            parse_mode: 'Markdown'
+        })
+    }).catch(err => console.error('Low Stock Telegram Error:', err));
+}
+
+function sendTelegramNotification(invCode, customer, phone, location, date, driver, total, items) {
+    let itemsText = items.map((item, idx) => 
+        `  ${idx + 1}. ${item.name} x${item.qty} = $${item.totalPrice.toFixed(2)}`
+    ).join('\n');
+
+    let message = `🧾 *វិក្កយបត្រថ្មី (NEW INVOICE)*\n` +
+                  `------------------------------\n` +
+                  `🆔 *លេខវិក្កយបត្រ:* \`${invCode}\` \n` +
+                  `👤 *អតិថិជន:* ${customer}\n` +
+                  `📞 *លេខទូរស័ព្ទ:* ${phone || 'គ្មាន'}\n` +
+                  `📍 *ទីតាំង:* ${location}\n` +
+                  `🛵 *អ្នកដឹកជញ្ជូន:* ${driver || 'មិនទាន់ចាត់ចែង'}\n` +
+                  `📅 *កាលបរិច្ឆេទ:* ${date}\n` +
+                  `------------------------------\n` +
+                  `📦 *មុខទំនិញ:*\n${itemsText}\n` +
+                  `------------------------------\n` +
+                  `💰 *ទូទាត់សរុប:* *$${total.toFixed(2)}*`;
+
+    fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            chat_id: TELEGRAM_CHAT_ID,
+            text: message,
+            parse_mode: 'Markdown'
+        })
+    }).catch(error => console.error('Telegram Error:', error));
+}
+
+// 🔍 មុខងារស្វែងរកប្រវត្តិទិញរបស់អតិថិជនតាមលេខទូរស័ព្ទ
+function searchCustomerHistory() {
+    const phoneInput = document.getElementById('searchCustPhone').value.trim();
+    const resultArea = document.getElementById('custHistoryResult');
+    const nameEl = document.getElementById('custHistoryName');
+    const phoneEl = document.getElementById('custHistoryPhone');
+    const totalSpentEl = document.getElementById('custHistoryTotalSpent');
+    const totalInvEl = document.getElementById('custHistoryTotalInvoices');
+    const tableBody = document.getElementById('custHistoryTableBody');
+
+    if (!phoneInput) {
+        alert("⚠️ សូមបញ្ចូលលេខទូរស័ព្ទអតិថិជនដើម្បីស្វែងរក!");
+        return;
+    }
+
+    // ស្វែងរកវិក្កយបត្រទាំងអស់របស់អតិថិជនតាមលេខទូរស័ព្ទ
+    const customerSales = salesData.filter(s => s.phone && s.phone.replace(/\s+/g, '') === phoneInput.replace(/\s+/g, ''));
+
+    if (customerSales.length === 0) {
+        resultArea.classList.add('hidden');
+        alert("❌ រកមិនឃើញប្រវត្តិទិញសម្រាប់លេខទូរស័ព្ទនេះទេ!");
+        return;
+    }
+
+    const firstMatch = customerSales[0];
+    const totalSpent = customerSales.reduce((sum, s) => sum + (parseFloat(s.total) || 0), 0);
+
+    nameEl.innerText = firstMatch.customer || 'មិនស្គាល់';
+    phoneEl.innerText = phoneInput;
+    totalSpentEl.innerText = `$${totalSpent.toFixed(2)}`;
+    totalInvEl.innerText = `${customerSales.length} វិក្កយបត្រ`;
+
+    tableBody.innerHTML = customerSales.map(s => `
+        <tr class="text-xs hover:bg-slate-50 border-b">
+            <td class="p-3 pl-6 font-medium">${s.date || '-'}</td>
+            <td class="p-3 font-bold text-indigo-600 cursor-pointer" onclick="viewInvoice('${s.invCode}')">${s.invCode}</td>
+            <td class="p-3 text-slate-600">
+                ${s.items ? s.items.map(i => `${i.name} (x${i.qty})`).join(', ') : '-'}
+            </td>
+            <td class="p-3 text-slate-500">${s.location || '-'}</td>
+            <td class="p-3 text-right font-bold text-emerald-600">$${(parseFloat(s.total) || 0).toFixed(2)}</td>
+            <td class="p-3 text-center">
+                <button onclick="viewInvoice('${s.invCode}')" class="bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-600 p-1.5 rounded transition text-[11px] font-bold">👁️ មើល</button>
+            </td>
+        </tr>
+    `).join('');
+
+    resultArea.classList.remove('hidden');
+}
+
 function deleteInvoice(invCode) {
     if (!currentUser || currentUser.role !== 'Admin') return alert("⚠️ អ្នកគ្មានសិទ្ធិលុបវិក្កយបត្រនេះទេ!");
     
-    if (confirm(`⚠️ តើអ្នកពិតជាចង់លុបវិក្កយបត្រលេខ ${invCode} នេះមែនទេ? ទិន្នន័យនឹងត្រូវបាត់បង់ទាំងស្រុងពីប្រព័ន្ធ!`)) {
+    if (confirm(`⚠️ តើអ្នកពិតជាចង់លុបវិក្កយបត្រលេខ ${invCode} នេះមែនទេ?`)) {
         database.ref('sales').child(invCode).remove();
         database.ref('deliveries').child(invCode).remove().then(() => {
             alert("🗑️ បានលុបវិក្កយបត្រដោយជោគជ័យ!");
@@ -334,9 +457,11 @@ function downloadInvoicePDF() {
         </div>
     `;
 
-    const exportDiv = document.getElementById('pdf-export-container');
-    document.getElementById('pdf-content-data').innerHTML = htmlContent;
+    const exportDiv = document.getElementById('pdf-export-container') || document.createElement('div');
+    exportDiv.id = 'pdf-export-container';
     exportDiv.style.display = 'block';
+    exportDiv.innerHTML = htmlContent;
+    document.body.appendChild(exportDiv);
 
     const opt = { 
         margin: 0.5, 
@@ -532,18 +657,15 @@ function renderDashboard() {
     salesData.forEach(s => {
         const amt = parseFloat(s.total) || 0;
         
-        // 1. គណនាប្រចាំថ្ងៃ
         if (selectedDate && s.date === selectedDate) {
             dailySum += amt;
         }
         
-        // 2. គណនាប្រចាំខែ
         if (s.date && typeof s.date === 'string' && s.date.substring(0, 7) === selectedMonth) {
             monthlySum += amt;
         }
     });
 
-    // 🔒 ពិនិត្យសិទ្ធិ៖ បើជា Admin ទើបបង្ហាញតួលេខលុយ បើជា User ត្រូវលាក់តួលេខ
     const isAdmin = currentUser && currentUser.role === 'Admin';
 
     if (document.getElementById('dashDailyAmount')) {
@@ -557,7 +679,6 @@ function renderDashboard() {
 }
 
 function renderSalesTable(selectedDate) {
-    // ប្រសិនបើអ្នកប្រើមិនទាន់ជ្រើសរើសថ្ងៃ វានឹងបង្ហាញទិន្នន័យទាំងអស់ ឬបង្ហាញទិន្នន័យតាមថ្ងៃជ្រើសរើស
     let filteredSales = selectedDate ? salesData.filter(s => s.date === selectedDate) : salesData;
     filteredSales.sort((a, b) => b.invCode.localeCompare(a.invCode));
 
@@ -574,7 +695,6 @@ function renderSalesTable(selectedDate) {
                     actionTd = (s.invCode && s.invCode !== '-') ? 
                         `<td class="p-3 text-center pr-6 flex justify-center gap-1.5">
                             <button onclick="viewInvoice('${s.invCode}')" class="bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-600 p-1 rounded transition text-[11px] cursor-pointer shadow-sm" title="មើលលម្អិត">👁️</button>
-                            <button onclick="printInvoiceFromDashboard('${s.invCode}')" class="bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-600 p-1 rounded transition text-[11px] cursor-pointer shadow-sm" title="បោះពុម្ភវិក្កយបត្រ">🖨️</button>
                             <button onclick="deleteInvoice('${s.invCode}')" class="bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 p-1 rounded transition text-[11px] cursor-pointer shadow-sm" title="លុប">🗑️</button>
                          </td>` : 
                         `<td class="p-3 text-center pr-6 text-slate-300">-</td>`;
@@ -649,7 +769,7 @@ function renderAll() {
                     <td class="p-3 font-bold text-slate-700">${p.name}</td>
                     <td class="p-3"><span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px]">${p.cat}</span></td>
                     <td class="p-2 text-center"><input type="number" id="inline-total-${p.id}" value="${p.total}" onchange="autoSaveProduct(${p.id})" class="w-16 border border-slate-200 rounded text-center p-1 font-bold"></td>
-                    <td class="p-2 text-center"><input type="number" id="inline-avail-${p.id}" value="${p.avail}" onchange="autoSaveProduct(${p.id})" class="w-16 border border-slate-200 rounded text-center p-1 font-bold ${p.avail < 5 ? 'text-rose-500 font-black' : ''}"></td>
+                    <td class="p-2 text-center"><input type="number" id="inline-avail-${p.id}" value="${p.avail}" onchange="autoSaveProduct(${p.id})" class="w-16 border border-slate-200 rounded text-center p-1 font-bold ${p.avail <= 5 ? 'text-rose-500 font-black' : ''}"></td>
                     <td class="p-2 text-right"><input type="number" step="0.01" id="inline-price-${p.id}" value="${p.price}" onchange="autoSaveProduct(${p.id})" class="w-20 border border-slate-200 rounded text-right p-1 font-bold"></td>
                     <td class="p-3 text-center"><button onclick="deleteProductFromStock(${p.id})" class="text-rose-600 cursor-pointer text-sm">🗑️</button></td>
                 </tr>
@@ -694,7 +814,7 @@ function viewInvoice(invoiceId) {
         content.innerHTML = `
             <div class="border-b pb-3 mb-4">
                 <p class="text-xs font-bold text-slate-500">វិក្កយបត្រលេខ: <span class="text-slate-800">${data.invCode || invoiceId}</span></p>
-                <p class="text-xs font-bold text-slate-500">អតិថិជន: <span class="text-slate-800">${data.customer || '-'}</span></p>
+                <p class="text-xs font-bold text-slate-500">អតិថិជន: <span class="text-slate-800">${data.customer || '-'}</span> (${data.phone || 'គ្មានលេខ'})</p>
                 <p class="text-xs font-bold text-slate-500">ទិសដៅ: <span class="text-slate-800">${data.location || '-'}</span></p>
                 <p class="text-xs font-bold text-slate-500">កាលបរិច្ឆេទ: <span class="text-slate-800">${data.date || '-'}</span></p>
             </div>
@@ -729,41 +849,4 @@ function viewInvoice(invoiceId) {
 function closeInvoiceModal() {
     const modal = document.getElementById('invoiceModal');
     if (modal) modal.classList.add('hidden');
-}
-
-const TELEGRAM_BOT_TOKEN = "8830737719:AAHYaFzRQYAFwPXHhYexgTdVGYOGrenYIKE"; 
-const TELEGRAM_CHAT_ID = "-5482283441"; 
-
-function sendTelegramNotification(invCode, customer, phone, location, date, driver, total, items) {
-    let itemsText = items.map((item, idx) => 
-        `  ${idx + 1}. ${item.name} x${item.qty} = $${item.totalPrice.toFixed(2)}`
-    ).join('\n');
-
-    let message = `🧾 *វិក្កយបត្រថ្មី (NEW INVOICE)*\n` +
-                  `------------------------------\n` +
-                  `🆔 *លេខវិក្កយបត្រ:* \`${invCode}\` \n` +
-                  `👤 *អតិថិជន:* ${customer}\n` +
-                  `📞 *លេខទូរស័ព្ទ:* ${phone || 'គ្មាន'}\n` +
-                  `📍 *ទីតាំង:* ${location}\n` +
-                  `🛵 *អ្នកដឹកជញ្ជូន:* ${driver || 'មិនទាន់ចាត់ចែង'}\n` +
-                  `📅 *កាលបរិច្ឆេទ:* ${date}\n` +
-                  `------------------------------\n` +
-                  `📦 *មុខទំនិញ:*\n${itemsText}\n` +
-                  `------------------------------\n` +
-                  `💰 *ទូទាត់សរុប:* *$${total.toFixed(2)}*`;
-
-    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-
-    fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            chat_id: TELEGRAM_CHAT_ID,
-            text: message,
-            parse_mode: 'Markdown'
-        })
-    })
-    .then(response => response.json())
-    .then(data => console.log('Telegram Alert Sent:', data))
-    .catch(error => console.error('Telegram Error:', error));
 }
