@@ -37,16 +37,26 @@ function handleLogin() {
     const userIn = document.getElementById('loginUsername').value.trim();
     const passIn = document.getElementById('loginPassword').value;
     const errorEl = document.getElementById('loginError');
-    const foundUser = usersData.find(u => u.name.toLowerCase() === userIn.toLowerCase() && u.password === passIn);
+    
+    database.ref('users').once('value').then((snapshot) => {
+        const firebaseUsers = snapshot.val();
+        let allUsers = usersData;
+        
+        if (firebaseUsers) {
+            allUsers = Object.values(firebaseUsers);
+        }
 
-    if (foundUser) {
-        currentUser = foundUser;
-        localStorage.setItem('vck_current_user', JSON.stringify(currentUser));
-        errorEl.classList.add('hidden');
-        initSystemAfterLogin();
-    } else {
-        errorEl.classList.remove('hidden');
-    }
+        const foundUser = allUsers.find(u => u.name.toLowerCase() === userIn.toLowerCase() && u.password === passIn);
+
+        if (foundUser) {
+            currentUser = foundUser;
+            localStorage.setItem('vck_current_user', JSON.stringify(currentUser));
+            errorEl.classList.add('hidden');
+            initSystemAfterLogin();
+        } else {
+            errorEl.classList.remove('hidden');
+        }
+    });
 }
 
 function initSystemAfterLogin() {
@@ -54,7 +64,19 @@ function initSystemAfterLogin() {
     document.getElementById('main-application').classList.remove('hidden');
     document.getElementById('topNavUser').innerText = currentUser.name;
     document.getElementById('topNavRole').innerText = currentUser.role;
-    document.getElementById('userAvatar').innerText = currentUser.name.charAt(0).toUpperCase();
+
+    const avatarImg = document.getElementById('userAvatarImg');
+    const avatarText = document.getElementById('userAvatarText');
+    
+    if (currentUser.profileImage) {
+        avatarImg.src = currentUser.profileImage;
+        avatarImg.classList.remove('hidden');
+        avatarText.classList.add('hidden');
+    } else {
+        avatarImg.classList.add('hidden');
+        avatarText.classList.remove('hidden');
+        avatarText.innerText = currentUser.name.charAt(0).toUpperCase();
+    }
 
     const today = new Date().toISOString().split('T')[0];
     const currentMonth = today.substring(0, 7);
@@ -86,6 +108,33 @@ function initSystemAfterLogin() {
     setupLivePreviewInputs();
     listenToFirebaseData();
     switchTab('dashboard');
+}
+
+function updateProfilePicture(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const base64Image = e.target.result;
+            
+            currentUser.profileImage = base64Image;
+            localStorage.setItem('vck_current_user', JSON.stringify(currentUser));
+
+            const avatarImg = document.getElementById('userAvatarImg');
+            const avatarText = document.getElementById('userAvatarText');
+            avatarImg.src = base64Image;
+            avatarImg.classList.remove('hidden');
+            avatarText.classList.add('hidden');
+
+            const userIndex = usersData.findIndex(u => u.name === currentUser.name);
+            if (userIndex !== -1) {
+                usersData[userIndex].profileImage = base64Image;
+                database.ref('users/' + currentUser.id).update({ profileImage: base64Image });
+            }
+            
+            alert("✨ បានផ្លាស់ប្ដូររូបភាពប្រវត្តិរូបដោយជោគជ័យ!");
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
 }
 
 function handleLogout() {
