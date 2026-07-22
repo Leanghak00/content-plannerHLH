@@ -1,14 +1,28 @@
-* { 
-    font-family: 'Battambang', sans-serif !important; 
+body {
+    font-family: 'Kantumruy Pro', 'Battambang', sans-serif;
 }
 
-.active-menu { 
-    background-color: #1e293b !important; 
-    color: #f8fafc !important; 
-    border-left: 4px solid #4f46e5; 
+/* Custom scrollbar សម្រាប់ភាពស្អាតបាត */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
 }
 
-/* Smooth Touch Scroll សម្រាប់ Mobile */
-.overflow-x-auto {
-    -webkit-overflow-scrolling: touch;
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+.active-menu {
+    background-color: #1e293b;
+    color: #ffffff;
+    border-left: 4px solid #6366f1;
 }
