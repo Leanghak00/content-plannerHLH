@@ -1,78 +1,14 @@
-/* ទាញយកពុម្ពអក្សរខ្មែរសម្រាប់ប្រព័ន្ធ និងទម្រង់វិក្កយបត្រ */
-@import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,100..0,700;1,100..0,700&family=Khmer&display=swap');
-
-:root {
-    --primary: #4f46e5;
-    --bg-main: #f8fafc;
+* { 
+    font-family: 'Battambang', sans-serif !important; 
 }
 
-body {
-    font-family: "Kantumruy Pro", "Khmer", sans-serif;
-    background-color: var(--bg-main);
+.active-menu { 
+    background-color: #1e293b !important; 
+    color: #f8fafc !important; 
+    border-left: 4px solid #4f46e5; 
 }
 
-.font-khmer {
-    font-family: "Kantumruy Pro", "Khmer", sans-serif !important;
-}
-
-/* លាក់ Scrollbar របស់ម៉ឺនុយផ្តេកលើទូរស័ព្ទ */
-.scrollbar-none::-webkit-scrollbar {
-    display: none;
-}
-.scrollbar-none {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-
-/* ស្ទីលសម្រាប់ម៉ឺនុយដែលកំពុងជ្រើសរើស (Active Tab Button) */
-.active-menu {
-    background: linear-gradient(135deg, rgba(79, 70, 229, 0.15) 0%, rgba(79, 70, 229, 0.05) 100%) !important;
-    color: #6366f1 !important;
-    font-weight: 700;
-}
-@media (min-width: 768px) {
-    .active-menu {
-        border-left: 4px solid #4f46e5 !important;
-    }
-}
-
-/* ប្រអប់គ្រប់គ្រងតារាងកុំឱ្យធ្លាយរាងលើទូរស័ព្ទ */
-.table-container {
-    width: 100%;
-    overflow-x: auto;
+/* Smooth Touch Scroll សម្រាប់ Mobile */
+.overflow-x-auto {
     -webkit-overflow-scrolling: touch;
-}
-
-table {
-    border-collapse: separate;
-    border-spacing: 0;
-}
-
-/* បែបផែន Input Focus */
-input:focus, select:focus {
-    border-color: var(--primary) !important;
-    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15) !important;
-}
-
-.tab-content {
-    animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(4px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.dash-card {
-    transition: all 0.2s ease;
-}
-.dash-card:hover {
-    transform: translateY(-2px);
-}
-
-/* លាក់ប៊ូតុងមួយចំនួនពេល Print ចេញជា PDF */
-@media print {
-    .print-hide {
-        display: none !important;
-    }
 }
