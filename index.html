@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@100;300;400;700;900&display=swap" rel="stylesheet">
-
+    
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -17,55 +17,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
-        * {
-            font-family: 'Battambang', sans-serif !important;
-        }
-        /* បង្ហាញម៉ូដម៉ឺនុយសកម្ម */
+        * { font-family: 'Battambang', sans-serif !important; }
         .active-menu { 
             background-color: #1e293b !important; 
             color: #f8fafc !important; 
             border-left: 4px solid #4f46e5; 
         }
-
-        /* កូដដោះស្រាយបញ្ហា Tailwind v4 មិនស្គាល់ពណ៌ពេលទាញយកជា PDF (html2canvas Compatibility) */
-        #invoice-pdf-area, #modalInvoiceContent {
-            background-color: #ffffff !important;
-            color: #1e293b !important;
-        }
-        #invoice-pdf-area .bg-slate-50, #modalInvoiceContent .bg-slate-50 {
-            background-color: #f8fafc !important;
-        }
-        #invoice-pdf-area .bg-slate-100, #modalInvoiceContent .bg-slate-100 {
-            background-color: #f1f5f9 !important;
-        }
-        #invoice-pdf-area .text-slate-800, #modalInvoiceContent .text-slate-800 {
-            color: #1e293b !important;
-        }
-        #invoice-pdf-area .text-slate-500, #modalInvoiceContent .text-slate-500 {
-            color: #64748b !important;
-        }
-        #invoice-pdf-area .text-slate-400, #modalInvoiceContent .text-slate-400 {
-            color: #94a3b8 !important;
-        }
-        #invoice-pdf-area .text-indigo-600, #modalInvoiceContent .text-indigo-600 {
-            color: #4f46e5 !important;
-        }
-        #invoice-pdf-area .text-emerald-600, #modalInvoiceContent .text-emerald-600 {
-            color: #059669 !important;
-        }
-        #invoice-pdf-area .border-slate-200, #modalInvoiceContent .border-slate-200 {
-            border: 1px solid #e2e8f0 !important;
-        }
-        #invoice-pdf-area .border-slate-100, #modalInvoiceContent .border-slate-100 {
-            border: 1px solid #f1f5f9 !important;
-        }
-        #invoice-pdf-area .divide-slate-200 > *, #modalInvoiceContent .divide-slate-200 > * {
-            border-color: #e2e8f0 !important;
-        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
 
+    <!-- Login Screen -->
     <div id="login-screen" class="flex items-center justify-center min-h-screen p-4">
         <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100">
             <div class="text-center mb-8">
@@ -94,6 +56,7 @@
         </div>
     </div>
 
+    <!-- Main Application -->
     <div id="main-application" class="hidden flex flex-col md:flex-row min-h-screen">
         
         <aside class="w-full md:w-64 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800">
@@ -105,17 +68,15 @@
             </div>
 
             <nav class="flex-1 p-4 space-y-1.5">
-                
-                
                 <button id="btn-dashboard" onclick="switchTab('dashboard')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold hover:bg-slate-800 transition text-left cursor-pointer">📊 ផ្ទាំងគ្រប់គ្រងទូទៅ</button>
-                
                 <button id="btn-sales" onclick="switchTab('sales')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold hover:bg-slate-800 transition text-left cursor-pointer">📄 វិក្កយបត្រ</button>
                 <button id="btn-vireakbuntham" onclick="switchTab('vireakbuntham')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold hover:bg-slate-800 transition text-left cursor-pointer">🚌 វិក្កយបត្រវីរៈប៊ុនថាំ</button>
                 <button id="btn-delivery" onclick="switchTab('delivery')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold hover:bg-slate-800 transition text-left cursor-pointer">🚚 ប្រព័ន្ធដឹកជញ្ជូន</button>
                 <button id="btn-stock" onclick="switchTab('stock')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold hover:bg-slate-800 transition text-left cursor-pointer">📦 គ្រប់គ្រងឃ្លាំងស្តុក</button>
                 
+                <!-- 👥 ម៉ឺនុយថ្មី៖ ប្រវត្តិទិញរបស់អតិថិជន -->
+                <button id="btn-customer-history" onclick="switchTab('customer-history')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold hover:bg-slate-800 transition text-left cursor-pointer text-indigo-300">👥 ប្រវត្តិទិញរបស់អតិថិជន</button>
             </nav>
-            
 
             <div class="p-4 border-t border-slate-800 bg-slate-950/40 flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -124,13 +85,10 @@
                         <h4 id="topNavUser" class="text-xs font-bold text-white">-</h4>
                         <p id="topNavRole" class="text-[10px] text-slate-400">-</p>
                     </div>
-                    
                 </div>
                 <button onclick="handleLogout()" class="text-slate-400 hover:text-rose-400 p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer" title="ចាកចេញ">🚪</button>
             </div>
-            
         </aside>
-        
 
         <main class="flex-1 flex flex-col overflow-x-hidden">
             <header class="bg-white border-b border-slate-200 px-6 py-4">
@@ -138,46 +96,40 @@
             </header>
 
             <div class="p-6 flex-1 overflow-y-auto">
+                <!-- Dashboard Section -->
                 <section id="tab-dashboard" class="tab-content hidden space-y-6">
-                    
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-    <!-- កាតប្រចាំថ្ងៃ -->
-    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase">តួលេខលក់ប្រចាំថ្ងៃ</p>
-                <h3 id="dashDailyAmount" class="text-2xl font-black text-emerald-600 mt-1">$0.00</h3>
-            </div>
-            <span class="text-3xl bg-emerald-50 p-3 rounded-xl">💵</span>
-        </div>
-        <!-- ជ្រើសរើសថ្ងៃចាស់ៗ -->
-        <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
-            <label for="searchDate" class="text-[10px] font-bold text-slate-400">ជ្រើសរើសថ្ងៃ៖</label>
-            <input type="date" id="searchDate" onchange="renderDashboard()" class="border border-slate-200 p-1.5 rounded-lg text-xs font-bold text-emerald-600 bg-slate-50 focus:outline-none">
-        </div>
-    </div>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[11px] font-bold text-slate-400 uppercase">តួលេខលក់ប្រចាំថ្ងៃ</p>
+                                    <h3 id="dashDailyAmount" class="text-2xl font-black text-emerald-600 mt-1">$0.00</h3>
+                                </div>
+                                <span class="text-3xl bg-emerald-50 p-3 rounded-xl">💵</span>
+                            </div>
+                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+                                <label for="searchDate" class="text-[10px] font-bold text-slate-400">ជ្រើសរើសថ្ងៃ៖</label>
+                                <input type="date" id="searchDate" onchange="renderDashboard()" class="border border-slate-200 p-1.5 rounded-lg text-xs font-bold text-emerald-600 bg-slate-50 focus:outline-none">
+                            </div>
+                        </div>
 
-    <!-- កាតប្រចាំខែ -->
-    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase">តួលេខលក់ប្រចាំខែ</p>
-                <h3 id="dashMonthlyAmount" class="text-2xl font-black text-indigo-600 mt-1">$0.00</h3>
-            </div>
-            <span class="text-3xl bg-indigo-50 p-3 rounded-xl">📈</span>
-        </div>
-        <!-- ជ្រើសរើសខែចាស់ៗ -->
-        <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
-            <label for="searchMonth" class="text-[10px] font-bold text-slate-400">ជ្រើសរើសខែ៖</label>
-            <input type="month" id="searchMonth" onchange="renderDashboard()" class="border border-slate-200 p-1.5 rounded-lg text-xs font-bold text-indigo-600 bg-slate-50 focus:outline-none">
-        </div>
-    </div>
-</div>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[11px] font-bold text-slate-400 uppercase">តួលេខលក់ប្រចាំខែ</p>
+                                    <h3 id="dashMonthlyAmount" class="text-2xl font-black text-indigo-600 mt-1">$0.00</h3>
+                                </div>
+                                <span class="text-3xl bg-indigo-50 p-3 rounded-xl">📈</span>
+                            </div>
+                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+                                <label for="searchMonth" class="text-[10px] font-bold text-slate-400">ជ្រើសរើសខែ៖</label>
+                                <input type="month" id="searchMonth" onchange="renderDashboard()" class="border border-slate-200 p-1.5 rounded-lg text-xs font-bold text-indigo-600 bg-slate-50 focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                         <div class="p-5 border-b border-slate-100"><h3 class="font-black text-sm text-slate-800">📝 របាយការណ៍លក់លោតចូលស្វ័យប្រវត្តិ</h3></div>
-                        <div class="flex items-center gap-2">
-      
-    </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse">
                                 <thead>
@@ -193,15 +145,13 @@
                                 <tbody id="salesTableBody" class="divide-y divide-slate-50"></tbody>
                             </table>
                         </div>
-                        
                     </div>
                 </section>
 
-              <section id="tab-sales" class="tab-content hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <!-- ផ្នែកបញ្ចូលទិន្នន័យ (ឆ្វេង) -->
+                <!-- Sales Section -->
+                <section id="tab-sales" class="tab-content hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4 h-fit">
                         <h3 class="font-black text-sm text-slate-800 border-b pb-3">✍️ បង្កើតវិក្កយបត្រថ្មី</h3>
-                        
                         
                         <div class="grid grid-cols-2 gap-3">
                             <div>
@@ -242,14 +192,10 @@
 
                         <div class="p-4 border border-slate-200 rounded-xl bg-slate-50 space-y-2">
                             <h3 class="font-bold text-xs text-slate-700 mb-2">🛒 បញ្ចូលមុខទំនិញ</h3>
-                            
                             <input type="text" id="invoiceProductInput" list="productList" oninput="autoFillProductPrice()" placeholder="ជ្រើសរើសឈ្មោះទំនិញ..." class="border border-slate-200 p-2 w-full text-xs rounded bg-white focus:outline-none focus:border-indigo-500">
                             <datalist id="productList"></datalist>
-
                             <input type="text" id="invoiceUnitPrice" readonly placeholder="តម្លៃឯកតា ($)" class="border border-slate-200 p-2 w-full text-xs rounded bg-gray-100 font-bold text-right">
-
                             <input type="number" id="invoiceQty" value="1" min="1" placeholder="ចំនួន" class="border border-slate-200 p-2 w-full text-xs rounded bg-white font-bold text-center focus:outline-none focus:border-indigo-500">
-
                             <input type="hidden" id="invoiceProductIdHidden">
 
                             <button type="button" onclick="addItemToCurrentInvoice()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white p-2.5 rounded-lg font-bold text-xs transition cursor-pointer mt-2 shadow-sm">
@@ -258,7 +204,6 @@
                         </div>
                     </div>
 
-                    <!-- ផ្នែកបង្ហាញផ្ទាំងទិដ្ឋភាពវិក្កយបត្រ (ស្តាំ) -->
                     <div class="lg:col-span-7 space-y-4">
                         <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm" id="invoice-pdf-area">
                             <div class="text-center border-b pb-4 mb-4">
@@ -286,7 +231,7 @@
                                             <th class="p-2 text-center border-r border-slate-250 w-16">ចំនួន</th>
                                             <th class="p-2 text-right border-r border-slate-250 w-24">តម្លៃរាយ</th>
                                             <th class="p-2 text-right border-r border-slate-250 w-24">សរុប</th>
-                                            <th class="p-2 text-center w-12 print-hide" id="th-action">លុប</th>
+                                            <th class="p-2 text-center w-12 print-hide">លុប</th>
                                         </tr>
                                     </thead>
                                     <tbody id="invoiceItemsTableBody" class="divide-y divide-slate-200"></tbody>
@@ -317,6 +262,8 @@
                         </div>
                     </div>
                 </section>
+
+                <!-- Vireak Buntham Section -->
                 <section id="tab-vireakbuntham" class="tab-content hidden space-y-6">
                     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm max-w-2xl mx-auto space-y-4">
                         <div class="border-b pb-3">
@@ -356,74 +303,71 @@
                     </div>
                 </section>
 
-     <section id="tab-delivery" class="tab-content hidden space-y-6">
-    
-    <!-- ផ្នែកស្ថិតិជើងដឹកជញ្ជូនប្រចាំថ្ងៃ -->
-    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 border-b border-slate-100 pb-3">
-            <div>
-                <h3 class="font-black text-sm text-slate-800">📊 ស្ថិតិជើងដឹកជញ្ជូនប្រចាំថ្ងៃ</h3>
-                <p class="text-xs text-slate-400 mt-0.5">ចំនួនជើងដែលបានដឹកជោគជ័យ និងកំពុងដឹកតាមកាលបរិច្ឆេទ</p>
-            </div>
-            <div class="flex items-center gap-2">
-                <label class="text-[11px] font-bold text-slate-500 whitespace-nowrap">ជ្រើសរើសថ្ងៃខែ៖</label>
-                <!-- ប្រអប់ជ្រើសរើសថ្ងៃខែសម្រាប់ Filter ទិន្នន័យ -->
-                <input type="date" id="deliveryStatDate" onchange="updateDeliveryStatsByDate()" class="border border-slate-200 p-2 rounded-xl text-xs font-bold bg-slate-50 focus:outline-none focus:border-indigo-500">
-            </div>
-        </div>
-        
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
-                <div>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase">លោក លាងហាក់</p>
-                    <h4 id="stat-driver-1" class="text-xl font-black text-indigo-650 mt-1">0 ជើង</h4>
-                </div>
-                <span class="text-2xl bg-indigo-50 p-2 rounded-lg">🛵</span>
-            </div>
-            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
-                <div>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase">លោក ផាន់នី</p>
-                    <h4 id="stat-driver-2" class="text-xl font-black text-emerald-600 mt-1">0 ជើង</h4>
-                </div>
-                <span class="text-2xl bg-emerald-50 p-2 rounded-lg">🛵</span>
-            </div>
-            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
-                <div>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase">លោក សុភាព</p>
-                    <h4 id="stat-driver-3" class="text-xl font-black text-amber-500 mt-1">0 ជើង</h4>
-                </div>
-                <span class="text-2xl bg-amber-50 p-2 rounded-lg">🛵</span>
-            </div>
-        </div>
-    </div>
+                <!-- Delivery Section -->
+                <section id="tab-delivery" class="tab-content hidden space-y-6">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 border-b border-slate-100 pb-3">
+                            <div>
+                                <h3 class="font-black text-sm text-slate-800">📊 ស្ថិតិជើងដឹកជញ្ជូនប្រចាំថ្ងៃ</h3>
+                                <p class="text-xs text-slate-400 mt-0.5">ចំនួនជើងដែលបានដឹកជោគជ័យ និងកំពុងដឹកតាមកាលបរិច្ឆេទ</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label class="text-[11px] font-bold text-slate-500 whitespace-nowrap">ជ្រើសរើសថ្ងៃខែ៖</label>
+                                <input type="date" id="deliveryStatDate" onchange="updateDeliveryStatsByDate()" class="border border-slate-200 p-2 rounded-xl text-xs font-bold bg-slate-50 focus:outline-none focus:border-indigo-500">
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase">លោក លាងហាក់</p>
+                                    <h4 id="stat-driver-1" class="text-xl font-black text-indigo-650 mt-1">0 ជើង</h4>
+                                </div>
+                                <span class="text-2xl bg-indigo-50 p-2 rounded-lg">🛵</span>
+                            </div>
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase">លោក ផាន់នី</p>
+                                    <h4 id="stat-driver-2" class="text-xl font-black text-emerald-600 mt-1">0 ជើង</h4>
+                                </div>
+                                <span class="text-2xl bg-emerald-50 p-2 rounded-lg">🛵</span>
+                            </div>
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase">លោក សុភាព</p>
+                                    <h4 id="stat-driver-3" class="text-xl font-black text-amber-500 mt-1">0 ជើង</h4>
+                                </div>
+                                <span class="text-2xl bg-amber-50 p-2 rounded-lg">🛵</span>
+                            </div>
+                        </div>
+                    </div>
 
-    <!-- ផ្នែកបញ្ជីប្រវត្តិដឹកជញ្ជូន (ទម្រង់ដើម) -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-            <h3 class="font-black text-sm text-slate-800">📋 បញ្ជីមុខងារចាត់ចែង និងប្រវត្តិដឹកជញ្ជូន</h3>
-        </div>
-        
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-50 text-[10px] font-bold text-slate-400 border-b">
-                        <th class="p-4 pl-6">ថ្ងៃខែ</th>
-                        <th class="p-4">លេខវិក្កយបត្រ</th>
-                        <th class="p-4">ព័ត៌មានអតិថិជន</th>
-                        <th class="p-4">ចេញពីទីតាំង</th>
-                        <th class="p-4">ទិសដៅទៅដល់</th>
-                        <th class="p-4">អ្នកដឹកជញ្ជូន</th>
-                        <th class="p-4 text-center">ស្ថានភាព</th>
-                        <th class="p-4 text-center">សកម្មភាព</th>
-                    </tr>
-                </thead>
-                <tbody id="deliveryTableBody" class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
-                    <!-- ទិន្នន័យនឹងលោតមកពី Firebase តាមរយៈការហៅអនុគមន៍ renderAll() -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-</section>
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                            <h3 class="font-black text-sm text-slate-800">📋 បញ្ជីមុខងារចាត់ចែង និងប្រវត្តិដឹកជញ្ជូន</h3>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50 text-[10px] font-bold text-slate-400 border-b">
+                                        <th class="p-4 pl-6">ថ្ងៃខែ</th>
+                                        <th class="p-4">លេខវិក្កយបត្រ</th>
+                                        <th class="p-4">ព័ត៌មានអតិថិជន</th>
+                                        <th class="p-4">ចេញពីទីតាំង</th>
+                                        <th class="p-4">ទិសដៅទៅដល់</th>
+                                        <th class="p-4">អ្នកដឹកជញ្ជូន</th>
+                                        <th class="p-4 text-center">ស្ថានភាព</th>
+                                        <th class="p-4 text-center">សកម្មភាព</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="deliveryTableBody" class="divide-y divide-slate-100 text-xs font-medium text-slate-700"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Stock Section -->
                 <section id="tab-stock" class="tab-content hidden space-y-6">
                     <div id="stock-entry-form" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                         <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
@@ -480,24 +424,78 @@
                         </div>
                     </div>
                 </section>
+
+                <!-- 👥 Section ថ្មី៖ ប្រវត្តិទិញរបស់អតិថិជន (Customer Purchase History) -->
+                <section id="tab-customer-history" class="tab-content hidden space-y-6">
+                    <!-- ប្រអប់ស្វែងរក -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm max-w-2xl mx-auto space-y-4">
+                        <div class="border-b pb-3">
+                            <h3 class="font-black text-base text-slate-800">🔍 ស្វែងរកប្រវត្តិទិញរបស់អតិថិជន</h3>
+                            <p class="text-xs text-slate-400 mt-0.5">បញ្ចូលលេខទូរស័ព្ទអតិថិជន ដើម្បីពិនិត្យមើលប្រវត្តិទិញ និងទិន្នន័យចំណាយ</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="text" id="searchCustPhone" placeholder="បញ្ចូលលេខទូរស័ព្ទអតិថិជន (ឧ. 012345678)" class="flex-1 border border-slate-200 p-3 rounded-xl text-xs font-bold focus:outline-none focus:border-indigo-500">
+                            <button onclick="searchCustomerHistory()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl text-xs font-bold cursor-pointer transition shadow-md">🔍 ស្វែងរក</button>
+                        </div>
+                    </div>
+
+                    <!-- លទ្ធផលស្វែងរក -->
+                    <div id="custHistoryResult" class="hidden space-y-6 max-w-5xl mx-auto">
+                        <!-- កាតសង្ខេប -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase">ឈ្មោះអតិថិជន</p>
+                                <h4 id="custHistoryName" class="text-lg font-black text-slate-800 mt-1">-</h4>
+                                <p id="custHistoryPhone" class="text-xs font-bold text-slate-400 mt-0.5">-</p>
+                            </div>
+                            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase">ទិញសរុបទាំងអស់</p>
+                                <h4 id="custHistoryTotalSpent" class="text-xl font-black text-emerald-600 mt-1">$0.00</h4>
+                            </div>
+                            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase">ចំនួនដងធ្លាប់ទិញ</p>
+                                <h4 id="custHistoryTotalInvoices" class="text-xl font-black text-indigo-600 mt-1">0 វិក្កយបត្រ</h4>
+                            </div>
+                        </div>
+
+                        <!-- តារាងប្រវត្តិទិញ -->
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                            <div class="p-4 border-b border-slate-100 bg-slate-50">
+                                <h3 class="font-black text-sm text-slate-800">📜 បញ្ជីវិក្កយបត្រធ្លាប់ទិញកន្លងមក</h3>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="bg-slate-50 text-[10px] font-bold text-slate-400 border-b">
+                                            <th class="p-4 pl-6">កាលបរិច្ឆេទ</th>
+                                            <th class="p-4">លេខវិក្កយបត្រ</th>
+                                            <th class="p-4">មុខទំនិញបានទិញ</th>
+                                            <th class="p-4">ទីតាំងដឹក</th>
+                                            <th class="p-4 text-right">ទឹកប្រាក់សរុប</th>
+                                            <th class="p-4 text-center">សកម្មភាព</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="custHistoryTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
         </main>
     </div>
 
+    <!-- Modal View Invoice -->
     <div id="invoiceModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
         <div class="bg-white p-6 rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4 border-b pb-3">
                 <h3 class="font-black text-sm text-slate-800" id="modalTitle">📄 ព័ត៌មានវិក្កយបត្រ</h3>
-                <button onclick="document.getElementById('invoiceModal').classList.add('hidden')" class="text-slate-400 font-black cursor-pointer hover:text-slate-600 text-lg">✕</button>
+                <button onclick="closeInvoiceModal()" class="text-slate-400 font-black cursor-pointer hover:text-slate-600 text-lg">✕</button>
             </div>
             <div id="modalInvoiceContent" class="space-y-4"></div>
-            <button onclick="printModalContent()" class="w-full mt-6 bg-indigo-600 text-white p-3 rounded-xl font-bold text-xs cursor-pointer hover:bg-indigo-700 transition">🖨️ ទាញយកជា PDF</button>
         </div>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <script src="app.js"></script>
-    
-    
 </body>
 </html>
