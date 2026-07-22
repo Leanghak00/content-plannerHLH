@@ -57,6 +57,17 @@ function initSystemAfterLogin() {
     document.getElementById('topNavRole').innerText = currentUser.role;
     document.getElementById('userAvatar').innerText = currentUser.name.charAt(0).toUpperCase();
 
+    const today = new Date().toISOString().split('T')[0];
+    const currentMonth = today.substring(0, 7);
+
+    if (document.getElementById('searchMonth')) document.getElementById('searchMonth').value = currentMonth;
+    
+    // ❌ បានលុបការកំណត់តម្លៃថ្ងៃនេះទៅ searchDate ចេញហើយ! (ទុកឱ្យវាចំហរទទេ ឬតាមប្រភព HTML)
+    
+    if (document.getElementById('invoiceDate')) document.getElementById('invoiceDate').value = today;
+    if (document.getElementById('pdfDate')) document.getElementById('pdfDate').innerText = today;
+    if (document.getElementById('deliveryStatDate')) document.getElementById('deliveryStatDate').value = today;
+
     // បើកបង្ហាញជួរឈរ "សកម្មភាព" ក្នុងតារាង Dashboard បើសិនជា Admin
     const thAction = document.getElementById('th-dashboard-action');
     if (thAction) {
@@ -69,15 +80,6 @@ function initSystemAfterLogin() {
 
     if (currentUser.role !== 'Admin') {
         document.getElementById('stock-entry-form').classList.add('hidden');
-    }
-
-    const today = new Date().toISOString().split('T')[0];
-    if (document.getElementById('invoiceDate')) document.getElementById('invoiceDate').value = today;
-    if (document.getElementById('pdfDate')) document.getElementById('pdfDate').innerText = today;
-    
-    // កំណត់ថ្ងៃនេះឱ្យទៅ Input ជ្រើសរើសថ្ងៃខែនៃស្ថិតិដឹកជញ្ជូន
-    if (document.getElementById('deliveryStatDate')) {
-        document.getElementById('deliveryStatDate').value = today;
     }
 
     setupLivePreviewInputs();
@@ -268,10 +270,7 @@ function saveFinalInvoice() {
     productsData.forEach(p => { productsObj[p.id] = p; });
     
     database.ref('products').set(productsObj).then(() => {
-        
-        // 🚀 ហៅ Telegram ដោយបញ្ជូន driver ចូលផងដែរ
         sendTelegramNotification(invCode, customer, phone, location, date, driver, grandTotal, currentInvoiceItems);
-
         downloadInvoicePDF(invCode);
         alert("🎉 រក្សាទុកចូលរបាយការណ៍លក់ និងទាញយក PDF ជោគជ័យ!");
         resetInvoiceForm();
@@ -476,25 +475,22 @@ function deleteVbInvoice(id) {
     if (confirm("⚠️ ចង់លុបរូបភាពវិក្កយបត្រនេះមែនទេ?")) database.ref('vireak_buntham_invoices').child(id).remove();
 }
 
-// មុខងារចាត់ចែងអ្នកដឹកជញ្ជូន
 function updateDriver(invCode, driver) { 
     database.ref('deliveries/' + invCode).update({ driver }).then(() => {
         const delivery = deliveryData.find(d => d.invCode === invCode);
         if (delivery) delivery.driver = driver;
-        updateDeliveryStatsByDate(); // គណនាស្ថិតិឡើងវិញភ្លាមៗ
+        updateDeliveryStatsByDate(); 
     }); 
 }
 
-// មុខងារធ្វើបច្ចុប្បន្នភាពស្ថានភាពជើងដឹកជញ្ជូន (លោតចូលកាតស្ថិតិពេល "បានប្រគល់ជូន")
 function updateStatus(invCode, status) { 
     database.ref('deliveries/' + invCode).update({ status }).then(() => {
         const delivery = deliveryData.find(d => d.invCode === invCode);
         if (delivery) delivery.status = status;
-        updateDeliveryStatsByDate(); // គណនាស្ថិតិឡើងវិញភ្លាមៗ
+        updateDeliveryStatsByDate(); 
     }); 
 }
 
-// មុខងារគណនា និងបង្ហាញស្ថិតិជើងដឹកជញ្ជូនដែលបាន "បានប្រគល់ជូន" តាមកាលបរិច្ឆេទ
 function updateDeliveryStatsByDate() {
     const statDateInput = document.getElementById('deliveryStatDate');
     if (!statDateInput) return;
@@ -506,7 +502,6 @@ function updateDeliveryStatsByDate() {
         const matchedSale = salesData.find(s => s.invCode === d.invCode);
         const deliveryDate = matchedSale ? matchedSale.date : '';
 
-        // លក្ខខណ្ឌ៖ ចំថ្ងៃជ្រើសរើស, ឈ្មោះត្រូវ និងស្ថានភាពគឺ "បានប្រគល់ជូន"
         if (deliveryDate === selectedDate && 
             driverCounts.hasOwnProperty(d.driver) && 
             d.status === 'បានប្រគល់ជូន') {
@@ -519,45 +514,54 @@ function updateDeliveryStatsByDate() {
     if (document.getElementById('stat-driver-3')) document.getElementById('stat-driver-3').innerText = `${driverCounts["សុភាព"]} ជើង`;
 }
 
-function renderAll() {
+function renderDashboard() {
     const today = new Date().toISOString().split('T')[0];
     
-    // ចាប់យកថ្ងៃខែពីប្រអប់ជ្រើសរើស (បើទើបបើកដំបូង វានឹងកំណត់យកថ្ងៃនេះស្វ័យប្រវត្តិ)
     const dateInput = document.getElementById('searchDate');
-    if (dateInput && !dateInput.value) {
-        dateInput.value = today;
-    }
-    const selectedDate = dateInput ? dateInput.value : today;
+    // ❌ បានលុបការកំណត់ auto fill dateInput.value = today ចេញ
+    const selectedDate = dateInput ? dateInput.value : '';
 
-    let dailySum = 0, monthlySum = 0;
-    const currentMonth = today.substring(0, 7);
+    const monthInput = document.getElementById('searchMonth');
+    if (monthInput && !monthInput.value) monthInput.value = today.substring(0, 7);
+    const selectedMonth = monthInput ? monthInput.value : today.substring(0, 7);
 
-    // 1. គណនាផលសរុប (រក្សាទុកការគណនាដដែល)
+    let dailySum = 0;
+    let monthlySum = 0;
+
     salesData.forEach(s => {
-        const amt = parseFloat(s.total) || 0; 
-        if (s.date === today) dailySum += amt; // ទឹកប្រាក់ប្រចាំថ្ងៃនេះពិតប្រាកដ
-        if (s.date && typeof s.date === 'string' && s.date.substring(0, 7) === currentMonth) {
+        const amt = parseFloat(s.total) || 0;
+        
+        // 1. គណនាប្រចាំថ្ងៃ តាមថ្ងៃដែលបានជ្រើសរើស (បើមិនជ្រើសរើស មិនគណនាថ្ងៃ)
+        if (selectedDate && s.date === selectedDate) {
+            dailySum += amt;
+        }
+        
+        // 2. គណនាប្រចាំខែ តាមខែដែលបានជ្រើសរើស
+        if (s.date && typeof s.date === 'string' && s.date.substring(0, 7) === selectedMonth) {
             monthlySum += amt;
         }
     });
 
-    if(document.getElementById('dashDailyAmount')) document.getElementById('dashDailyAmount').innerText = `$${dailySum.toFixed(2)}`;
-    if(document.getElementById('dashMonthlyAmount')) document.getElementById('dashMonthlyAmount').innerText = `$${monthlySum.toFixed(2)}`;
+    if (document.getElementById('dashDailyAmount')) {
+        document.getElementById('dashDailyAmount').innerText = `$${dailySum.toFixed(2)}`;
+    }
+    if (document.getElementById('dashMonthlyAmount')) {
+        document.getElementById('dashMonthlyAmount').innerText = `$${monthlySum.toFixed(2)}`;
+    }
 
-    // 2. ច្រោះយកតែវិក្កយបត្រណាដែលត្រូវនឹងថ្ងៃដែលបានជ្រើសរើស (Selected Date)
-    let filteredSales = salesData.filter(s => s.date === selectedDate);
+    renderSalesTable(selectedDate);
+}
 
-    // 3. តម្រៀបវិក្កយបត្រដែលទើបបង្កើតចុងក្រោយគេ ឱ្យឡើងមកលើគេបង្អស់ (Newest First)
-    filteredSales.sort((a, b) => {
-        return b.invCode.localeCompare(a.invCode);
-    });
+function renderSalesTable(selectedDate) {
+    // ប្រសិនបើអ្នកប្រើមិនទាន់ជ្រើសរើសថ្ងៃ វានឹងបង្ហាញទិន្នន័យទាំងអស់ ឬបង្ហាញទិន្នន័យតាមថ្ងៃជ្រើសរើស
+    let filteredSales = selectedDate ? salesData.filter(s => s.date === selectedDate) : salesData;
+    filteredSales.sort((a, b) => b.invCode.localeCompare(a.invCode));
 
-    // 4. បង្ហាញទិន្នន័យទៅលើតារាងរបាយការណ៍លក់
     const salesTbody = document.getElementById('salesTableBody');
     if (salesTbody) {
         if (filteredSales.length === 0) {
             const cols = (currentUser && currentUser.role === 'Admin') ? 6 : 5;
-            salesTbody.innerHTML = `<tr><td colspan="${cols}" class="p-6 text-center text-xs font-bold text-slate-400">📝 មិនទាន់មានទិន្នន័យលក់សម្រាប់ថ្ងៃទី ${selectedDate} ទេ</td></tr>`;
+            salesTbody.innerHTML = `<tr><td colspan="${cols}" class="p-6 text-center text-xs font-bold text-slate-400">📝 មិនទាន់មានទិន្នន័យលក់ ${selectedDate ? 'សម្រាប់ថ្ងៃទី ' + selectedDate : ''} ទេ</td></tr>`;
         } else {
             salesTbody.innerHTML = filteredSales.map(s => {
                 const totalAmt = parseFloat(s.total) || 0;
@@ -585,8 +589,13 @@ function renderAll() {
             }).join('');
         }
     }
+}
 
-    // ផ្នែកតារាងដឹកជញ្ជូន និង ឃ្លាំងស្តុក រក្សាទុកដដែល...
+function renderAll() {
+    const today = new Date().toISOString().split('T')[0];
+
+    renderDashboard();
+
     const deliveryTbody = document.getElementById('deliveryTableBody');
     if (deliveryTbody) {
         if (deliveryData.length === 0) {
@@ -647,7 +656,6 @@ function renderAll() {
     updateDeliveryStatsByDate();
 }
 
-// មុខងារស្វែងរកទំនិញក្នុងស្តុក
 function searchStockFunction() {
     let input = document.getElementById("searchStockInput");
     let filter = input.value.toLowerCase();
@@ -671,7 +679,6 @@ function searchStockFunction() {
     }
 }
 
-// មុខងារចុចមើលព័ត៌មានលម្អិតនៃវិក្កយបត្រ (ទាញចេញពី Node 'sales')
 function viewInvoice(invoiceId) {
     database.ref('sales/' + invoiceId).once('value').then((snapshot) => {
         const data = snapshot.val();
@@ -715,18 +722,14 @@ function viewInvoice(invoiceId) {
     });
 }
 
-// មុខងារសម្រាប់បិទផ្ទាំង Modal វិក្កយបត្រ
 function closeInvoiceModal() {
     const modal = document.getElementById('invoiceModal');
     if (modal) modal.classList.add('hidden');
 }
-/// ==========================================
-// Telegram Integration Config
-// ==========================================
-const TELEGRAM_BOT_TOKEN = "8830737719:AAHYaFzRQYAFwPXHhYexgTdVGYOGrenYIKE"; // ជំនួសដោយ Bot Token របស់អ្នក
-const TELEGRAM_CHAT_ID = "-5482283441"; // ជំនួសដោយ Chat ID របស់អ្នក
 
-// មុខងារផ្ញើសារអក្សរទៅ Telegram (បន្ថែម driver)
+const TELEGRAM_BOT_TOKEN = "8830737719:AAHYaFzRQYAFwPXHhYexgTdVGYOGrenYIKE"; 
+const TELEGRAM_CHAT_ID = "-5482283441"; 
+
 function sendTelegramNotification(invCode, customer, phone, location, date, driver, total, items) {
     let itemsText = items.map((item, idx) => 
         `  ${idx + 1}. ${item.name} x${item.qty} = $${item.totalPrice.toFixed(2)}`
