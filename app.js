@@ -1,7 +1,3 @@
-// ==========================================
-// VCK System - Main Application Javascript (Full Version)
-// ==========================================
-
 // Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyAw0owrI_MjRPJmQLzd9zNFyjcdgRc7H4I",
@@ -119,6 +115,16 @@ function switchTab(tabId) {
         'customer-history': '👥 ប្រវត្តិទិញរបស់អតិថិជន'
     };
     document.getElementById('pageTitle').innerText = titles[tabId] || 'VCK System';
+
+    if (window.innerWidth < 768) {
+        const menu = document.getElementById('sidebarMenu');
+        const footer = document.getElementById('userFooter');
+        if (menu) menu.classList.add('hidden');
+        if (footer) {
+            footer.classList.add('hidden');
+            footer.classList.remove('flex');
+        }
+    }
 }
 
 function listenToFirebaseData() {
@@ -276,7 +282,6 @@ function saveFinalInvoice() {
         const p = productsData.find(prod => prod.id === item.productId);
         if (p) {
             p.avail -= item.qty;
-            // 🚨 ពិនិត្យប្រសិនបើស្តុកនៅសល់ ≤ 5
             if (p.avail <= 5) {
                 lowStockAlerts.push({ name: p.name, avail: p.avail });
             }
@@ -292,7 +297,6 @@ function saveFinalInvoice() {
     database.ref('products').set(productsObj).then(() => {
         sendTelegramNotification(invCode, customer, phone, location, date, driver, grandTotal, currentInvoiceItems);
         
-        // 🚨 ប្រសិនបើមានទំនិញជិតអស់ស្តុក ផ្ញើសារ Alert ទៅ Telegram ភ្លាមៗ
         if (lowStockAlerts.length > 0) {
             sendLowStockTelegramAlert(lowStockAlerts);
         }
@@ -304,7 +308,6 @@ function saveFinalInvoice() {
     });
 }
 
-// 🚨 អនុគមន៍ផ្ញើសារស្វ័យប្រវត្តិពេលស្តុកជិតអស់ទៅ Telegram
 function sendLowStockTelegramAlert(items) {
     let itemsListText = items.map(i => `⚠️ *${i.name}* ➔ នៅសល់ត្រឹមតែ *${i.avail}* ប៉ុណ្ណោះ!`).join('\n');
     let message = `🚨 *ការជូនដំណឹង៖ ទំនិញជិតអស់ពីស្តុក (LOW STOCK ALERT)*\n` +
@@ -353,7 +356,6 @@ function sendTelegramNotification(invCode, customer, phone, location, date, driv
     }).catch(error => console.error('Telegram Error:', error));
 }
 
-// 🔍 មុខងារស្វែងរកប្រវត្តិទិញរបស់អតិថិជនតាមលេខទូរស័ព្ទ
 function searchCustomerHistory() {
     const phoneInput = document.getElementById('searchCustPhone').value.trim();
     const resultArea = document.getElementById('custHistoryResult');
@@ -368,7 +370,6 @@ function searchCustomerHistory() {
         return;
     }
 
-    // ស្វែងរកវិក្កយបត្រទាំងអស់របស់អតិថិជនតាមលេខទូរស័ព្ទ
     const customerSales = salesData.filter(s => s.phone && s.phone.replace(/\s+/g, '') === phoneInput.replace(/\s+/g, ''));
 
     if (customerSales.length === 0) {
@@ -849,4 +850,12 @@ function viewInvoice(invoiceId) {
 function closeInvoiceModal() {
     const modal = document.getElementById('invoiceModal');
     if (modal) modal.classList.add('hidden');
+}
+
+function toggleMobileMenu() {
+    const menu = document.getElementById('sidebarMenu');
+    const footer = document.getElementById('userFooter');
+    menu.classList.toggle('hidden');
+    footer.classList.toggle('hidden');
+    footer.classList.toggle('flex');
 }
