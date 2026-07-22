@@ -2,7 +2,7 @@
 <html lang="km">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>VCK SHOP Pro v2.6</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,16 +23,20 @@
             color: #f8fafc !important; 
             border-left: 4px solid #4f46e5; 
         }
+        /* Smooth Touch Scroll សម្រាប់ Mobile */
+        .overflow-x-auto {
+            -webkit-overflow-scrolling: touch;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
 
     <!-- Login Screen -->
     <div id="login-screen" class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100">
-            <div class="text-center mb-8">
-                <span class="text-5xl">🛍️</span>
-                <h1 class="text-2xl font-black mt-3 text-slate-800">VCK SHOP</h1>
+        <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100">
+            <div class="text-center mb-6 sm:mb-8">
+                <span class="text-4xl sm:text-5xl">🛍️</span>
+                <h1 class="text-xl sm:text-2xl font-black mt-3 text-slate-800">VCK SHOP</h1>
                 <p class="text-xs text-slate-400 mt-1">ប្រព័ន្ធគ្រប់គ្រងការលក់ និងស្តុកទំនិញ</p>
             </div>
             
@@ -49,7 +53,7 @@
                     <label class="block text-xs font-bold text-slate-500 mb-1.5">លេខសម្ងាត់</label>
                     <input type="password" id="loginPassword" placeholder="••••••••" class="w-full border border-slate-200 p-3 rounded-xl text-sm focus:outline-none focus:border-indigo-500">
                 </div>
-                <button onclick="handleLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl font-bold transition shadow-lg shadow-indigo-100 mt-2 cursor-pointer text-sm">
+                <button onclick="handleLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white p-3 rounded-xl font-bold transition shadow-lg shadow-indigo-100 mt-2 cursor-pointer text-sm">
                     ចូលប្រើប្រាស់ប្រព័ន្ធ
                 </button>
             </div>
@@ -59,15 +63,22 @@
     <!-- Main Application -->
     <div id="main-application" class="hidden flex flex-col md:flex-row min-h-screen">
         
-        <aside class="w-full md:w-64 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800">
-            <div class="p-5 border-b border-slate-800">
-                <h2 class="font-black text-white text-lg tracking-wide">VCK SYSTEM</h2>
-                <p class="text-[10px] text-emerald-400 font-bold flex items-center gap-1 mt-0.5">
-                    <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span> ដំណើរការ
-                </p>
+        <!-- Navigation Header/Sidebar -->
+        <aside class="w-full md:w-64 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 sticky top-0 z-40">
+            <div class="p-4 sm:p-5 border-b border-slate-800 flex justify-between items-center">
+                <div>
+                    <h2 class="font-black text-white text-base sm:text-lg tracking-wide">VCK SYSTEM</h2>
+                    <p class="text-[10px] text-emerald-400 font-bold flex items-center gap-1 mt-0.5">
+                        <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span> ដំណើរការ
+                    </p>
+                </div>
+                <!-- ប៊ូតុង Toggle ម៉ឺនុយលើ Mobile -->
+                <button onclick="toggleMobileMenu()" class="md:hidden text-white bg-slate-800 p-2 rounded-lg text-lg focus:outline-none border border-slate-700">
+                    ☰ ម៉ឺនុយ
+                </button>
             </div>
 
-            <nav class="flex-1 p-4 space-y-1.5">
+            <nav id="sidebarMenu" class="hidden md:block flex-1 p-3 sm:p-4 space-y-1.5 bg-slate-900">
                 <button id="btn-dashboard" onclick="switchTab('dashboard')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold hover:bg-slate-800 transition text-left cursor-pointer">📊 ផ្ទាំងគ្រប់គ្រងទូទៅ</button>
                 <button id="btn-sales" onclick="switchTab('sales')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold hover:bg-slate-800 transition text-left cursor-pointer">📄 វិក្កយបត្រ</button>
                 <button id="btn-vireakbuntham" onclick="switchTab('vireakbuntham')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold hover:bg-slate-800 transition text-left cursor-pointer">🚌 វិក្កយបត្រវីរៈប៊ុនថាំ</button>
@@ -78,7 +89,7 @@
                 <button id="btn-customer-history" onclick="switchTab('customer-history')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold hover:bg-slate-800 transition text-left cursor-pointer text-indigo-300">👥 ប្រវត្តិទិញរបស់អតិថិជន</button>
             </nav>
 
-            <div class="p-4 border-t border-slate-800 bg-slate-950/40 flex items-center justify-between">
+            <div id="userFooter" class="hidden md:flex p-4 border-t border-slate-800 bg-slate-950/40 items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div id="userAvatar" class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black text-sm">U</div>
                     <div>
@@ -90,22 +101,22 @@
             </div>
         </aside>
 
-        <main class="flex-1 flex flex-col overflow-x-hidden">
-            <header class="bg-white border-b border-slate-200 px-6 py-4">
-                <h2 id="pageTitle" class="font-black text-base text-slate-800">📊 ផ្ទាំងគ្រប់គ្រងទូទៅ</h2>
+        <main class="flex-1 flex flex-col overflow-x-hidden min-w-0">
+            <header class="bg-white border-b border-slate-200 px-4 py-3 sm:px-6 sm:py-4 flex justify-between items-center">
+                <h2 id="pageTitle" class="font-black text-sm sm:text-base text-slate-800">📊 ផ្ទាំងគ្រប់គ្រងទូទៅ</h2>
             </header>
 
-            <div class="p-6 flex-1 overflow-y-auto">
+            <div class="p-3 sm:p-6 flex-1 overflow-y-auto">
                 <!-- Dashboard Section -->
-                <section id="tab-dashboard" class="tab-content hidden space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">
+                <section id="tab-dashboard" class="tab-content hidden space-y-4 sm:space-y-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
+                        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-[11px] font-bold text-slate-400 uppercase">តួលេខលក់ប្រចាំថ្ងៃ</p>
-                                    <h3 id="dashDailyAmount" class="text-2xl font-black text-emerald-600 mt-1">$0.00</h3>
+                                    <h3 id="dashDailyAmount" class="text-xl sm:text-2xl font-black text-emerald-600 mt-1">$0.00</h3>
                                 </div>
-                                <span class="text-3xl bg-emerald-50 p-3 rounded-xl">💵</span>
+                                <span class="text-2xl sm:text-3xl bg-emerald-50 p-2.5 sm:p-3 rounded-xl">💵</span>
                             </div>
                             <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
                                 <label for="searchDate" class="text-[10px] font-bold text-slate-400">ជ្រើសរើសថ្ងៃ៖</label>
@@ -113,13 +124,13 @@
                             </div>
                         </div>
 
-                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">
+                        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-[11px] font-bold text-slate-400 uppercase">តួលេខលក់ប្រចាំខែ</p>
-                                    <h3 id="dashMonthlyAmount" class="text-2xl font-black text-indigo-600 mt-1">$0.00</h3>
+                                    <h3 id="dashMonthlyAmount" class="text-xl sm:text-2xl font-black text-indigo-600 mt-1">$0.00</h3>
                                 </div>
-                                <span class="text-3xl bg-indigo-50 p-3 rounded-xl">📈</span>
+                                <span class="text-2xl sm:text-3xl bg-indigo-50 p-2.5 sm:p-3 rounded-xl">📈</span>
                             </div>
                             <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
                                 <label for="searchMonth" class="text-[10px] font-bold text-slate-400">ជ្រើសរើសខែ៖</label>
@@ -129,17 +140,17 @@
                     </div>
 
                     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                        <div class="p-5 border-b border-slate-100"><h3 class="font-black text-sm text-slate-800">📝 របាយការណ៍លក់លោតចូលស្វ័យប្រវត្តិ</h3></div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse">
+                        <div class="p-4 sm:p-5 border-b border-slate-100"><h3 class="font-black text-xs sm:text-sm text-slate-800">📝 របាយការណ៍លក់លោតចូលស្វ័យប្រវត្តិ</h3></div>
+                        <div class="overflow-x-auto w-full">
+                            <table class="w-full text-left border-collapse min-w-[600px]">
                                 <thead>
                                     <tr class="bg-slate-50 text-[10px] font-bold text-slate-400 border-b">
-                                        <th class="p-4 pl-6">កាលបរិច្ឆេទ</th>
-                                        <th class="p-4">លេខវិក្កយបត្រ</th>
-                                        <th class="p-4">អតិថិជន</th>
-                                        <th class="p-4">ទីទិសដៅដឹក</th>
-                                        <th class="p-4 text-right">សរុបទឹកប្រាក់</th>
-                                        <th class="p-4 text-center pr-6">សកម្មភាព</th>
+                                        <th class="p-3 sm:p-4 pl-4 sm:pl-6">កាលបរិច្ឆេទ</th>
+                                        <th class="p-3 sm:p-4">លេខវិក្កយបត្រ</th>
+                                        <th class="p-3 sm:p-4">អតិថិជន</th>
+                                        <th class="p-3 sm:p-4">ទីទិសដៅដឹក</th>
+                                        <th class="p-3 sm:p-4 text-right">សរុបទឹកប្រាក់</th>
+                                        <th class="p-3 sm:p-4 text-center pr-4 sm:pr-6">សកម្មភាព</th>
                                     </tr>
                                 </thead>
                                 <tbody id="salesTableBody" class="divide-y divide-slate-50"></tbody>
@@ -149,11 +160,11 @@
                 </section>
 
                 <!-- Sales Section -->
-                <section id="tab-sales" class="tab-content hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <div class="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4 h-fit">
-                        <h3 class="font-black text-sm text-slate-800 border-b pb-3">✍️ បង្កើតវិក្កយបត្រថ្មី</h3>
+                <section id="tab-sales" class="tab-content hidden grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+                    <div class="lg:col-span-5 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4 h-fit">
+                        <h3 class="font-black text-xs sm:text-sm text-slate-800 border-b pb-3">✍️ បង្កើតវិក្កយបត្រថ្មី</h3>
                         
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-400 mb-1">ឈ្មោះអតិថិជន *</label>
                                 <input type="text" id="invoiceCustomer" class="w-full border border-slate-200 p-2 rounded-lg text-xs font-bold focus:outline-none focus:border-indigo-500">
@@ -164,7 +175,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-400 mb-1">ចេញពីទីតាំង *</label>
                                 <input type="text" id="invoiceFromLocation" value="ភ្នំពេញ" class="w-full border border-slate-200 p-2 rounded-lg text-xs font-bold focus:outline-none focus:border-indigo-500">
@@ -190,7 +201,7 @@
                             </select>
                         </div>
 
-                        <div class="p-4 border border-slate-200 rounded-xl bg-slate-50 space-y-2">
+                        <div class="p-3 sm:p-4 border border-slate-200 rounded-xl bg-slate-50 space-y-2">
                             <h3 class="font-bold text-xs text-slate-700 mb-2">🛒 បញ្ចូលមុខទំនិញ</h3>
                             <input type="text" id="invoiceProductInput" list="productList" oninput="autoFillProductPrice()" placeholder="ជ្រើសរើសឈ្មោះទំនិញ..." class="border border-slate-200 p-2 w-full text-xs rounded bg-white focus:outline-none focus:border-indigo-500">
                             <datalist id="productList"></datalist>
@@ -205,13 +216,13 @@
                     </div>
 
                     <div class="lg:col-span-7 space-y-4">
-                        <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm" id="invoice-pdf-area">
-                            <div class="text-center border-b pb-4 mb-4">
-                                <h2 class="text-base font-black text-slate-800 tracking-wide">ផ្គត់ផ្គង់សម្ភារៈតុការចានប្រណិតទាន់សម័យ</h2>
+                        <div class="bg-white p-4 sm:p-8 rounded-2xl border border-slate-200 shadow-sm" id="invoice-pdf-area">
+                            <div class="text-center border-b pb-3 sm:pb-4 mb-3 sm:mb-4">
+                                <h2 class="text-sm sm:text-base font-black text-slate-800 tracking-wide">ផ្គត់ផ្គង់សម្ភារៈតុការចានប្រណិតទាន់សម័យ</h2>
                                 <p class="text-[9px] text-slate-400 mt-0.5 font-bold">វិក្កយបត្រទូទាត់ប្រាក់ / INVOICE</p>
                             </div>
                             
-                            <div class="grid grid-cols-2 text-xs mb-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                            <div class="grid grid-cols-2 text-xs mb-4 p-3 sm:p-4 bg-slate-50 rounded-xl border border-slate-100">
                                 <div class="space-y-1">
                                     <p class="text-slate-500"><strong>អតិថិជន៖</strong> <span id="pdfCustomer" class="font-bold text-slate-800">-</span></p>
                                     <p class="text-slate-500"><strong>ទូរស័ព្ទ៖</strong> <span id="pdfPhone" class="font-bold text-slate-800">-</span></p>
@@ -222,8 +233,8 @@
                                 </div>
                             </div>
                             
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-xs border border-slate-200 mb-4 text-left border-collapse">
+                            <div class="overflow-x-auto w-full">
+                                <table class="w-full text-xs border border-slate-200 mb-4 text-left border-collapse min-w-[350px]">
                                     <thead class="bg-slate-100 font-bold text-slate-700 border-b">
                                         <tr>
                                             <th class="p-2 text-center border-r border-slate-250 w-10">ល.រ</th>
@@ -238,25 +249,25 @@
                                 </table>
                             </div>
                             
-                            <div class="flex justify-between items-end mt-6 pt-4 border-t border-slate-150">
-                                <div class="flex gap-4">
+                            <div class="flex justify-between items-end mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-slate-150">
+                                <div class="flex gap-2 sm:gap-4">
                                     <div class="flex flex-col items-center">
                                         <span class="text-[8px] text-slate-400 font-bold mb-1">ABA USD ($)</span>
-                                        <img src="Img/dola.jpg" class="w-16 h-16 object-contain border p-1 rounded-lg bg-white shadow-sm" alt="ABA USD">
+                                        <img src="Img/dola.jpg" class="w-12 h-12 sm:w-16 sm:h-16 object-contain border p-1 rounded-lg bg-white shadow-sm" alt="ABA USD">
                                     </div>
                                     <div class="flex flex-col items-center">
                                         <span class="text-[8px] text-slate-400 font-bold mb-1">ABA KHR (៛)</span>
-                                        <img src="Img/riel.jpg" class="w-16 h-16 object-contain border p-1 rounded-lg bg-white shadow-sm" alt="ABA KHR">
+                                        <img src="Img/riel.jpg" class="w-12 h-12 sm:w-16 sm:h-16 object-contain border p-1 rounded-lg bg-white shadow-sm" alt="ABA KHR">
                                     </div>
                                 </div>
                                 <div class="text-right">
                                     <span class="text-[9px] text-slate-400 font-bold block uppercase">សរុបរួម / GRAND TOTAL</span>
-                                    <span id="invoiceGrandTotal" class="text-indigo-600 text-xl font-black">$0.00</span>
+                                    <span id="invoiceGrandTotal" class="text-indigo-600 text-lg sm:text-xl font-black">$0.00</span>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="flex gap-3">
+                        <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
                             <button onclick="saveFinalInvoice()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-xl font-bold text-xs cursor-pointer transition shadow-md">💾 Save ចូលរបាយការណ៍</button>
                             <button onclick="downloadInvoicePDF()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl font-bold text-xs cursor-pointer transition shadow-md">🖨️ ទាញយកជា PDF</button>
                         </div>
@@ -264,26 +275,26 @@
                 </section>
 
                 <!-- Vireak Buntham Section -->
-                <section id="tab-vireakbuntham" class="tab-content hidden space-y-6">
-                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm max-w-2xl mx-auto space-y-4">
+                <section id="tab-vireakbuntham" class="tab-content hidden space-y-4 sm:space-y-6">
+                    <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-2xl mx-auto space-y-4">
                         <div class="border-b pb-3">
-                            <h3 class="font-black text-base text-slate-800">🚌 ប្រព័ន្ធថតវិក្កយបត្រ វីរៈប៊ុនថាំ</h3>
+                            <h3 class="font-black text-sm sm:text-base text-slate-800">🚌 ប្រព័ន្ធថតវិក្កយបត្រ វីរៈប៊ុនថាំ</h3>
                             <p class="text-xs text-slate-400 mt-0.5">បើកកាមេរ៉ាដើម្បីថតរូបវិក្កយបត្រទុកក្នុងប្រព័ន្ធ</p>
                         </div>
                         
                         <div class="relative bg-slate-900 rounded-xl overflow-hidden aspect-video flex items-center justify-center border border-slate-700 shadow-inner">
                             <video id="webcamVideo" autoplay playsinline class="w-full h-full object-cover hidden"></video>
                             <div id="cameraPlaceholder" class="text-center text-slate-500 p-4">
-                                <span class="text-4xl block mb-2">📷</span>
+                                <span class="text-3xl sm:text-4xl block mb-2">📷</span>
                                 <p class="text-xs font-bold">មិនទាន់បានបើកកាមេរ៉ានៅឡើយទេ</p>
                             </div>
                             <canvas id="capturedCanvas" class="hidden absolute inset-0 w-full h-full object-cover"></canvas>
                         </div>
 
-                        <div class="flex gap-3 justify-center">
-                            <button onclick="startCamera()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold cursor-pointer hover:bg-indigo-700">📹 បើកកាមេរ៉ា</button>
-                            <button onclick="takeSnapshot()" id="btnCapture" disabled class="bg-amber-500 text-white px-4 py-2 rounded-xl text-xs font-bold cursor-pointer hover:bg-amber-600 disabled:opacity-40">📸 ថតរូបភាព</button>
-                            <button onclick="resetCameraView()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold cursor-pointer hover:bg-slate-300">🔄 ថតឡើងវិញ</button>
+                        <div class="flex flex-wrap gap-2 sm:gap-3 justify-center">
+                            <button onclick="startCamera()" class="flex-1 sm:flex-none bg-indigo-600 text-white px-3 sm:px-4 py-2 rounded-xl text-xs font-bold cursor-pointer hover:bg-indigo-700">📹 បើកកាមេរ៉ា</button>
+                            <button onclick="takeSnapshot()" id="btnCapture" disabled class="flex-1 sm:flex-none bg-amber-500 text-white px-3 sm:px-4 py-2 rounded-xl text-xs font-bold cursor-pointer hover:bg-amber-600 disabled:opacity-40">📸 ថតរូបភាព</button>
+                            <button onclick="resetCameraView()" class="flex-1 sm:flex-none bg-slate-200 text-slate-700 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold cursor-pointer hover:bg-slate-300">🔄 ថតឡើងវិញ</button>
                         </div>
 
                         <div class="pt-4 border-t space-y-3">
@@ -297,68 +308,68 @@
 
                     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden max-w-5xl mx-auto">
                         <div class="p-4 border-b border-slate-100 bg-slate-50">
-                            <h3 class="font-black text-sm text-slate-800">📂 វិក្កយបត្រ វីរៈប៊ុនថាំ</h3>
+                            <h3 class="font-black text-xs sm:text-sm text-slate-800">📂 វិក្កយបត្រ វីរៈប៊ុនថាំ</h3>
                         </div>
-                        <div class="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4" id="vireakBunthamImagesGrid"></div>
+                        <div class="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4" id="vireakBunthamImagesGrid"></div>
                     </div>
                 </section>
 
                 <!-- Delivery Section -->
-                <section id="tab-delivery" class="tab-content hidden space-y-6">
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <section id="tab-delivery" class="tab-content hidden space-y-4 sm:space-y-6">
+                    <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 border-b border-slate-100 pb-3">
                             <div>
-                                <h3 class="font-black text-sm text-slate-800">📊 ស្ថិតិជើងដឹកជញ្ជូនប្រចាំថ្ងៃ</h3>
-                                <p class="text-xs text-slate-400 mt-0.5">ចំនួនជើងដែលបានដឹកជោគជ័យ និងកំពុងដឹកតាមកាលបរិច្ឆេទ</p>
+                                <h3 class="font-black text-xs sm:text-sm text-slate-800">📊 ស្ថិតិជើងដឹកជញ្ជូនប្រចាំថ្ងៃ</h3>
+                                <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5">ចំនួនជើងដែលបានដឹកជោគជ័យ និងកំពុងដឹកតាមកាលបរិច្ឆេទ</p>
                             </div>
                             <div class="flex items-center gap-2">
                                 <label class="text-[11px] font-bold text-slate-500 whitespace-nowrap">ជ្រើសរើសថ្ងៃខែ៖</label>
-                                <input type="date" id="deliveryStatDate" onchange="updateDeliveryStatsByDate()" class="border border-slate-200 p-2 rounded-xl text-xs font-bold bg-slate-50 focus:outline-none focus:border-indigo-500">
+                                <input type="date" id="deliveryStatDate" onchange="updateDeliveryStatsByDate()" class="border border-slate-200 p-1.5 sm:p-2 rounded-xl text-xs font-bold bg-slate-50 focus:outline-none focus:border-indigo-500">
                             </div>
                         </div>
                         
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                            <div class="bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-100 flex items-center justify-between">
                                 <div>
                                     <p class="text-[10px] font-bold text-slate-400 uppercase">លោក លាងហាក់</p>
-                                    <h4 id="stat-driver-1" class="text-xl font-black text-indigo-650 mt-1">0 ជើង</h4>
+                                    <h4 id="stat-driver-1" class="text-lg sm:text-xl font-black text-indigo-650 mt-1">0 ជើង</h4>
                                 </div>
-                                <span class="text-2xl bg-indigo-50 p-2 rounded-lg">🛵</span>
+                                <span class="text-xl sm:text-2xl bg-indigo-50 p-2 rounded-lg">🛵</span>
                             </div>
-                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
+                            <div class="bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-100 flex items-center justify-between">
                                 <div>
                                     <p class="text-[10px] font-bold text-slate-400 uppercase">លោក ផាន់នី</p>
-                                    <h4 id="stat-driver-2" class="text-xl font-black text-emerald-600 mt-1">0 ជើង</h4>
+                                    <h4 id="stat-driver-2" class="text-lg sm:text-xl font-black text-emerald-600 mt-1">0 ជើង</h4>
                                 </div>
-                                <span class="text-2xl bg-emerald-50 p-2 rounded-lg">🛵</span>
+                                <span class="text-xl sm:text-2xl bg-emerald-50 p-2 rounded-lg">🛵</span>
                             </div>
-                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
+                            <div class="bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-100 flex items-center justify-between">
                                 <div>
                                     <p class="text-[10px] font-bold text-slate-400 uppercase">លោក សុភាព</p>
-                                    <h4 id="stat-driver-3" class="text-xl font-black text-amber-500 mt-1">0 ជើង</h4>
+                                    <h4 id="stat-driver-3" class="text-lg sm:text-xl font-black text-amber-500 mt-1">0 ជើង</h4>
                                 </div>
-                                <span class="text-2xl bg-amber-50 p-2 rounded-lg">🛵</span>
+                                <span class="text-xl sm:text-2xl bg-amber-50 p-2 rounded-lg">🛵</span>
                             </div>
                         </div>
                     </div>
 
                     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                         <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                            <h3 class="font-black text-sm text-slate-800">📋 បញ្ជីមុខងារចាត់ចែង និងប្រវត្តិដឹកជញ្ជូន</h3>
+                            <h3 class="font-black text-xs sm:text-sm text-slate-800">📋 បញ្ជីមុខងារចាត់ចែង និងប្រវត្តិដឹកជញ្ជូន</h3>
                         </div>
                         
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse">
+                        <div class="overflow-x-auto w-full">
+                            <table class="w-full text-left border-collapse min-w-[700px]">
                                 <thead>
                                     <tr class="bg-slate-50 text-[10px] font-bold text-slate-400 border-b">
-                                        <th class="p-4 pl-6">ថ្ងៃខែ</th>
-                                        <th class="p-4">លេខវិក្កយបត្រ</th>
-                                        <th class="p-4">ព័ត៌មានអតិថិជន</th>
-                                        <th class="p-4">ចេញពីទីតាំង</th>
-                                        <th class="p-4">ទិសដៅទៅដល់</th>
-                                        <th class="p-4">អ្នកដឹកជញ្ជូន</th>
-                                        <th class="p-4 text-center">ស្ថានភាព</th>
-                                        <th class="p-4 text-center">សកម្មភាព</th>
+                                        <th class="p-3 sm:p-4 pl-4 sm:pl-6">ថ្ងៃខែ</th>
+                                        <th class="p-3 sm:p-4">លេខវិក្កយបត្រ</th>
+                                        <th class="p-3 sm:p-4">ព័ត៌មានអតិថិជន</th>
+                                        <th class="p-3 sm:p-4">ចេញពីទីតាំង</th>
+                                        <th class="p-3 sm:p-4">ទិសដៅទៅដល់</th>
+                                        <th class="p-3 sm:p-4">អ្នកដឹកជញ្ជូន</th>
+                                        <th class="p-3 sm:p-4 text-center">ស្ថានភាព</th>
+                                        <th class="p-3 sm:p-4 text-center">សកម្មភាព</th>
                                     </tr>
                                 </thead>
                                 <tbody id="deliveryTableBody" class="divide-y divide-slate-100 text-xs font-medium text-slate-700"></tbody>
@@ -368,13 +379,13 @@
                 </section>
 
                 <!-- Stock Section -->
-                <section id="tab-stock" class="tab-content hidden space-y-6">
-                    <div id="stock-entry-form" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <section id="tab-stock" class="tab-content hidden space-y-4 sm:space-y-6">
+                    <div id="stock-entry-form" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                         <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
-                            <span class="text-lg">📥</span>
-                            <h3 class="font-black text-sm text-slate-800">ទម្រង់បញ្ចូលទំនិញថ្មីចូលឃ្លាំង</h3>
+                            <span class="text-base sm:text-lg">📥</span>
+                            <h3 class="font-black text-xs sm:text-sm text-slate-800">ទម្រង់បញ្ចូលទំនិញថ្មីចូលឃ្លាំង</h3>
                         </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-400 mb-1">ឈ្មោះទំនិញ</label>
                                 <input type="text" id="newProdName" placeholder="ឈ្មោះទំនិញ" class="w-full border border-slate-200 p-2.5 rounded-xl text-xs font-bold">
@@ -393,30 +404,30 @@
                             </div>
                         </div>
                         <div class="flex justify-end pt-2">
-                            <button onclick="addNewProductToStock()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold cursor-pointer transition shadow-md">➕ បញ្ចូលក្នុងឃ្លាំងស្តុក</button>
+                            <button onclick="addNewProductToStock()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold cursor-pointer transition shadow-md">➕ បញ្ចូលក្នុងឃ្លាំងស្តុក</button>
                         </div>
                     </div>
 
                     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                        <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                            <h3 class="font-black text-sm text-slate-800">📋 ទំនិញក្នុងស្តុក</h3>
+                        <div class="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                            <h3 class="font-black text-xs sm:text-sm text-slate-800">📋 ទំនិញក្នុងស្តុក</h3>
                             <div class="relative w-full sm:w-72">
                                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 text-sm">🔍</span>
                                 <input type="text" id="searchStockInput" onkeyup="searchStockFunction()" placeholder="ស្វែងរកឈ្មោះ ឬ ប្រភេទ..." class="w-full border border-slate-200 pl-9 pr-3 py-2 rounded-xl text-xs font-bold focus:outline-none focus:border-indigo-500 bg-white transition shadow-sm">
                             </div>
                         </div>
                         
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse">
+                        <div class="overflow-x-auto w-full">
+                            <table class="w-full text-left border-collapse min-w-[600px]">
                                 <thead>
                                     <tr class="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b">
-                                        <th class="p-4 pl-6 w-16 text-center">ល.រ</th>
-                                        <th class="p-4">ឈ្មោះមុខទំនិញ</th>
-                                        <th class="p-4">ប្រភេទក្រុម</th>
-                                        <th class="p-4 text-center">ចំនួនស្តុកសរុប</th>
-                                        <th class="p-4 text-center">នៅសល់ប្រាកដ</th>
-                                        <th class="p-4 text-right">តម្លៃលក់រាយ</th>
-                                        <th class="p-4 text-center w-20">លុប</th>
+                                        <th class="p-3 sm:p-4 pl-4 sm:pl-6 w-16 text-center">ល.រ</th>
+                                        <th class="p-3 sm:p-4">ឈ្មោះមុខទំនិញ</th>
+                                        <th class="p-3 sm:p-4">ប្រភេទក្រុម</th>
+                                        <th class="p-3 sm:p-4 text-center">ចំនួនស្តុកសរុប</th>
+                                        <th class="p-3 sm:p-4 text-center">នៅសល់ប្រាកដ</th>
+                                        <th class="p-3 sm:p-4 text-right">តម្លៃលក់រាយ</th>
+                                        <th class="p-3 sm:p-4 text-center w-20">លុប</th>
                                     </tr>
                                 </thead>
                                 <tbody id="stockTableBody" class="divide-y divide-slate-100"></tbody>
@@ -426,53 +437,53 @@
                 </section>
 
                 <!-- 👥 Section ថ្មី៖ ប្រវត្តិទិញរបស់អតិថិជន (Customer Purchase History) -->
-                <section id="tab-customer-history" class="tab-content hidden space-y-6">
+                <section id="tab-customer-history" class="tab-content hidden space-y-4 sm:space-y-6">
                     <!-- ប្រអប់ស្វែងរក -->
-                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm max-w-2xl mx-auto space-y-4">
+                    <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-2xl mx-auto space-y-4">
                         <div class="border-b pb-3">
-                            <h3 class="font-black text-base text-slate-800">🔍 ស្វែងរកប្រវត្តិទិញរបស់អតិថិជន</h3>
+                            <h3 class="font-black text-sm sm:text-base text-slate-800">🔍 ស្វែងរកប្រវត្តិទិញរបស់អតិថិជន</h3>
                             <p class="text-xs text-slate-400 mt-0.5">បញ្ចូលលេខទូរស័ព្ទអតិថិជន ដើម្បីពិនិត្យមើលប្រវត្តិទិញ និងទិន្នន័យចំណាយ</p>
                         </div>
-                        <div class="flex gap-2">
-                            <input type="text" id="searchCustPhone" placeholder="បញ្ចូលលេខទូរស័ព្ទអតិថិជន (ឧ. 012345678)" class="flex-1 border border-slate-200 p-3 rounded-xl text-xs font-bold focus:outline-none focus:border-indigo-500">
-                            <button onclick="searchCustomerHistory()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl text-xs font-bold cursor-pointer transition shadow-md">🔍 ស្វែងរក</button>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="text" id="searchCustPhone" placeholder="បញ្ចូលលេខទូរស័ព្ទអតិថិជន (ឧ. 012345678)" class="flex-1 border border-slate-200 p-2.5 sm:p-3 rounded-xl text-xs font-bold focus:outline-none focus:border-indigo-500">
+                            <button onclick="searchCustomerHistory()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 sm:py-3 rounded-xl text-xs font-bold cursor-pointer transition shadow-md">🔍 ស្វែងរក</button>
                         </div>
                     </div>
 
                     <!-- លទ្ធផលស្វែងរក -->
-                    <div id="custHistoryResult" class="hidden space-y-6 max-w-5xl mx-auto">
+                    <div id="custHistoryResult" class="hidden space-y-4 sm:space-y-6 max-w-5xl mx-auto">
                         <!-- កាតសង្ខេប -->
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
                                 <p class="text-[10px] font-bold text-slate-400 uppercase">ឈ្មោះអតិថិជន</p>
-                                <h4 id="custHistoryName" class="text-lg font-black text-slate-800 mt-1">-</h4>
+                                <h4 id="custHistoryName" class="text-base sm:text-lg font-black text-slate-800 mt-1">-</h4>
                                 <p id="custHistoryPhone" class="text-xs font-bold text-slate-400 mt-0.5">-</p>
                             </div>
-                            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
                                 <p class="text-[10px] font-bold text-slate-400 uppercase">ទិញសរុបទាំងអស់</p>
-                                <h4 id="custHistoryTotalSpent" class="text-xl font-black text-emerald-600 mt-1">$0.00</h4>
+                                <h4 id="custHistoryTotalSpent" class="text-lg sm:text-xl font-black text-emerald-600 mt-1">$0.00</h4>
                             </div>
-                            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
                                 <p class="text-[10px] font-bold text-slate-400 uppercase">ចំនួនដងធ្លាប់ទិញ</p>
-                                <h4 id="custHistoryTotalInvoices" class="text-xl font-black text-indigo-600 mt-1">0 វិក្កយបត្រ</h4>
+                                <h4 id="custHistoryTotalInvoices" class="text-lg sm:text-xl font-black text-indigo-600 mt-1">0 វិក្កយបត្រ</h4>
                             </div>
                         </div>
 
                         <!-- តារាងប្រវត្តិទិញ -->
                         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                             <div class="p-4 border-b border-slate-100 bg-slate-50">
-                                <h3 class="font-black text-sm text-slate-800">📜 បញ្ជីវិក្កយបត្រធ្លាប់ទិញកន្លងមក</h3>
+                                <h3 class="font-black text-xs sm:text-sm text-slate-800">📜 បញ្ជីវិក្កយបត្រធ្លាប់ទិញកន្លងមក</h3>
                             </div>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left border-collapse">
+                            <div class="overflow-x-auto w-full">
+                                <table class="w-full text-left border-collapse min-w-[600px]">
                                     <thead>
                                         <tr class="bg-slate-50 text-[10px] font-bold text-slate-400 border-b">
-                                            <th class="p-4 pl-6">កាលបរិច្ឆេទ</th>
-                                            <th class="p-4">លេខវិក្កយបត្រ</th>
-                                            <th class="p-4">មុខទំនិញបានទិញ</th>
-                                            <th class="p-4">ទីតាំងដឹក</th>
-                                            <th class="p-4 text-right">ទឹកប្រាក់សរុប</th>
-                                            <th class="p-4 text-center">សកម្មភាព</th>
+                                            <th class="p-3 sm:p-4 pl-4 sm:pl-6">កាលបរិច្ឆេទ</th>
+                                            <th class="p-3 sm:p-4">លេខវិក្កយបត្រ</th>
+                                            <th class="p-3 sm:p-4">មុខទំនិញបានទិញ</th>
+                                            <th class="p-3 sm:p-4">ទីតាំងដឹក</th>
+                                            <th class="p-3 sm:p-4 text-right">ទឹកប្រាក់សរុប</th>
+                                            <th class="p-3 sm:p-4 text-center">សកម្មភាព</th>
                                         </tr>
                                     </thead>
                                     <tbody id="custHistoryTableBody"></tbody>
@@ -486,16 +497,41 @@
     </div>
 
     <!-- Modal View Invoice -->
-    <div id="invoiceModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white p-6 rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4 border-b pb-3">
-                <h3 class="font-black text-sm text-slate-800" id="modalTitle">📄 ព័ត៌មានវិក្កយបត្រ</h3>
+    <div id="invoiceModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-3 sm:p-4 z-50">
+        <div class="bg-white p-4 sm:p-6 rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-3 sm:mb-4 border-b pb-3">
+                <h3 class="font-black text-xs sm:text-sm text-slate-800" id="modalTitle">📄 ព័ត៌មានវិក្កយបត្រ</h3>
                 <button onclick="closeInvoiceModal()" class="text-slate-400 font-black cursor-pointer hover:text-slate-600 text-lg">✕</button>
             </div>
-            <div id="modalInvoiceContent" class="space-y-4"></div>
+            <div id="modalInvoiceContent" class="space-y-3 sm:space-y-4"></div>
         </div>
     </div>
 
     <script src="app.js"></script>
+    <script>
+        // Toggle Sidebar Menu លើ Mobile
+        function toggleMobileMenu() {
+            const menu = document.getElementById('sidebarMenu');
+            const footer = document.getElementById('userFooter');
+            menu.classList.toggle('hidden');
+            footer.classList.toggle('hidden');
+            footer.classList.toggle('flex');
+        }
+
+        // បិទម៉ឺនុយវិញដោយស្វ័យប្រវត្តិពេលចុចលើ Tab ណាមួយ (លើទូរស័ព្ទ)
+        const origSwitchTab = window.switchTab;
+        window.switchTab = function(tabId) {
+            if (typeof origSwitchTab === 'function') origSwitchTab(tabId);
+            if (window.innerWidth < 768) {
+                const menu = document.getElementById('sidebarMenu');
+                const footer = document.getElementById('userFooter');
+                if (menu) menu.classList.add('hidden');
+                if (footer) {
+                    footer.classList.add('hidden');
+                    footer.classList.remove('flex');
+                }
+            }
+        };
+    </script>
 </body>
 </html>
