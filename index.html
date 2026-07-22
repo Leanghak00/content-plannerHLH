@@ -140,28 +140,43 @@
             <div class="p-6 flex-1 overflow-y-auto">
                 <section id="tab-dashboard" class="tab-content hidden space-y-6">
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-                            <div>
-                                <p class="text-[11px] font-bold text-slate-400 uppercase">តួលេខលក់ប្រចាំថ្ងៃ</p>
-                                <h3 id="dashDailyAmount" class="text-2xl font-black text-slate-800 mt-1">$0.00</h3>
-                            </div>
-                            <span class="text-3xl bg-indigo-50 p-3 rounded-xl">💰</span>
-                        </div>
-                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-                            <div>
-                                <p class="text-[11px] font-bold text-slate-400 uppercase">តួលេខលក់ប្រចាំខែ</p>
-                                <h3 id="dashMonthlyAmount" class="text-2xl font-black text-indigo-600 mt-1">$0.00</h3>
-                            </div>
-                            <span class="text-3xl bg-emerald-50 p-3 rounded-xl">📈</span>
-                        </div>
-                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <!-- កាតប្រចាំថ្ងៃ -->
+    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-[11px] font-bold text-slate-400 uppercase">តួលេខលក់ប្រចាំថ្ងៃ</p>
+                <h3 id="dashDailyAmount" class="text-2xl font-black text-emerald-600 mt-1">$0.00</h3>
+            </div>
+            <span class="text-3xl bg-emerald-50 p-3 rounded-xl">💵</span>
+        </div>
+        <!-- ជ្រើសរើសថ្ងៃចាស់ៗ -->
+        <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+            <label for="searchDate" class="text-[10px] font-bold text-slate-400">ជ្រើសរើសថ្ងៃ៖</label>
+            <input type="date" id="searchDate" onchange="renderDashboard()" class="border border-slate-200 p-1.5 rounded-lg text-xs font-bold text-emerald-600 bg-slate-50 focus:outline-none">
+        </div>
+    </div>
 
+    <!-- កាតប្រចាំខែ -->
+    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-[11px] font-bold text-slate-400 uppercase">តួលេខលក់ប្រចាំខែ</p>
+                <h3 id="dashMonthlyAmount" class="text-2xl font-black text-indigo-600 mt-1">$0.00</h3>
+            </div>
+            <span class="text-3xl bg-indigo-50 p-3 rounded-xl">📈</span>
+        </div>
+        <!-- ជ្រើសរើសខែចាស់ៗ -->
+        <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+            <label for="searchMonth" class="text-[10px] font-bold text-slate-400">ជ្រើសរើសខែ៖</label>
+            <input type="month" id="searchMonth" onchange="renderDashboard()" class="border border-slate-200 p-1.5 rounded-lg text-xs font-bold text-indigo-600 bg-slate-50 focus:outline-none">
+        </div>
+    </div>
+</div>
                     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                         <div class="p-5 border-b border-slate-100"><h3 class="font-black text-sm text-slate-800">📝 របាយការណ៍លក់លោតចូលស្វ័យប្រវត្តិ</h3></div>
                         <div class="flex items-center gap-2">
-        <label for="searchDate" class="text-xs font-bold text-slate-500">ជ្រើសរើសថ្ងៃ៖</label>
-        <input type="date" id="searchDate" onchange="renderAll()" class="border border-slate-200 p-1.5 rounded-xl text-xs bg-white font-bold text-slate-700 focus:outline-none">
+      
     </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse">
@@ -186,6 +201,7 @@
                     <!-- ផ្នែកបញ្ចូលទិន្នន័យ (ឆ្វេង) -->
                     <div class="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4 h-fit">
                         <h3 class="font-black text-sm text-slate-800 border-b pb-3">✍️ បង្កើតវិក្កយបត្រថ្មី</h3>
+                        
                         
                         <div class="grid grid-cols-2 gap-3">
                             <div>
@@ -213,7 +229,7 @@
                             <label class="block text-[10px] font-bold text-slate-400 mb-1">កាលបរិច្ឆេទ</label>
                             <input type="date" id="invoiceDate" class="w-full border border-slate-200 p-2 rounded-lg text-xs font-bold focus:outline-none focus:border-indigo-500">
                         </div>
-
+                        
                         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
                             <label class="block text-[10px] font-bold text-indigo-600 mb-1">👤 មុខងារចាត់ចែងអ្នកដឹកជញ្ជូន (Admin Only)</label>
                             <select id="invoiceDriverSelect" class="w-full border border-slate-200 p-2 rounded-lg text-xs font-bold bg-white text-slate-700 focus:outline-none focus:border-indigo-500">
@@ -481,6 +497,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <script src="app.js"></script>
+    
     
 </body>
 </html>
