@@ -61,21 +61,23 @@ function initSystemAfterLogin() {
     const currentMonth = today.substring(0, 7);
 
     if (document.getElementById('searchMonth')) document.getElementById('searchMonth').value = currentMonth;
-    
-    // ❌ បានលុបការកំណត់តម្លៃថ្ងៃនេះទៅ searchDate ចេញហើយ! (ទុកឱ្យវាចំហរទទេ ឬតាមប្រភព HTML)
-    
     if (document.getElementById('invoiceDate')) document.getElementById('invoiceDate').value = today;
     if (document.getElementById('pdfDate')) document.getElementById('pdfDate').innerText = today;
     if (document.getElementById('deliveryStatDate')) document.getElementById('deliveryStatDate').value = today;
 
     // បើកបង្ហាញជួរឈរ "សកម្មភាព" ក្នុងតារាង Dashboard បើសិនជា Admin
+   const dashCards = document.getElementById('dash-cards-container');
+    const thTotal = document.getElementById('th-dashboard-total');
     const thAction = document.getElementById('th-dashboard-action');
-    if (thAction) {
-        if (currentUser.role === 'Admin') {
-            thAction.classList.remove('hidden');
-        } else {
-            thAction.classList.add('hidden');
-        }
+
+    if (currentUser.role === 'Admin') {
+        if (dashCards) dashCards.classList.remove('hidden');
+        if (thTotal) thTotal.classList.remove('hidden');
+        if (thAction) thAction.classList.remove('hidden');
+    } else {
+        if (dashCards) dashCards.classList.add('hidden');
+        if (thTotal) thTotal.classList.add('hidden');
+        if (thAction) thAction.classList.add('hidden');
     }
 
     if (currentUser.role !== 'Admin') {
@@ -518,7 +520,6 @@ function renderDashboard() {
     const today = new Date().toISOString().split('T')[0];
     
     const dateInput = document.getElementById('searchDate');
-    // ❌ បានលុបការកំណត់ auto fill dateInput.value = today ចេញ
     const selectedDate = dateInput ? dateInput.value : '';
 
     const monthInput = document.getElementById('searchMonth');
@@ -531,22 +532,25 @@ function renderDashboard() {
     salesData.forEach(s => {
         const amt = parseFloat(s.total) || 0;
         
-        // 1. គណនាប្រចាំថ្ងៃ តាមថ្ងៃដែលបានជ្រើសរើស (បើមិនជ្រើសរើស មិនគណនាថ្ងៃ)
+        // 1. គណនាប្រចាំថ្ងៃ
         if (selectedDate && s.date === selectedDate) {
             dailySum += amt;
         }
         
-        // 2. គណនាប្រចាំខែ តាមខែដែលបានជ្រើសរើស
+        // 2. គណនាប្រចាំខែ
         if (s.date && typeof s.date === 'string' && s.date.substring(0, 7) === selectedMonth) {
             monthlySum += amt;
         }
     });
 
+    // 🔒 ពិនិត្យសិទ្ធិ៖ បើជា Admin ទើបបង្ហាញតួលេខលុយ បើជា User ត្រូវលាក់តួលេខ
+    const isAdmin = currentUser && currentUser.role === 'Admin';
+
     if (document.getElementById('dashDailyAmount')) {
-        document.getElementById('dashDailyAmount').innerText = `$${dailySum.toFixed(2)}`;
+        document.getElementById('dashDailyAmount').innerText = isAdmin ? `$${dailySum.toFixed(2)}` : '***';
     }
     if (document.getElementById('dashMonthlyAmount')) {
-        document.getElementById('dashMonthlyAmount').innerText = `$${monthlySum.toFixed(2)}`;
+        document.getElementById('dashMonthlyAmount').innerText = isAdmin ? `$${monthlySum.toFixed(2)}` : '***';
     }
 
     renderSalesTable(selectedDate);
