@@ -5,29 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>VCK SHOP Pro v2.6</title>
     
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@100;300;400;700;900&display=swap" rel="stylesheet">
     
+    <!-- Tailwind CSS -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     
+    <!-- Firebase Libraries -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
+    <!-- HTML2PDF Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-    <style>
-        * { font-family: 'Battambang', sans-serif !important; }
-        .active-menu { 
-            background-color: #1e293b !important; 
-            color: #f8fafc !important; 
-            border-left: 4px solid #4f46e5; 
-        }
-        /* Smooth Touch Scroll សម្រាប់ Mobile */
-        .overflow-x-auto {
-            -webkit-overflow-scrolling: touch;
-        }
-    </style>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
 
@@ -72,7 +66,6 @@
                         <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span> ដំណើរការ
                     </p>
                 </div>
-                <!-- ប៊ូតុង Toggle ម៉ឺនុយលើ Mobile -->
                 <button onclick="toggleMobileMenu()" class="md:hidden text-white bg-slate-800 p-2 rounded-lg text-lg focus:outline-none border border-slate-700">
                     ☰ ម៉ឺនុយ
                 </button>
@@ -84,8 +77,6 @@
                 <button id="btn-vireakbuntham" onclick="switchTab('vireakbuntham')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold hover:bg-slate-800 transition text-left cursor-pointer">🚌 វិក្កយបត្រវីរៈប៊ុនថាំ</button>
                 <button id="btn-delivery" onclick="switchTab('delivery')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold hover:bg-slate-800 transition text-left cursor-pointer">🚚 ប្រព័ន្ធដឹកជញ្ជូន</button>
                 <button id="btn-stock" onclick="switchTab('stock')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold hover:bg-slate-800 transition text-left cursor-pointer">📦 គ្រប់គ្រងឃ្លាំងស្តុក</button>
-                
-                <!-- 👥 ម៉ឺនុយថ្មី៖ ប្រវត្តិទិញរបស់អតិថិជន -->
                 <button id="btn-customer-history" onclick="switchTab('customer-history')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold hover:bg-slate-800 transition text-left cursor-pointer text-indigo-300">👥 ប្រវត្តិទិញរបស់អតិថិជន</button>
             </nav>
 
@@ -436,9 +427,8 @@
                     </div>
                 </section>
 
-                <!-- 👥 Section ថ្មី៖ ប្រវត្តិទិញរបស់អតិថិជន (Customer Purchase History) -->
+                <!-- Customer History Section -->
                 <section id="tab-customer-history" class="tab-content hidden space-y-4 sm:space-y-6">
-                    <!-- ប្រអប់ស្វែងរក -->
                     <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-2xl mx-auto space-y-4">
                         <div class="border-b pb-3">
                             <h3 class="font-black text-sm sm:text-base text-slate-800">🔍 ស្វែងរកប្រវត្តិទិញរបស់អតិថិជន</h3>
@@ -450,9 +440,7 @@
                         </div>
                     </div>
 
-                    <!-- លទ្ធផលស្វែងរក -->
                     <div id="custHistoryResult" class="hidden space-y-4 sm:space-y-6 max-w-5xl mx-auto">
-                        <!-- កាតសង្ខេប -->
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                             <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
                                 <p class="text-[10px] font-bold text-slate-400 uppercase">ឈ្មោះអតិថិជន</p>
@@ -469,7 +457,6 @@
                             </div>
                         </div>
 
-                        <!-- តារាងប្រវត្តិទិញ -->
                         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                             <div class="p-4 border-b border-slate-100 bg-slate-50">
                                 <h3 class="font-black text-xs sm:text-sm text-slate-800">📜 បញ្ជីវិក្កយបត្រធ្លាប់ទិញកន្លងមក</h3>
@@ -507,31 +494,7 @@
         </div>
     </div>
 
+    <!-- Main JS Code -->
     <script src="app.js"></script>
-    <script>
-        // Toggle Sidebar Menu លើ Mobile
-        function toggleMobileMenu() {
-            const menu = document.getElementById('sidebarMenu');
-            const footer = document.getElementById('userFooter');
-            menu.classList.toggle('hidden');
-            footer.classList.toggle('hidden');
-            footer.classList.toggle('flex');
-        }
-
-        // បិទម៉ឺនុយវិញដោយស្វ័យប្រវត្តិពេលចុចលើ Tab ណាមួយ (លើទូរស័ព្ទ)
-        const origSwitchTab = window.switchTab;
-        window.switchTab = function(tabId) {
-            if (typeof origSwitchTab === 'function') origSwitchTab(tabId);
-            if (window.innerWidth < 768) {
-                const menu = document.getElementById('sidebarMenu');
-                const footer = document.getElementById('userFooter');
-                if (menu) menu.classList.add('hidden');
-                if (footer) {
-                    footer.classList.add('hidden');
-                    footer.classList.remove('flex');
-                }
-            }
-        };
-    </script>
 </body>
 </html>
