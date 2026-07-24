@@ -17,7 +17,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
-    
     <!-- HTML2PDF Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
@@ -177,6 +176,12 @@
                                 <input type="text" id="invoiceLocation" class="w-full border border-slate-200 p-2 rounded-lg text-xs font-bold focus:outline-none focus:border-indigo-500">
                             </div>
                         </div>
+                        
+                        <!-- ➕ ប្រអប់បញ្ចូលសេវាដឹកជញ្ជូន -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1">សេវាដឹកជញ្ជូន ($)</label>
+                            <input type="number" id="invoiceDeliveryFee" value="0.00" step="0.01" oninput="renderInvoicePreviewTable()" class="w-full border border-slate-200 p-2 rounded-lg text-xs font-bold focus:outline-none focus:border-indigo-500 text-right">
+                        </div>
 
                         <div>
                             <label class="block text-[10px] font-bold text-slate-400 mb-1">កាលបរិច្ឆេទ</label>
@@ -226,7 +231,7 @@
                             </div>
                             
                             <div class="overflow-x-auto w-full">
-                                <table class="w-full text-xs border border-slate-200 mb-4 text-left border-collapse min-w-[350px]">
+                                <table class="w-full text-xs border border-slate-200 mb-2 text-left border-collapse min-w-[350px]">
                                     <thead class="bg-slate-100 font-bold text-slate-700 border-b">
                                         <tr>
                                             <th class="p-2 text-center border-r border-slate-250 w-10">ល.រ</th>
@@ -239,6 +244,12 @@
                                     </thead>
                                     <tbody id="invoiceItemsTableBody" class="divide-y divide-slate-200"></tbody>
                                 </table>
+                            </div>
+
+                            <!-- ➕ បង្ហាញសេវាដឹកជញ្ជូនក្នុង Preview -->
+                            <div id="pdfDeliveryFeeRow" class="flex justify-between text-xs py-1 text-slate-600 border-t border-slate-100 mt-2 pt-2">
+                                <span>សេវាដឹកជញ្ជូន (Delivery Fee):</span>
+                                <span id="pdfDeliveryFeeText" class="font-bold">$0.00</span>
                             </div>
                             
                             <div class="flex justify-between items-end mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-slate-150">
