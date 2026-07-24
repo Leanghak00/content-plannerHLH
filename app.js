@@ -246,9 +246,10 @@ function removeInvoiceItem(index) {
 function renderInvoicePreviewTable() {
     const tbody = document.getElementById('invoiceItemsTableBody');
     if (!tbody) return;
-    let html = '', grandTotal = 0;
+    let html = '', itemsTotal = 0;
+    
     currentInvoiceItems.forEach((item, index) => {
-        grandTotal += item.totalPrice;
+        itemsTotal += item.totalPrice;
         html += `
         <tr class="border-b text-xs">
             <td class="p-2 text-center border-r">${index + 1}</td>
@@ -260,6 +261,16 @@ function renderInvoicePreviewTable() {
         </tr>`;
     });
     tbody.innerHTML = html;
+
+    const deliveryFeeInput = document.getElementById('invoiceDeliveryFee');
+    const deliveryFee = deliveryFeeInput ? parseFloat(deliveryFeeInput.value) || 0 : 0;
+    
+    const pdfDeliveryFeeText = document.getElementById('pdfDeliveryFeeText');
+    if (pdfDeliveryFeeText) {
+        pdfDeliveryFeeText.innerText = `$${deliveryFee.toFixed(2)}`;
+    }
+
+    const grandTotal = itemsTotal + deliveryFee;
     document.getElementById('invoiceGrandTotal').innerText = `$${grandTotal.toFixed(2)}`;
 }
 
@@ -270,11 +281,13 @@ function saveFinalInvoice() {
     const location = document.getElementById('invoiceLocation').value.trim();
     const date = document.getElementById('invoiceDate').value;
     const driver = document.getElementById('invoiceDriverSelect').value;
+    const deliveryFee = parseFloat(document.getElementById('invoiceDeliveryFee').value) || 0;
 
     if (!customer || !location || currentInvoiceItems.length === 0) return alert("⚠️ សូមបំពេញព័ត៌មានអតិថិជន ទិសដៅ និងទំនិញឱ្យបានគ្រប់គ្រាន់!");
 
     const invCode = 'INV-' + Math.floor(100000 + Math.random() * 900000);
-    const grandTotal = currentInvoiceItems.reduce((sum, item) => sum + item.totalPrice, 0);
+    const itemsTotal = currentInvoiceItems.reduce((sum, item) => sum + item.totalPrice, 0);
+    const grandTotal = itemsTotal + deliveryFee;
 
     const lowStockAlerts = [];
 
@@ -288,14 +301,21 @@ function saveFinalInvoice() {
         }
     });
 
-    database.ref('sales').child(invCode).set({ invCode, customer, phone, location, date, total: grandTotal, items: currentInvoiceItems });
+    database.ref('sales').child(invCode).set({ 
+        invCode, customer, phone, location, date, 
+        itemsTotal: itemsTotal,
+        deliveryFee: deliveryFee,
+        total: grandTotal, 
+        items: currentInvoiceItems 
+    });
+    
     database.ref('deliveries').child(invCode).set({ invCode, customer, phone, fromLoc, location, driver, status: "កំពុងរៀបចំ" });
     
     const productsObj = {};
     productsData.forEach(p => { productsObj[p.id] = p; });
     
     database.ref('products').set(productsObj).then(() => {
-        sendTelegramNotification(invCode, customer, phone, location, date, driver, grandTotal, currentInvoiceItems);
+        sendTelegramNotification(invCode, customer, phone, location, date, driver, grandTotal, currentInvoiceItems, deliveryFee);
         
         if (lowStockAlerts.length > 0) {
             sendLowStockTelegramAlert(lowStockAlerts);
@@ -327,7 +347,7 @@ function sendLowStockTelegramAlert(items) {
     }).catch(err => console.error('Low Stock Telegram Error:', err));
 }
 
-function sendTelegramNotification(invCode, customer, phone, location, date, driver, total, items) {
+function sendTelegramNotification(invCode, customer, phone, location, date, driver, total, items, deliveryFee) {
     let itemsText = items.map((item, idx) => 
         `  ${idx + 1}. ${item.name} x${item.qty} = $${item.totalPrice.toFixed(2)}`
     ).join('\n');
@@ -343,6 +363,7 @@ function sendTelegramNotification(invCode, customer, phone, location, date, driv
                   `------------------------------\n` +
                   `📦 *មុខទំនិញ:*\n${itemsText}\n` +
                   `------------------------------\n` +
+                  `🚚 *សេវាដឹកជញ្ជូន:* $${deliveryFee.toFixed(2)}\n` +
                   `💰 *ទូទាត់សរុប:* *$${total.toFixed(2)}*`;
 
     fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -420,6 +441,7 @@ function resetInvoiceForm() {
     document.getElementById('invoiceCustomer').value = '';
     document.getElementById('invoicePhone').value = '';
     document.getElementById('invoiceLocation').value = '';
+    document.getElementById('invoiceDeliveryFee').value = '0.00';
     document.getElementById('invoiceDriverSelect').value = 'មិនទាន់ចាត់ចែង';
     renderInvoicePreviewTable();
 }
@@ -429,6 +451,7 @@ function downloadInvoicePDF() {
 
     const customer = document.getElementById('invoiceCustomer')?.value || 'N/A';
     const date = document.getElementById('invoiceDate')?.value || '-';
+    const deliveryFee = parseFloat(document.getElementById('invoiceDeliveryFee')?.value) || 0;
     
     let htmlContent = `
         <div style="border-bottom: 1px solid #ccc; margin-bottom: 20px;">
@@ -453,6 +476,9 @@ function downloadInvoicePDF() {
                 `).join('')}
             </tbody>
         </table>
+        <div style="margin-top: 15px; font-size: 14px;">
+            <p><strong>សេវាដឹកជញ្ជូន:</strong> $${deliveryFee.toFixed(2)}</p>
+        </div>
         <div style="text-align: right; margin-top: 20px;">
             <h3>សរុប: ${document.getElementById('invoiceGrandTotal')?.innerText || '$0.00'}</h3>
         </div>
@@ -811,6 +837,7 @@ function viewInvoice(invoiceId) {
 
         const modal = document.getElementById('invoiceModal');
         const content = document.getElementById('modalInvoiceContent');
+        const deliveryFee = parseFloat(data.deliveryFee) || 0;
         
         content.innerHTML = `
             <div class="border-b pb-3 mb-4">
@@ -839,6 +866,18 @@ function viewInvoice(invoiceId) {
                     `).join('') : '<tr><td colspan="4" class="p-2">គ្មានទិន្នន័យ</td></tr>'}
                 </tbody>
             </table>
+
+            <div class="mt-3 text-xs space-y-1 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <div class="flex justify-between text-slate-600">
+                    <span>សរុបតម្លៃទំនិញ៖</span>
+                    <span>$${(parseFloat(data.total) - deliveryFee).toFixed(2)}</span>
+                </div>
+                <div class="flex justify-between text-slate-600">
+                    <span>សេវាដឹកជញ្ជូន៖</span>
+                    <span>$${deliveryFee.toFixed(2)}</span>
+                </div>
+            </div>
+
             <div class="text-right mt-4 p-3 bg-indigo-50 rounded-xl">
                 <p class="text-xs font-bold text-indigo-600">សរុបទាំងអស់: $${parseFloat(data.total).toFixed(2) || '0.00'}</p>
             </div>
