@@ -642,44 +642,27 @@ function renderSalesTable(selectedDate) {
 }
 
 function renderAll() {
-  const deliveryTbody = document.getElementById('deliveryTableBody');
+    const today = new Date().toISOString().split('T')[0];
+
+    renderDashboard();
+
+    const deliveryTbody = document.getElementById('deliveryTableBody');
     if (deliveryTbody) {
-        // យកតម្លៃថ្ងៃពី Date Filter ខាងលើ (ប្រសិនបើអត់មាន យកថ្ងៃនេះជាស្វ័យប្រវត្តិ)
-        const filterDateEl = document.getElementById('filterDeliveryDate');
-        const selectedDate = filterDateEl ? filterDateEl.value : new Date().toISOString().split('T')[0];
-
-        // ចម្រាញ់យកเฉพาะទិន្នន័យការលក់ចំថ្ងៃដែលបានជ្រើសរើស
-        let targetSales = salesData.filter(s => s.date === selectedDate);
-
-        if (targetSales.length === 0) {
-            deliveryTbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-xs font-bold text-slate-400">🚚 មិនមានទិន្នន័យដឹកជញ្ជូនសម្រាប់ថ្ងៃទី ${selectedDate} ទេ</td></tr>`;
+        if (deliveryData.length === 0) {
+            deliveryTbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-xs font-bold text-slate-400">🚚 មិនទាន់មានជើងដឹកជញ្ជូនទេ</td></tr>`;
         } else {
-            deliveryTbody.innerHTML = targetSales.map(sale => {
-                // ស្វែងរកទិន្នន័យដឹកជញ្ជូនដែលមានស្រាប់ក្នុង deliveryData តាម invCode
-                let d = deliveryData.find(item => item.invCode === sale.invCode);
-                
-                // បើមិនទាន់មានក្នុង deliveryData ទេ បង្កើតតម្លៃដើមបណ្តោះអាសន្នសម្រាប់បង្ហាញ
-                if (!d) {
-                    d = {
-                        invCode: sale.invCode,
-                        customer: sale.customer || 'អតិថិជន',
-                        phone: sale.phone || '',
-                        fromLoc: 'ភ្នំពេញ',
-                        location: sale.location || '-',
-                        driver: 'មិនទាន់ចាត់ចែង',
-                        status: 'កំពុងរៀបចំ'
-                    };
-                }
-
+            deliveryTbody.innerHTML = deliveryData.map(d => {
+                const matchedSale = salesData.find(s => s.invCode === d.invCode);
+                const dDate = matchedSale ? matchedSale.date : today;
                 return `
                     <tr class="text-xs hover:bg-slate-50">
-                        <td class="p-4 pl-6 text-slate-500">${sale.date}</td>
-                        <td class="p-4 font-bold text-indigo-600 cursor-pointer" onclick="viewInvoice('${sale.invCode}')">${sale.invCode || '-'}</td>
-                        <td class="p-4 font-bold">${d.customer || sale.customer || '-'} ${d.phone || sale.phone ? `(${d.phone || sale.phone})` : ''}</td>
+                        <td class="p-4 pl-6 text-slate-500">${dDate}</td>
+                        <td class="p-4 font-bold text-indigo-600 cursor-pointer" onclick="viewInvoice('${d.invCode}')">${d.invCode || '-'}</td>
+                        <td class="p-4 font-bold">${d.customer || '-'} ${d.phone ? `(${d.phone})` : ''}</td>
                         <td class="p-4 font-medium text-slate-600">${d.fromLoc || 'ភ្នំពេញ'}</td>
-                        <td class="p-4 font-medium text-indigo-600">${d.location || sale.location || '-'}</td>
+                        <td class="p-4 font-medium text-indigo-600">${d.location || '-'}</td>
                         <td class="p-4">
-                            <select onchange="updateDriver('${sale.invCode}', this.value)" class="border border-slate-200 p-1.5 rounded-xl text-xs bg-white font-bold text-slate-700 focus:outline-none">
+                            <select onchange="updateDriver('${d.invCode}', this.value)" class="border border-slate-200 p-1.5 rounded-xl text-xs bg-white font-bold text-slate-700 focus:outline-none">
                                 <option value="មិនទាន់ចាត់ចែង" ${d.driver === 'មិនទាន់ចាត់ចែង' ? 'selected' : ''}>--- ជ្រើសរើស ---</option>
                                 <option value="លាងហាក់" ${d.driver === 'លាងហាក់' ? 'selected' : ''}>លាងហាក់</option>
                                 <option value="ផាន់នី" ${d.driver === 'ផាន់នី' ? 'selected' : ''}>ផាន់នី</option>
@@ -690,7 +673,7 @@ function renderAll() {
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${d.status === 'បានប្រគល់ជូន' ? 'bg-emerald-50 text-emerald-600' : d.status === 'កំពុងដឹក' ? 'bg-indigo-50 text-indigo-600' : 'bg-amber-50 text-amber-600'}">${d.status || 'កំពុងរៀបចំ'}</span>
                         </td>
                         <td class="p-4 text-center">
-                            <select onchange="updateStatus('${sale.invCode}', this.value)" class="border border-slate-200 p-1.5 rounded-xl text-xs bg-white text-slate-700 focus:outline-none">
+                            <select onchange="updateStatus('${d.invCode}', this.value)" class="border border-slate-200 p-1.5 rounded-xl text-xs bg-white text-slate-700 focus:outline-none">
                                 <option value="កំពុងរៀបចំ" ${d.status === 'កំពុងរៀបចំ' ? 'selected' : ''}>កំពុងរៀបចំ</option>
                                 <option value="កំពុងដឹក" ${d.status === 'កំពុងដឹក' ? 'selected' : ''}>កំពុងដឹក</option>
                                 <option value="បានប្រគល់ជូន" ${d.status === 'បានប្រគល់ជូន' ? 'selected' : ''}>បានប្រគល់ជូន</option>
