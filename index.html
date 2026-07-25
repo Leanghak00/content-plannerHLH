@@ -277,75 +277,68 @@
                 </section>
 
                 <!-- Delivery Section -->
-               <!-- Delivery Section -->
-<section id="tab-delivery" class="tab-content hidden space-y-4 sm:space-y-6">
-    <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 border-b border-slate-100 pb-3">
-            <div>
-                <h3 class="font-black text-xs sm:text-sm text-slate-800">📊 ស្ថិតិជើងដឹកជញ្ជូនប្រចាំថ្ងៃ</h3>
-                <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5">ចំនួនជើងដែលបានដឹកជោគជ័យ និងកំពុងដឹកតាមកាលបរិច្ឆេទ</p>
-            </div>
-            <div class="flex items-center gap-2">
-                <label class="text-[11px] font-bold text-slate-500 whitespace-nowrap">ជ្រើសរើសថ្ងៃខែ៖</label>
-                <input type="date" id="deliveryStatDate" onchange="updateDeliveryStatsByDate()" class="border border-slate-200 p-1.5 sm:p-2 rounded-xl text-xs font-bold bg-slate-50 focus:outline-none focus:border-indigo-500">
-            </div>
-        </div>
-        
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-            <div class="bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-100 flex items-center justify-between">
-                <div>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase">លោក លាងហាក់</p>
-                    <h4 id="stat-driver-1" class="text-lg sm:text-xl font-black text-indigo-650 mt-1">0 ជើង</h4>
-                </div>
-                <span class="text-xl sm:text-2xl bg-indigo-50 p-2 rounded-lg">🛵</span>
-            </div>
-            <div class="bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-100 flex items-center justify-between">
-                <div>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase">លោក ផាន់នី</p>
-                    <h4 id="stat-driver-2" class="text-lg sm:text-xl font-black text-emerald-600 mt-1">0 ជើង</h4>
-                </div>
-                <span class="text-xl sm:text-2xl bg-emerald-50 p-2 rounded-lg">🛵</span>
-            </div>
-            <div class="bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-100 flex items-center justify-between">
-                <div>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase">លោក សុភាព</p>
-                    <h4 id="stat-driver-3" class="text-lg sm:text-xl font-black text-amber-500 mt-1">0 ជើង</h4>
-                </div>
-                <span class="text-xl sm:text-2xl bg-amber-50 p-2 rounded-lg">🛵</span>
-            </div>
-        </div>
-    </div>
+                <section id="tab-delivery" class="tab-content hidden space-y-4 sm:space-y-6">
+                    <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 border-b border-slate-100 pb-3">
+                            <div>
+                                <h3 class="font-black text-xs sm:text-sm text-slate-800">📊 ស្ថិតិជើងដឹកជញ្ជូនប្រចាំថ្ងៃ</h3>
+                                <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5">ចំនួនជើងដែលបានដឹកជោគជ័យ និងកំពុងដឹកតាមកាលបរិច្ឆេទ</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label class="text-[11px] font-bold text-slate-500 whitespace-nowrap">ជ្រើសរើសថ្ងៃខែ៖</label>
+                                <input type="date" id="deliveryStatDate" onchange="updateDeliveryStatsByDate()" class="border border-slate-200 p-1.5 sm:p-2 rounded-xl text-xs font-bold bg-slate-50 focus:outline-none focus:border-indigo-500">
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                            <div class="bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-100 flex items-center justify-between">
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase">លោក លាងហាក់</p>
+                                    <h4 id="stat-driver-1" class="text-lg sm:text-xl font-black text-indigo-650 mt-1">0 ជើង</h4>
+                                </div>
+                                <span class="text-xl sm:text-2xl bg-indigo-50 p-2 rounded-lg">🛵</span>
+                            </div>
+                            <div class="bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-100 flex items-center justify-between">
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase">លោក ផាន់នី</p>
+                                    <h4 id="stat-driver-2" class="text-lg sm:text-xl font-black text-emerald-600 mt-1">0 ជើង</h4>
+                                </div>
+                                <span class="text-xl sm:text-2xl bg-emerald-50 p-2 rounded-lg">🛵</span>
+                            </div>
+                            <div class="bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-100 flex items-center justify-between">
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase">លោក សុភាព</p>
+                                    <h4 id="stat-driver-3" class="text-lg sm:text-xl font-black text-amber-500 mt-1">0 ជើង</h4>
+                                </div>
+                                <span class="text-xl sm:text-2xl bg-amber-50 p-2 rounded-lg">🛵</span>
+                            </div>
+                        </div>
+                    </div>
 
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-            <h3 class="font-black text-xs sm:text-sm text-slate-800">📋 បញ្ជីមុខងារចាត់ចែង និងប្រវត្តិដឹកជញ្ជូន</h3>
-            
-            <!-- ➕ បន្ថែម Date Filter សម្រាប់តារាង List ដឹកជញ្ជូន -->
-            <div class="flex items-center gap-2">
-                <label class="text-[11px] font-bold text-slate-500 whitespace-nowrap">តម្រៀបតាមថ្ងៃ៖</label>
-                <input type="date" id="filterDeliveryDate" onchange="renderAll()" class="border border-slate-200 p-1.5 rounded-xl text-xs font-bold bg-white focus:outline-none focus:border-indigo-500">
-            </div>
-        </div>
-        
-        <div class="overflow-x-auto w-full">
-            <table class="w-full text-left border-collapse min-w-[700px]">
-                <thead>
-                    <tr class="bg-slate-50 text-[10px] font-bold text-slate-400 border-b">
-                        <th class="p-3 sm:p-4 pl-4 sm:pl-6">ថ្ងៃខែ</th>
-                        <th class="p-3 sm:p-4">លេខវិក្កយបត្រ</th>
-                        <th class="p-3 sm:p-4">ព័ត៌មានអតិថិជន</th>
-                        <th class="p-3 sm:p-4">ចេញពីទីតាំង</th>
-                        <th class="p-3 sm:p-4">ទិសដៅទៅដល់</th>
-                        <th class="p-3 sm:p-4">អ្នកដឹកជញ្ជូន</th>
-                        <th class="p-3 sm:p-4 text-center">ស្ថានភាព</th>
-                        <th class="p-3 sm:p-4 text-center">សកម្មភាព</th>
-                    </tr>
-                </thead>
-                <tbody id="deliveryTableBody" class="divide-y divide-slate-100 text-xs font-medium text-slate-700"></tbody>
-            </table>
-        </div>
-    </div>
-</section>
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                            <h3 class="font-black text-xs sm:text-sm text-slate-800">📋 បញ្ជីមុខងារចាត់ចែង និងប្រវត្តិដឹកជញ្ជូន</h3>
+                        </div>
+                        
+                        <div class="overflow-x-auto w-full">
+                            <table class="w-full text-left border-collapse min-w-[700px]">
+                                <thead>
+                                    <tr class="bg-slate-50 text-[10px] font-bold text-slate-400 border-b">
+                                        <th class="p-3 sm:p-4 pl-4 sm:pl-6">ថ្ងៃខែ</th>
+                                        <th class="p-3 sm:p-4">លេខវិក្កយបត្រ</th>
+                                        <th class="p-3 sm:p-4">ព័ត៌មានអតិថិជន</th>
+                                        <th class="p-3 sm:p-4">ចេញពីទីតាំង</th>
+                                        <th class="p-3 sm:p-4">ទិសដៅទៅដល់</th>
+                                        <th class="p-3 sm:p-4">អ្នកដឹកជញ្ជូន</th>
+                                        <th class="p-3 sm:p-4 text-center">ស្ថានភាព</th>
+                                        <th class="p-3 sm:p-4 text-center">សកម្មភាព</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="deliveryTableBody" class="divide-y divide-slate-100 text-xs font-medium text-slate-700"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
 
                 <!-- Stock Section -->
                 <section id="tab-stock" class="tab-content hidden space-y-4 sm:space-y-6">
