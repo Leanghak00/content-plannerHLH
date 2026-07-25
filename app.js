@@ -898,3 +898,52 @@ function toggleMobileMenu() {
     footer.classList.toggle('hidden');
     footer.classList.toggle('flex');
 }
+// មុខងារសម្រាប់ផ្ញើសារสรุปចំនួនជើងអ្នកដឹកជូន Telegram ពេលម៉ោង ៥ ល្ងាច
+function checkAndSendDailyDriverSummary() {
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+
+    // កំណត់ឱ្យផ្ញើនៅម៉ោង 17:00 (ម៉ោង 5 ល្ងាច) ត្រង់នាទីទី 00
+    if (hours === 18 && minutes === 8) {
+        const today = now.toISOString().split('T')[0];
+        const driverCounts = { "លាងហាក់": 0, "ផាន់នី": 0, "សុភាព": 0 };
+
+        deliveryData.forEach(d => {
+            const matchedSale = salesData.find(s => s.invCode === d.invCode);
+            const deliveryDate = matchedSale ? matchedSale.date : '';
+
+            // រាប់เฉพาะជើងណាដែលចំថ្ងៃបច្ចុប្បន្ន និងមានស្ថានភាព "បានប្រគល់ជូន" (ឬអាចដក condition status ចេញបើចង់រាប់សរុបគ្រប់ស្ថានភាព)
+            if (deliveryDate === today && 
+                driverCounts.hasOwnProperty(d.driver) && 
+                d.status === 'បានប្រគល់ជូន') {
+                driverCounts[d.driver]++;
+            }
+        });
+
+        let message = `🛵 *របាយការណ៍សង្ខេបជើងដឹកជញ្ជូនប្រចាំថ្ងៃ*\n` +
+                      `📅 *កាលបរិច្ឆេទ:* ${today}\n` +
+                      `------------------------------\n` +
+                      `👤 *លោក លាងហាក់:* ${driverCounts["លាងហាក់"]} ជើង\n` +
+                      `👤 *លោក ផាន់នី:* ${driverCounts["ផាន់នី"]} ជើង\n` +
+                      `👤 *លោក សុភាព:* ${driverCounts["សុភាព"]} ជើង\n` +
+                      `------------------------------\n` +
+                      `✅ បានបញ្ចប់ការពិនិត្យស្វ័យប្រវត្តីម៉ោង ៥ ល្ងាច។`;
+
+        // ផ្ញើទៅកាន់ Telegram Bot
+        fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: TELEGRAM_CHAT_ID,
+                text: message,
+                parse_mode: 'Markdown'
+            })
+        })
+        .then(response => console.log('Daily summary sent successfully'))
+        .catch(err => console.error('Daily Summary Telegram Error:', err));
+    }
+}
+
+// ʹដំឡើង Timer ឱ្យវាឆែកមើលម៉ោងរៀងរាល់ ១ នាទីម្តង (60000 ms)
+setInterval(checkAndSendDailyDriverSummary, 60000);
