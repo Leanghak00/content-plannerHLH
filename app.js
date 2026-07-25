@@ -19,8 +19,7 @@ const usersData = [
     { id: 4, name: "SP", role: "User", password: "123" }
 ];
 
-let productsData = [], currentUser = null, salesData = [], deliveryData = [], currentInvoiceItems = [], vbInvoicesData = [];
-let localStream = null;
+let productsData = [], currentUser = null, salesData = [], deliveryData = [], currentInvoiceItems = [];
 
 const TELEGRAM_BOT_TOKEN = "8830737719:AAHYaFzRQYAFwPXHhYexgTdVGYOGrenYIKE"; 
 const TELEGRAM_CHAT_ID = "-5482283441"; 
@@ -29,7 +28,9 @@ window.addEventListener('DOMContentLoaded', () => {
     const savedUser = localStorage.getItem('vck_current_user');
     if (savedUser) {
         currentUser = JSON.parse(savedUser);
-        initSystemAfterLogin();
+        initSystemAfterLogin()
+        if (document.getElementById('deliveryStatDate')) document.getElementById('deliveryStatDate').value = today;
+    if (document.getElementById('filterDeliveryDate')) document.getElementById('filterDeliveryDate').value = today; // ➕ កំណត់ថ្ងៃថ្ងៃនេះឱ្យប្រអប់ Filter ដឹកជញ្ជូន;
     }
 });
 
@@ -89,14 +90,12 @@ function initSystemAfterLogin() {
 }
 
 function handleLogout() {
-    stopCamera();
     currentUser = null;
     localStorage.removeItem('vck_current_user');
     location.reload();
 }
 
 function switchTab(tabId) {
-    stopCamera();
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     
     const targetTab = document.getElementById('tab-' + tabId);
@@ -109,7 +108,6 @@ function switchTab(tabId) {
     const titles = { 
         'dashboard': '📊 ផ្ទាំងគ្រប់គ្រងទូទៅ', 
         'sales': '📄 វិក្កយបត្រលក់សម្ភារៈ', 
-        'vireakbuntham': '🚌 វិក្កយបត្រវីរៈប៊ុនថាំ', 
         'delivery': '🚚 ប្រព័ន្ធដឹកជញ្ជូន', 
         'stock': '📦 គ្រប់គ្រងឃ្លាំងស្តុក',
         'customer-history': '👥 ប្រវត្តិទិញរបស់អតិថិជន'
@@ -143,11 +141,6 @@ function listenToFirebaseData() {
         const data = snapshot.val();
         deliveryData = data ? Object.values(data) : [];
         renderAll();
-    });
-    database.ref('vireak_buntham_invoices').on('value', (snapshot) => {
-        const data = snapshot.val();
-        vbInvoicesData = data ? Object.values(data) : [];
-        renderVireakBunthamGrid();
     });
 }
 
@@ -535,100 +528,6 @@ function deleteProductFromStock(id) {
     if (confirm("⚠️ ចង់លុបទំនិញនេះមែនទេ?")) database.ref('products').child(id).remove();
 }
 
-function startCamera() {
-    const video = document.getElementById('webcamVideo');
-    const placeholder = document.getElementById('cameraPlaceholder');
-    const btnCapture = document.getElementById('btnCapture');
-
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
-        .then(stream => {
-            localStream = stream;
-            video.srcObject = stream;
-            video.classList.remove('hidden');
-            placeholder.classList.add('hidden');
-            btnCapture.disabled = false;
-        }).catch(err => alert("⚠️ មិនអាចបើកកាមេរ៉ាបានទេ៖ " + err.message));
-}
-
-function takeSnapshot() {
-    const video = document.getElementById('webcamVideo');
-    const canvas = document.getElementById('capturedCanvas');
-    const ctx = canvas.getContext('2d');
-
-    if (localStream) {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        canvas.classList.remove('hidden');
-        video.classList.add('hidden');
-    }
-}
-
-function resetCameraView() {
-    document.getElementById('capturedCanvas').classList.add('hidden');
-    document.getElementById('webcamVideo').classList.remove('hidden');
-}
-
-function stopCamera() {
-    if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-        localStream = null;
-    }
-    if (document.getElementById('webcamVideo')) document.getElementById('webcamVideo').classList.add('hidden');
-    if (document.getElementById('cameraPlaceholder')) document.getElementById('cameraPlaceholder').classList.remove('hidden');
-    if (document.getElementById('capturedCanvas')) document.getElementById('capturedCanvas').classList.add('hidden');
-    if (document.getElementById('btnCapture')) document.getElementById('btnCapture').disabled = true;
-}
-
-function saveVireakBunthamInvoice() {
-    const note = document.getElementById('vbNote').value.trim();
-    const canvas = document.getElementById('capturedCanvas');
-    
-    if (canvas.classList.contains('hidden')) return alert("⚠️ សូមថតរូបវិក្កយបត្រជាមុនសិន!");
-
-    const imageDataUrl = canvas.toDataURL('image/jpeg', 0.7); 
-    const id = 'VB-' + Date.now();
-
-    database.ref('vireak_buntham_invoices').child(id).set({
-        id: id,
-        note: note || "គ្មានចំណាំ",
-        image: imageDataUrl,
-        date: new Date().toLocaleString()
-    }).then(() => {
-        alert("🎉 រក្សាទុករូបភាពវិក្កយបត្រវីរៈប៊ុនថាំ រួចរាល់!");
-        document.getElementById('vbNote').value = '';
-        resetCameraView();
-        stopCamera();
-    });
-}
-
-function renderVireakBunthamGrid() {
-    const grid = document.getElementById('vireakBunthamImagesGrid');
-    if (!grid) return;
-    
-    if (vbInvoicesData.length === 0) {
-        grid.innerHTML = `<p class="col-span-full text-center text-xs text-slate-400 font-bold p-6">📦 មិនទាន់មានរូបភាពវិក្កយបត្រទេ</p>`;
-        return;
-    }
-
-    grid.innerHTML = vbInvoicesData.map(vb => `
-        <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl space-y-2 flex flex-col shadow-sm">
-            <div class="overflow-hidden rounded-lg aspect-video bg-slate-900">
-                <img src="${vb.image}" class="w-full h-full object-cover">
-            </div>
-            <div class="text-[11px] space-y-0.5 flex-1">
-                <p class="font-bold text-slate-700">📝 ចំណាំ៖ ${vb.note}</p>
-                <p class="text-slate-400">📅 ថ្ងៃថត៖ ${vb.date}</p>
-            </div>
-            <button onclick="deleteVbInvoice('${vb.id}')" class="text-rose-500 hover:text-rose-700 font-bold text-[10px] text-right cursor-pointer mt-1">🗑️ លុបរូបភាព</button>
-        </div>
-    `).join('');
-}
-
-function deleteVbInvoice(id) {
-    if (confirm("⚠️ ចង់លុបរូបភាពវិក្កយបត្រនេះមែនទេ?")) database.ref('vireak_buntham_invoices').child(id).remove();
-}
-
 function updateDriver(invCode, driver) { 
     database.ref('deliveries/' + invCode).update({ driver }).then(() => {
         const delivery = deliveryData.find(d => d.invCode === invCode);
@@ -743,27 +642,44 @@ function renderSalesTable(selectedDate) {
 }
 
 function renderAll() {
-    const today = new Date().toISOString().split('T')[0];
-
-    renderDashboard();
-
-    const deliveryTbody = document.getElementById('deliveryTableBody');
+  const deliveryTbody = document.getElementById('deliveryTableBody');
     if (deliveryTbody) {
-        if (deliveryData.length === 0) {
-            deliveryTbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-xs font-bold text-slate-400">🚚 មិនទាន់មានជើងដឹកជញ្ជូនទេ</td></tr>`;
+        // យកតម្លៃថ្ងៃពី Date Filter ខាងលើ (ប្រសិនបើអត់មាន យកថ្ងៃនេះជាស្វ័យប្រវត្តិ)
+        const filterDateEl = document.getElementById('filterDeliveryDate');
+        const selectedDate = filterDateEl ? filterDateEl.value : new Date().toISOString().split('T')[0];
+
+        // ចម្រាញ់យកเฉพาะទិន្នន័យការលក់ចំថ្ងៃដែលបានជ្រើសរើស
+        let targetSales = salesData.filter(s => s.date === selectedDate);
+
+        if (targetSales.length === 0) {
+            deliveryTbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-xs font-bold text-slate-400">🚚 មិនមានទិន្នន័យដឹកជញ្ជូនសម្រាប់ថ្ងៃទី ${selectedDate} ទេ</td></tr>`;
         } else {
-            deliveryTbody.innerHTML = deliveryData.map(d => {
-                const matchedSale = salesData.find(s => s.invCode === d.invCode);
-                const dDate = matchedSale ? matchedSale.date : today;
+            deliveryTbody.innerHTML = targetSales.map(sale => {
+                // ស្វែងរកទិន្នន័យដឹកជញ្ជូនដែលមានស្រាប់ក្នុង deliveryData តាម invCode
+                let d = deliveryData.find(item => item.invCode === sale.invCode);
+                
+                // បើមិនទាន់មានក្នុង deliveryData ទេ បង្កើតតម្លៃដើមបណ្តោះអាសន្នសម្រាប់បង្ហាញ
+                if (!d) {
+                    d = {
+                        invCode: sale.invCode,
+                        customer: sale.customer || 'អតិថិជន',
+                        phone: sale.phone || '',
+                        fromLoc: 'ភ្នំពេញ',
+                        location: sale.location || '-',
+                        driver: 'មិនទាន់ចាត់ចែង',
+                        status: 'កំពុងរៀបចំ'
+                    };
+                }
+
                 return `
                     <tr class="text-xs hover:bg-slate-50">
-                        <td class="p-4 pl-6 text-slate-500">${dDate}</td>
-                        <td class="p-4 font-bold text-indigo-600 cursor-pointer" onclick="viewInvoice('${d.invCode}')">${d.invCode || '-'}</td>
-                        <td class="p-4 font-bold">${d.customer || '-'} ${d.phone ? `(${d.phone})` : ''}</td>
+                        <td class="p-4 pl-6 text-slate-500">${sale.date}</td>
+                        <td class="p-4 font-bold text-indigo-600 cursor-pointer" onclick="viewInvoice('${sale.invCode}')">${sale.invCode || '-'}</td>
+                        <td class="p-4 font-bold">${d.customer || sale.customer || '-'} ${d.phone || sale.phone ? `(${d.phone || sale.phone})` : ''}</td>
                         <td class="p-4 font-medium text-slate-600">${d.fromLoc || 'ភ្នំពេញ'}</td>
-                        <td class="p-4 font-medium text-indigo-600">${d.location || '-'}</td>
+                        <td class="p-4 font-medium text-indigo-600">${d.location || sale.location || '-'}</td>
                         <td class="p-4">
-                            <select onchange="updateDriver('${d.invCode}', this.value)" class="border border-slate-200 p-1.5 rounded-xl text-xs bg-white font-bold text-slate-700 focus:outline-none">
+                            <select onchange="updateDriver('${sale.invCode}', this.value)" class="border border-slate-200 p-1.5 rounded-xl text-xs bg-white font-bold text-slate-700 focus:outline-none">
                                 <option value="មិនទាន់ចាត់ចែង" ${d.driver === 'មិនទាន់ចាត់ចែង' ? 'selected' : ''}>--- ជ្រើសរើស ---</option>
                                 <option value="លាងហាក់" ${d.driver === 'លាងហាក់' ? 'selected' : ''}>លាងហាក់</option>
                                 <option value="ផាន់នី" ${d.driver === 'ផាន់នី' ? 'selected' : ''}>ផាន់នី</option>
@@ -774,7 +690,7 @@ function renderAll() {
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${d.status === 'បានប្រគល់ជូន' ? 'bg-emerald-50 text-emerald-600' : d.status === 'កំពុងដឹក' ? 'bg-indigo-50 text-indigo-600' : 'bg-amber-50 text-amber-600'}">${d.status || 'កំពុងរៀបចំ'}</span>
                         </td>
                         <td class="p-4 text-center">
-                            <select onchange="updateStatus('${d.invCode}', this.value)" class="border border-slate-200 p-1.5 rounded-xl text-xs bg-white text-slate-700 focus:outline-none">
+                            <select onchange="updateStatus('${sale.invCode}', this.value)" class="border border-slate-200 p-1.5 rounded-xl text-xs bg-white text-slate-700 focus:outline-none">
                                 <option value="កំពុងរៀបចំ" ${d.status === 'កំពុងរៀបចំ' ? 'selected' : ''}>កំពុងរៀបចំ</option>
                                 <option value="កំពុងដឹក" ${d.status === 'កំពុងដឹក' ? 'selected' : ''}>កំពុងដឹក</option>
                                 <option value="បានប្រគល់ជូន" ${d.status === 'បានប្រគល់ជូន' ? 'selected' : ''}>បានប្រគល់ជូន</option>
@@ -898,13 +814,13 @@ function toggleMobileMenu() {
     footer.classList.toggle('hidden');
     footer.classList.toggle('flex');
 }
-// មុខងារសម្រាប់ផ្ញើសារសង្ខេបចំនួនជើងអ្នកដឹកជូន Telegram ពេលម៉ោង ៦:២០ ល្ងាច
+// មុខងារសម្រាប់ផ្ញើសារสรุปចំនួនជើងអ្នកដឹកជូន Telegram ពេលម៉ោង ៥ ល្ងាច
 function checkAndSendDailyDriverSummary() {
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
 
-    // កំណត់ឱ្យផ្ញើនៅម៉ោង 18:20 (ម៉ោង ៦ និង ២០ នាទីល្ងាច)
+    // កំណត់ឱ្យផ្ញើនៅម៉ោង 17:00 (ម៉ោង 5 ល្ងាច) ត្រង់នាទីទី 00
     if (hours === 18 && minutes === 20) {
         const today = now.toISOString().split('T')[0];
         const driverCounts = { "លាងហាក់": 0, "ផាន់នី": 0, "សុភាព": 0 };
@@ -913,7 +829,7 @@ function checkAndSendDailyDriverSummary() {
             const matchedSale = salesData.find(s => s.invCode === d.invCode);
             const deliveryDate = matchedSale ? matchedSale.date : '';
 
-            // រាប់เฉพาะជើងណាដែលចំថ្ងៃបច្ចុប្បន្ន និងមានស្ថានភាព "បានប្រគល់ជូន"
+            // រាប់เฉพาะជើងណាដែលចំថ្ងៃបច្ចុប្បន្ន និងមានស្ថានភាព "បានប្រគល់ជូន" (ឬអាចដក condition status ចេញបើចង់រាប់សរុបគ្រប់ស្ថានភាព)
             if (deliveryDate === today && 
                 driverCounts.hasOwnProperty(d.driver) && 
                 d.status === 'បានប្រគល់ជូន') {
@@ -921,14 +837,14 @@ function checkAndSendDailyDriverSummary() {
             }
         });
 
-        let message = `🛵 *របាយការណ៍សង្ខេបជើងដឹកជញ្ជូនប្រចាំថ្ងៃ (ម៉ោង ៦:២០ ល្ងាច)*\n` +
+        let message = `🛵 *របាយការណ៍សង្ខេបជើងដឹកជញ្ជូនប្រចាំថ្ងៃ*\n` +
                       `📅 *កាលបរិច្ឆេទ:* ${today}\n` +
                       `------------------------------\n` +
                       `👤 *លោក លាងហាក់:* ${driverCounts["លាងហាក់"]} ជើង\n` +
                       `👤 *លោក ផាន់នី:* ${driverCounts["ផាន់នី"]} ជើង\n` +
                       `👤 *លោក សុភាព:* ${driverCounts["សុភាព"]} ជើង\n` +
                       `------------------------------\n` +
-                      `✅ បានបញ្ចប់ការពិនិត្យស្វ័យប្រវត្តីម៉ោង ៦:២០ ល្ងាច។`;
+                      `✅ បានបញ្ចប់ការពិនិត្យស្វ័យប្រវត្តីម៉ោង ៥ ល្ងាច។`;
 
         // ផ្ញើទៅកាន់ Telegram Bot
         fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -940,10 +856,10 @@ function checkAndSendDailyDriverSummary() {
                 parse_mode: 'Markdown'
             })
         })
-        .then(response => console.log('Daily summary sent successfully at 18:20'))
+        .then(response => console.log('Daily summary sent successfully'))
         .catch(err => console.error('Daily Summary Telegram Error:', err));
     }
 }
 
-// ដំឡើង Timer ឱ្យវាឆែកមើលម៉ោងរៀងរាល់ ១ នាទីម្តង
+// ʹដំឡើង Timer ឱ្យវាឆែកមើលម៉ោងរៀងរាល់ ១ នាទីម្តង (60000 ms)
 setInterval(checkAndSendDailyDriverSummary, 60000);
