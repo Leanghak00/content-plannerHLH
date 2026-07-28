@@ -29,8 +29,9 @@ window.addEventListener('DOMContentLoaded', () => {
     if (savedUser) {
         currentUser = JSON.parse(savedUser);
         initSystemAfterLogin()
+        const today = new Date().toISOString().split('T')[0];
         if (document.getElementById('deliveryStatDate')) document.getElementById('deliveryStatDate').value = today;
-    if (document.getElementById('filterDeliveryDate')) document.getElementById('filterDeliveryDate').value = today; // ➕ កំណត់ថ្ងៃថ្ងៃនេះឱ្យប្រអប់ Filter ដឹកជញ្ជូន;
+        if (document.getElementById('filterDeliveryDate')) document.getElementById('filterDeliveryDate').value = today; // ➕ កំណត់ថ្ងៃថ្ងៃនេះឱ្យប្រអប់ Filter ដឹកជញ្ជូន;
     }
 });
 
@@ -264,7 +265,16 @@ function renderInvoicePreviewTable() {
     }
 
     const grandTotal = itemsTotal + deliveryFee;
-    document.getElementById('invoiceGrandTotal').innerText = `$${grandTotal.toFixed(2)}`;
+    
+    // ➕ កន្លែងបន្ថែមការគណនា និងបង្ហាញជាលុយរៀល (អត្រាប្តូរប្រាក់ 1$ = 4000៛)
+    const exchangeRate = 4000;
+    const grandTotalRiel = Math.round(grandTotal * exchangeRate);
+    const formattedRiel = grandTotalRiel.toLocaleString('km-KH');
+
+    const grandTotalElement = document.getElementById('invoiceGrandTotal');
+    if (grandTotalElement) {
+        grandTotalElement.innerHTML = `$${grandTotal.toFixed(2)} <span class="text-xs font-normal text-slate-500">(${formattedRiel} ៛)</span>`;
+    }
 }
 
 function saveFinalInvoice() {
@@ -345,6 +355,10 @@ function sendTelegramNotification(invCode, customer, phone, location, date, driv
         `  ${idx + 1}. ${item.name} x${item.qty} = $${item.totalPrice.toFixed(2)}`
     ).join('\n');
 
+    // ➕ គណនាលុយរៀលសម្រាប់ Telegram (1$ = 4000៛)
+    const exchangeRate = 4000;
+    const totalRiel = Math.round(total * exchangeRate).toLocaleString('km-KH');
+
     let message = `🧾 *វិក្កយបត្រថ្មី (NEW INVOICE)*\n` +
                   `------------------------------\n` +
                   `🆔 *លេខវិក្កយបត្រ:* \`${invCode}\` \n` +
@@ -357,7 +371,7 @@ function sendTelegramNotification(invCode, customer, phone, location, date, driv
                   `📦 *មុខទំនិញ:*\n${itemsText}\n` +
                   `------------------------------\n` +
                   `🚚 *សេវាដឹកជញ្ជូន:* $${deliveryFee.toFixed(2)}\n` +
-                  `💰 *ទូទាត់សរុប:* *$${total.toFixed(2)}*`;
+                  `💰 *ទូទាត់សរុប:* *$${total.toFixed(2)}* (${totalRiel} ៛)`;
 
     fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
         method: 'POST',
@@ -446,6 +460,12 @@ function downloadInvoicePDF() {
     const date = document.getElementById('invoiceDate')?.value || '-';
     const deliveryFee = parseFloat(document.getElementById('invoiceDeliveryFee')?.value) || 0;
     
+    // ➕ គណនាលុយរៀលសម្រាប់ PDF
+    const exchangeRate = 4000;
+    const itemsTotal = currentInvoiceItems.reduce((sum, item) => sum + item.totalPrice, 0);
+    const grandTotalNum = itemsTotal + deliveryFee;
+    const grandTotalRielStr = Math.round(grandTotalNum * exchangeRate).toLocaleString('km-KH');
+
     let htmlContent = `
         <div style="border-bottom: 1px solid #ccc; margin-bottom: 20px;">
             <p><strong>អតិថិជន:</strong> ${customer}</p>
@@ -473,7 +493,7 @@ function downloadInvoicePDF() {
             <p><strong>សេវាដឹកជញ្ជូន:</strong> $${deliveryFee.toFixed(2)}</p>
         </div>
         <div style="text-align: right; margin-top: 20px;">
-            <h3>សរុប: ${document.getElementById('invoiceGrandTotal')?.innerText || '$0.00'}</h3>
+            <h3>សរុប: $${grandTotalNum.toFixed(2)} (${grandTotalRielStr} ៛)</h3>
         </div>
     `;
 
@@ -738,6 +758,11 @@ function viewInvoice(invoiceId) {
         const content = document.getElementById('modalInvoiceContent');
         const deliveryFee = parseFloat(data.deliveryFee) || 0;
         
+        // ➕ គណនាលុយរៀលសម្រាប់ Modal មើលព័ត៌មានលម្អិត
+        const exchangeRate = 4000;
+        const totalNum = parseFloat(data.total) || 0;
+        const totalRielStr = Math.round(totalNum * exchangeRate).toLocaleString('km-KH');
+
         content.innerHTML = `
             <div class="border-b pb-3 mb-4">
                 <p class="text-xs font-bold text-slate-500">វិក្កយបត្រលេខ: <span class="text-slate-800">${data.invCode || invoiceId}</span></p>
@@ -778,7 +803,7 @@ function viewInvoice(invoiceId) {
             </div>
 
             <div class="text-right mt-4 p-3 bg-indigo-50 rounded-xl">
-                <p class="text-xs font-bold text-indigo-600">សរុបទាំងអស់: $${parseFloat(data.total).toFixed(2) || '0.00'}</p>
+                <p class="text-xs font-bold text-indigo-600">សរុបទាំងអស់: $${totalNum.toFixed(2)} (${totalRielStr} ៛)</p>
             </div>
         `;
         modal.classList.remove('hidden');
@@ -797,14 +822,13 @@ function toggleMobileMenu() {
     footer.classList.toggle('hidden');
     footer.classList.toggle('flex');
 }
-// មុខងារសម្រាប់ផ្ញើសារสรุปចំនួនជើងអ្នកដឹកជូន Telegram ពេលម៉ោង ៥ ល្ងាច
+
 function checkAndSendDailyDriverSummary() {
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
 
-    // កំណត់ឱ្យផ្ញើនៅម៉ោង 17:00 (ម៉ោង 5 ល្ងាច) ត្រង់នាទីទី 00
-    if (hours === 18 && minutes === 20) {
+    if (hours === 17 && minutes === 00) {
         const today = now.toISOString().split('T')[0];
         const driverCounts = { "លាងហាក់": 0, "ផាន់នី": 0, "សុភាព": 0 };
 
@@ -812,7 +836,6 @@ function checkAndSendDailyDriverSummary() {
             const matchedSale = salesData.find(s => s.invCode === d.invCode);
             const deliveryDate = matchedSale ? matchedSale.date : '';
 
-            // រាប់เฉพาะជើងណាដែលចំថ្ងៃបច្ចុប្បន្ន និងមានស្ថានភាព "បានប្រគល់ជូន" (ឬអាចដក condition status ចេញបើចង់រាប់សរុបគ្រប់ស្ថានភាព)
             if (deliveryDate === today && 
                 driverCounts.hasOwnProperty(d.driver) && 
                 d.status === 'បានប្រគល់ជូន') {
@@ -829,7 +852,6 @@ function checkAndSendDailyDriverSummary() {
                       `------------------------------\n` +
                       `✅ បានបញ្ចប់ការពិនិត្យស្វ័យប្រវត្តីម៉ោង ៥ ល្ងាច។`;
 
-        // ផ្ញើទៅកាន់ Telegram Bot
         fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -844,5 +866,4 @@ function checkAndSendDailyDriverSummary() {
     }
 }
 
-// ʹដំឡើង Timer ឱ្យវាឆែកមើលម៉ោងរៀងរាល់ ១ នាទីម្តង (60000 ms)
 setInterval(checkAndSendDailyDriverSummary, 60000);
