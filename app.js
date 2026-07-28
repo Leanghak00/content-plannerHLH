@@ -829,7 +829,7 @@ function checkAndSendDailyDriverSummary() {
     const minutes = now.getMinutes();
 
     // អាចកែសម្រួលម៉ោងតាមតម្រូវការ
-    if (hours === 17 && minutes === 00) {
+    if (hours === 17 && minutes === 10) {
         const today = now.toISOString().split('T')[0];
         const driverCounts = { "លាងហាក់": 0, "ផាន់នី": 0, "សុភាព": 0 };
         let totalRevenueToday = 0; // ➕ បន្ថែមអង្សាសេប្រមូលប្រាក់សរុបប្រចាំថ្ងៃ
