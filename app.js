@@ -352,26 +352,38 @@ function sendLowStockTelegramAlert(items) {
 
 function sendTelegramNotification(invCode, customer, phone, location, date, driver, total, items, deliveryFee) {
     let itemsText = items.map((item, idx) => 
-        `  ${idx + 1}. ${item.name} x${item.qty} = $${item.totalPrice.toFixed(2)}`
+        `🔹 *${idx + 1}. ${item.name}* \n   └ จำนวน: ${item.qty} | តម្លៃ: $${item.totalPrice.toFixed(2)}`
     ).join('\n');
 
-    // ➕ គណនាលុយរៀលសម្រាប់ Telegram (1$ = 4000៛)
     const exchangeRate = 4000;
     const totalRiel = Math.round(total * exchangeRate).toLocaleString('km-KH');
 
-    let message = `🧾 *វិក្កយបត្រថ្មី (NEW INVOICE)*\n` +
-                  `------------------------------\n` +
-                  `🆔 *លេខវិក្កយបត្រ:* \`${invCode}\` \n` +
-                  `👤 *អតិថិជន:* ${customer}\n` +
-                  `📞 *លេខទូរស័ព្ទ:* ${phone || 'គ្មាន'}\n` +
+    // ការរចនាសារឱ្យមានលក្ខណៈជាប្រអប់ទាន់សម័យ
+    let message = `🚀 *ប្រព័ន្ធលក់ VCK SHOP - វិក្កយបត្រថ្មី* \n` +
+                  `━━━━━━━━━━━━━━━━━━━━━━\n` +
+                  `🆔 *លេខកូដ:* \`${invCode}\`\n` +
+                  `👤 *អតិថិជន:* *${customer}*\n` +
+                  `📞 *ទូរស័ព្ទ:* ${phone || 'អត់មានលេខ'}\n` +
                   `📍 *ទីតាំង:* ${location}\n` +
                   `🛵 *អ្នកដឹកជញ្ជូន:* ${driver || 'មិនទាន់ចាត់ចែង'}\n` +
-                  `📅 *កាលបរិច្ឆេទ:* ${date}\n` +
-                  `------------------------------\n` +
-                  `📦 *មុខទំនិញ:*\n${itemsText}\n` +
-                  `------------------------------\n` +
-                  `🚚 *សេវាដឹកជញ្ជូន:* $${deliveryFee.toFixed(2)}\n` +
-                  `💰 *ទូទាត់សរុប:* *$${total.toFixed(2)}* (${totalRiel} ៛)`;
+                  `📅 *ថ្ងៃខែឆ្នាំ:* ${date}\n` +
+                  `━━━━━━━━━━━━━━━━━━━━━━\n` +
+                  `📦 *បញ្ជីទំនិញបានបញ្ជាទិញ៖*\n${itemsText}\n` +
+                  `━━━━━━━━━━━━━━━━━━━━━━\n` +
+                  `🚚 *សេវាដឹកជញ្ជូន:* \`$${deliveryFee.toFixed(2)}\`\n` +
+                  `💰 *ទឹកប្រាក់សរុប:* *\\$${total.toFixed(2)}* (${totalRiel} ៛)\n` +
+                  `━━━━━━━━━━━━━━━━━━━━━━\n` +
+                  `✨ *ស្ថានភាព:* បានរក្សាទុកក្នុងប្រព័ន្ធដោយជោគជ័យ!`;
+
+    // បន្ថែម Inline Keyboard (ប៊ូតុងចុចបញ្ជាក្នុង Telegram Bot ផ្ទាល់)
+    const inlineKeyboard = {
+        inline_keyboard: [
+            [
+                { text: "👁️ មើលអនឡាញ", url: "https://vckshop-b951b.firebaseapp.com" },
+                { text: "✅ រួចរាល់/ដឹកជញ្ជូន", callback_data: "completed_delivery" }
+            ]
+        ]
+    };
 
     fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
         method: 'POST',
@@ -379,7 +391,8 @@ function sendTelegramNotification(invCode, customer, phone, location, date, driv
         body: JSON.stringify({
             chat_id: TELEGRAM_CHAT_ID,
             text: message,
-            parse_mode: 'Markdown'
+            parse_mode: 'Markdown',
+            reply_markup: inlineKeyboard // បន្ថែមប៊ូតុងអន្តរកម្មទំនើប
         })
     }).catch(error => console.error('Telegram Error:', error));
 }
