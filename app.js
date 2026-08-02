@@ -352,13 +352,13 @@ function sendLowStockTelegramAlert(items) {
 
 function sendTelegramNotification(invCode, customer, phone, location, date, driver, total, items, deliveryFee) {
     let itemsText = items.map((item, idx) => 
-        `🔹 *${idx + 1}. ${item.name}* \n   └ จำนวน: ${item.qty} | តម្លៃ: $${item.totalPrice.toFixed(2)}`
+        `🔹 *${idx + 1}. ${item.name}* \n   └ ចំនួន: ${item.qty} | តម្លៃ: $${item.totalPrice.toFixed(2)}`
     ).join('\n');
 
     const exchangeRate = 4000;
     const totalRiel = Math.round(total * exchangeRate).toLocaleString('km-KH');
 
-    // ការរចនាសារឱ្យមានលក្ខណៈជាប្រអប់ទាន់សម័យ
+    // ការរចនាសារឱ្យមានលក្ខណៈជាប្រអប់ទាន់សម័យ (ដកអក្សរថៃចេញ និងប្តូរជាភាសាខ្មែរ)
     let message = `🚀 *ប្រព័ន្ធលក់ VCK SHOP - វិក្កយបត្រថ្មី* \n` +
                   `━━━━━━━━━━━━━━━━━━━━━━\n` +
                   `🆔 *លេខកូដ:* \`${invCode}\`\n` +
@@ -392,7 +392,7 @@ function sendTelegramNotification(invCode, customer, phone, location, date, driv
             chat_id: TELEGRAM_CHAT_ID,
             text: message,
             parse_mode: 'Markdown',
-            reply_markup: inlineKeyboard // បន្ថែមប៊ូតុងអន្តរកម្មទំនើប
+            reply_markup: inlineKeyboard
         })
     }).catch(error => console.error('Telegram Error:', error));
 }
