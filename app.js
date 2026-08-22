@@ -398,7 +398,7 @@ function sendTelegramNotification(invCode, customer, phone, location, date, driv
 
 // ➕ បន្ថែម Function សម្រាប់ស្ដាប់ និងចាត់ចែងការចុចប៊ូតុងពី Telegram Bot ស្វ័យប្រវត្តិ
 let lastUpdateId = 0;
-function listenTelegramCallbackQueries() {
+function listenTelegramCommands() {
     fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?offset=${lastUpdateId + 1}`)
         .then(res => res.json())
         .then(data => {
@@ -406,49 +406,81 @@ function listenTelegramCallbackQueries() {
                 data.result.forEach(update => {
                     lastUpdateId = update.update_id;
                     
+                    // ១. ដំណើរការ Inline Button (ដែលមានស្រាប់)
                     if (update.callback_query) {
                         const callbackData = update.callback_query.data;
                         const chatId = update.callback_query.message.chat.id;
-                        const messageId = update.callback_query.message.message_id;
 
                         if (callbackData.startsWith('complete_')) {
                             const invCode = callbackData.replace('complete_', '');
-
-                            // ១. អាប់ដេតស្ថានភាពក្នុង Firebase ទៅជា "បានប្រគល់ជូន" ភ្លាមៗ (លោតក្នុងវេបសាយស្វ័យប្រវត្តិ)
                             database.ref('deliveries/' + invCode).update({ status: 'បានប្រគល់ជូន' }).then(() => {
-                                
-                                // ២. ផ្ញើសារដំណឹងត្រឡប់ទៅ Telegram វិញថាបានប្រគល់រួចរាល់
-                                fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                        chat_id: chatId,
-                                        text: `✅ *វិក្កយបត្រ ${invCode} បានផ្លាស់ប្តូរទៅជា៖ [បានប្រគល់ជូន] ដោយជោគជ័យ!*`,
-                                        parse_mode: 'Markdown'
-                                    })
-                                });
-
-                                // ៣. ឆ្លើយតប Popup Toast ទៅអ្នកចុចក្នុង Telegram
-                                fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/answerCallbackQuery`, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                        callback_query_id: update.callback_query.id,
-                                        text: "✅ រក្សាទុកស្ថានភាព [បានប្រគល់ជូន] រួចរាល់!",
-                                        show_alert: false
-                                    })
-                                });
+                                sendTelegramReply(chatId, `✅ *វិក្កយបត្រ ${invCode} បានផ្លាស់ប្តូរទៅជា៖ [បានប្រគល់ជូន] រួចរាល់!*`);
                             });
+                        }
+                    }
+
+                    // ២. ដំណើរការ Commands ផ្ញើចេញពី Telegram (/stock, /today_sales)
+                    if (update.message && update.message.text) {
+                        const text = update.message.text.trim();
+                        const chatId = update.message.chat.id;
+
+                        // បញ្ជាឆែកទំនិញជិតអស់ពីស្តុក
+                        if (text === '/stock') {
+                            let lowStock = productsData.filter(p => p.avail <= 5);
+                            let replyMsg = `📦 *របាយការណ៍ស្តុកទំនិញជិតអស់ (<= ៥)*\n------------------------------\n`;
+                            
+                            if (lowStock.length === 0) {
+                                replyMsg += `✅ គ្រប់មុខទំនិញទាំងអស់មានស្តុកគ្រប់គ្រាន់!`;
+                            } else {
+                                lowStock.forEach(p => {
+                                    replyMsg += `⚠️ *${p.name}*: នៅសល់ \`${p.avail}\` ${p.cat}\n`;
+                                });
+                            }
+                            sendTelegramReply(chatId, replyMsg);
+                        }
+
+                        // បញ្ជាឆែកចំណូលលក់ប្រចាំថ្ងៃ
+                        if (text === '/today_sales') {
+                            const today = new Date().toISOString().split('T')[0];
+                            let todayTotal = 0;
+                            let count = 0;
+
+                            salesData.forEach(s => {
+                                if (s.date === today) {
+                                    todayTotal += (parseFloat(s.total) || 0);
+                                    count++;
+                                }
+                            });
+
+                            const totalRiel = Math.round(todayTotal * 4000).toLocaleString('km-KH');
+                            let replyMsg = `💰 *របាយការណ៍លក់ប្រចាំថ្ងៃ (${today})*\n------------------------------\n` +
+                                           `🧾 ចំនួនវិក្កយបត្រ៖ *${count}*\n` +
+                                           `💵 ចំណូលសរុប៖ *$${todayTotal.toFixed(2)}* (${totalRiel} ៛)`;
+                            
+                            sendTelegramReply(chatId, replyMsg);
                         }
                     }
                 });
             }
         })
-        .catch(err => console.error('Telegram Poll Error:', err));
+        .catch(err => console.error('Telegram Command Error:', err));
 }
 
-// ឱ្យប្រព័ន្ធ Run ពិនិត្យការចុចប៊ូតុងរៀងរាល់ ៣ វិនាទីម្តង
-setInterval(listenTelegramCallbackQueries, 3000);
+// Helper Function សម្រាប់ផ្ញើសារបកទៅ Telegram
+function sendTelegramReply(chatId, text) {
+    fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            chat_id: chatId,
+            text: text,
+            parse_mode: 'Markdown'
+        })
+    });
+}
+
+// ប្តូរការហៅ Interval ចាស់មកប្រើមុខងារថ្មីនេះជំនួស
+setInterval(listenTelegramCommands, 3000);
 function searchCustomerHistory() {
     const phoneInput = document.getElementById('searchCustPhone').value.trim();
     const resultArea = document.getElementById('custHistoryResult');
@@ -580,6 +612,7 @@ function downloadInvoicePDF() {
         exportDiv.style.display = 'none';
     });
 }
+
 
 function addNewProductToStock() {
     const name = document.getElementById('newProdName').value.trim();
@@ -942,3 +975,66 @@ function checkAndSendDailyDriverSummary() {
 }
 
 setInterval(checkAndSendDailyDriverSummary, 60000);
+let myChartInstance = null;
+
+function renderBestSellersChart() {
+    const ctx = document.getElementById('bestSellersChart')?.getContext('2d');
+    if (!ctx) return;
+
+    const filter = document.getElementById('chartFilter')?.value || 'month';
+    const currentMonth = new Date().toISOString().substring(0, 7);
+    
+    // 1. ប្រមូលទិន្នន័យចំនួនលក់តាមមុខទំនិញ
+    const productSalesCount = {};
+
+    salesData.forEach(sale => {
+        // បើជ្រើសរើស "ខែនេះ" ត្រូវតម្រងយកតែ sales ក្នុងខែបច្ចុប្បន្ន
+        if (filter === 'month' && sale.date && !sale.date.startsWith(currentMonth)) {
+            return;
+        }
+
+        if (sale.items && Array.isArray(sale.items)) {
+            sale.items.forEach(item => {
+                if (productSalesCount[item.name]) {
+                    productSalesCount[item.name] += item.qty;
+                } else {
+                    productSalesCount[item.name] = item.qty;
+                }
+            });
+        }
+    });
+
+    // 2. តម្រៀបទំនិញពីលក់ដាច់ច្រើនទៅតិច និងយក Top 5
+    const sortedProducts = Object.entries(productSalesCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+
+    const labels = sortedProducts.map(p => p[0]);
+    const dataValues = sortedProducts.map(p => p[1]);
+
+    // 3. លុប Chart ចាស់ចោលមុនគូរ Chart ថ្មី (ការពារ Chart ជាន់គ្នា)
+    if (myChartInstance) {
+        myChartInstance.destroy();
+    }
+
+    // 4. គូរ Chart ថ្មី (Doughnut/Pie Chart)
+    myChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels.length > 0 ? labels : ['គ្មានទិន្នន័យ'],
+            datasets: [{
+                data: dataValues.length > 0 ? dataValues : [1],
+                backgroundColor: [
+                    '#6366f1', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+}
