@@ -358,7 +358,6 @@ function sendTelegramNotification(invCode, customer, phone, location, date, driv
     const exchangeRate = 4000;
     const totalRiel = Math.round(total * exchangeRate).toLocaleString('km-KH');
 
-    // ការរចនាសារឱ្យមានលក្ខណៈជាប្រអប់ទាន់សម័យ (ដកអក្សរថៃចេញ និងប្តូរជាភាសាខ្មែរ)
     let message = `🚀 *ប្រព័ន្ធលក់ VCK SHOP - វិក្កយបត្រថ្មី* \n` +
                   `━━━━━━━━━━━━━━━━━━━━━━\n` +
                   `🆔 *លេខកូដ:* \`${invCode}\`\n` +
@@ -373,14 +372,14 @@ function sendTelegramNotification(invCode, customer, phone, location, date, driv
                   `🚚 *សេវាដឹកជញ្ជូន:* \`$${deliveryFee.toFixed(2)}\`\n` +
                   `💰 *ទឹកប្រាក់សរុប:* *\\$${total.toFixed(2)}* (${totalRiel} ៛)\n` +
                   `━━━━━━━━━━━━━━━━━━━━━━\n` +
-                  `✨ *ស្ថានភាព:* បានរក្សាទុកក្នុងប្រព័ន្ធដោយជោគជ័យ!`;
+                  `✨ *ស្ថានភាព:* កំពុងរៀបចំ`;
 
-    // បន្ថែម Inline Keyboard (ប៊ូតុងចុចបញ្ជាក្នុង Telegram Bot ផ្ទាល់)
+    // ប៊ូតុង Telegram Inline Keyboard
     const inlineKeyboard = {
         inline_keyboard: [
             [
                 { text: "👁️ មើលអនឡាញ", url: "https://vckshop-b951b.firebaseapp.com" },
-                { text: "✅ រួចរាល់/ដឹកជញ្ជូន", callback_data: "completed_delivery" }
+                { text: "✅ រួចរាល់/បានប្រគល់ជូន", callback_data: `complete_${invCode}` }
             ]
         ]
     };
@@ -397,6 +396,59 @@ function sendTelegramNotification(invCode, customer, phone, location, date, driv
     }).catch(error => console.error('Telegram Error:', error));
 }
 
+// ➕ បន្ថែម Function សម្រាប់ស្ដាប់ និងចាត់ចែងការចុចប៊ូតុងពី Telegram Bot ស្វ័យប្រវត្តិ
+let lastUpdateId = 0;
+function listenTelegramCallbackQueries() {
+    fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?offset=${lastUpdateId + 1}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.ok && data.result.length > 0) {
+                data.result.forEach(update => {
+                    lastUpdateId = update.update_id;
+                    
+                    if (update.callback_query) {
+                        const callbackData = update.callback_query.data;
+                        const chatId = update.callback_query.message.chat.id;
+                        const messageId = update.callback_query.message.message_id;
+
+                        if (callbackData.startsWith('complete_')) {
+                            const invCode = callbackData.replace('complete_', '');
+
+                            // ១. អាប់ដេតស្ថានភាពក្នុង Firebase ទៅជា "បានប្រគល់ជូន" ភ្លាមៗ (លោតក្នុងវេបសាយស្វ័យប្រវត្តិ)
+                            database.ref('deliveries/' + invCode).update({ status: 'បានប្រគល់ជូន' }).then(() => {
+                                
+                                // ២. ផ្ញើសារដំណឹងត្រឡប់ទៅ Telegram វិញថាបានប្រគល់រួចរាល់
+                                fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        chat_id: chatId,
+                                        text: `✅ *វិក្កយបត្រ ${invCode} បានផ្លាស់ប្តូរទៅជា៖ [បានប្រគល់ជូន] ដោយជោគជ័យ!*`,
+                                        parse_mode: 'Markdown'
+                                    })
+                                });
+
+                                // ៣. ឆ្លើយតប Popup Toast ទៅអ្នកចុចក្នុង Telegram
+                                fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/answerCallbackQuery`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        callback_query_id: update.callback_query.id,
+                                        text: "✅ រក្សាទុកស្ថានភាព [បានប្រគល់ជូន] រួចរាល់!",
+                                        show_alert: false
+                                    })
+                                });
+                            });
+                        }
+                    }
+                });
+            }
+        })
+        .catch(err => console.error('Telegram Poll Error:', err));
+}
+
+// ឱ្យប្រព័ន្ធ Run ពិនិត្យការចុចប៊ូតុងរៀងរាល់ ៣ វិនាទីម្តង
+setInterval(listenTelegramCallbackQueries, 3000);
 function searchCustomerHistory() {
     const phoneInput = document.getElementById('searchCustPhone').value.trim();
     const resultArea = document.getElementById('custHistoryResult');
@@ -842,7 +894,7 @@ function checkAndSendDailyDriverSummary() {
     const minutes = now.getMinutes();
 
     // អាចកែសម្រួលម៉ោងតាមតម្រូវការ
-    if (hours === 17 && minutes === 10) {
+    if (hours === 17 && minutes === 17) {
         const today = now.toISOString().split('T')[0];
         const driverCounts = { "លាងហាក់": 0, "ផាន់នី": 0, "សុភាព": 0 };
         let totalRevenueToday = 0; // ➕ បន្ថែមអង្សាសេប្រមូលប្រាក់សរុបប្រចាំថ្ងៃ
