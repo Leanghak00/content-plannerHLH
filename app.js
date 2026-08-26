@@ -378,7 +378,7 @@ function sendTelegramNotification(invCode, customer, phone, location, date, driv
     const inlineKeyboard = {
         inline_keyboard: [
             [
-                { text: "👁️ មើលអនឡាញ", url: "https://vckshop-b951b.firebaseapp.com" },
+                { text: "👁️ មើលអនឡាញ", url: "https://leanghak00.github.io/content-plannerHLH/" },
                 { text: "✅ រួចរាល់/បានប្រគល់ជូន", callback_data: `complete_${invCode}` }
             ]
         ]
@@ -550,69 +550,121 @@ function resetInvoiceForm() {
     renderInvoicePreviewTable();
 }
 
-function downloadInvoicePDF() {
-    if (typeof html2pdf === 'undefined') return alert("⚠️ មិនឃើញ Library html2pdf!");
+function downloadInvoicePDF(customInvCode) {
+    if (typeof html2pdf === 'undefined') {
+        alert("⚠️ មិនឃើញ Library html2pdf! សូមពិនិត្យមើលការតភ្ជាប់អ៊ីនធឺណិត ឬ CDN ក្នុង HTML");
+        return;
+    }
 
-    const customer = document.getElementById('invoiceCustomer')?.value || 'N/A';
-    const date = document.getElementById('invoiceDate')?.value || '-';
+    // ១. យកព័ត៌មានពី Form ឬពីទិន្នន័យបច្ចុប្បន្ន
+    const invCode = customInvCode || ('INV-' + Math.floor(100000 + Math.random() * 900000));
+    const customer = document.getElementById('invoiceCustomer')?.value || 'អតិថិជនទូទៅ';
+    const phone = document.getElementById('invoicePhone')?.value || '-';
+    const location = document.getElementById('invoiceLocation')?.value || '-';
+    const date = document.getElementById('invoiceDate')?.value || new Date().toISOString().split('T')[0];
     const deliveryFee = parseFloat(document.getElementById('invoiceDeliveryFee')?.value) || 0;
-    
-    // ➕ គណនាលុយរៀលសម្រាប់ PDF
-    const exchangeRate = 4000;
+
+    if (currentInvoiceItems.length === 0) {
+        alert("⚠️ គ្មានទំនិញក្នុងវិក្កយបត្រដើម្បីបង្កើត PDF ទេ!");
+        return;
+    }
+
     const itemsTotal = currentInvoiceItems.reduce((sum, item) => sum + item.totalPrice, 0);
     const grandTotalNum = itemsTotal + deliveryFee;
-    const grandTotalRielStr = Math.round(grandTotalNum * exchangeRate).toLocaleString('km-KH');
+    const grandTotalRielStr = Math.round(grandTotalNum * 4000).toLocaleString('km-KH');
 
-    let htmlContent = `
-        <div style="border-bottom: 1px solid #ccc; margin-bottom: 20px;">
-            <p><strong>អតិថិជន:</strong> ${customer}</p>
-            <p><strong>កាលបរិច្ឆេទ:</strong> ${date}</p>
-        </div>
-        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-            <thead>
-                <tr style="background-color: #f2f2f2;">
-                    <th style="border: 1px solid #000; padding: 8px;">ទំនិញ</th>
-                    <th style="border: 1px solid #000; padding: 8px;">ចំនួន</th>
-                    <th style="border: 1px solid #000; padding: 8px;">តម្លៃ</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${currentInvoiceItems.map(item => `
-                    <tr>
-                        <td style="border: 1px solid #000; padding: 8px;">${item.name}</td>
-                        <td style="border: 1px solid #000; padding: 8px; text-align: center;">${item.qty}</td>
-                        <td style="border: 1px solid #000; padding: 8px; text-align: right;">$${item.price.toFixed(2)}</td>
+    // ២. បង្កើត HTML Template សម្រាប់ PDF (រចនាម៉ូតឱ្យស្អាត)
+    const pdfTemplate = `
+        <div style="padding: 30px; font-family: 'Kantumruy Pro', sans-serif, Arial; color: #1e293b; max-width: 800px; margin: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #6366f1; padding-bottom: 15px; margin-bottom: 20px;">
+                <div>
+                    <h1 style="color: #6366f1; margin: 0; font-size: 24px; font-weight: bold;">VCK SHOP</h1>
+                    <p style="margin: 5px 0 0 0; font-size: 12px; color: #64748b;">វិក្កយបត្រ / INVOICE</p>
+                </div>
+                <div style="text-align: right;">
+                    <h3 style="margin: 0; font-size: 16px; color: #334155;">លេខ៖ <span style="color: #6366f1;">${invCode}</span></h3>
+                    <p style="margin: 5px 0 0 0; font-size: 12px; color: #64748b;">ថ្ងៃទី៖ ${date}</p>
+                </div>
+            </div>
+
+            <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 13px;">
+                <p style="margin: 0 0 5px 0;"><strong>អតិថិជន (Customer):</strong> ${customer}</p>
+                <p style="margin: 0 0 5px 0;"><strong>លេខទូរស័ព្ទ (Phone):</strong> ${phone}</p>
+                <p style="margin: 0;"><strong>អាសយដ្ឋាន (Address):</strong> ${location}</p>
+            </div>
+
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px;">
+                <thead>
+                    <tr style="background-color: #6366f1; color: white; text-align: left;">
+                        <th style="padding: 10px; border: 1px solid #6366f1; text-align: center; width: 40px;">#</th>
+                        <th style="padding: 10px; border: 1px solid #6366f1;">ឈ្មោះទំនិញ</th>
+                        <th style="padding: 10px; border: 1px solid #6366f1; text-align: center; width: 60px;">ចំនួន</th>
+                        <th style="padding: 10px; border: 1px solid #6366f1; text-align: right; width: 100px;">តម្លៃរាយ</th>
+                        <th style="padding: 10px; border: 1px solid #6366f1; text-align: right; width: 110px;">សរុប</th>
                     </tr>
-                `).join('')}
-            </tbody>
-        </table>
-        <div style="margin-top: 15px; font-size: 14px;">
-            <p><strong>សេវាដឹកជញ្ជូន:</strong> $${deliveryFee.toFixed(2)}</p>
-        </div>
-        <div style="text-align: right; margin-top: 20px;">
-            <h3>សរុប: $${grandTotalNum.toFixed(2)} (${grandTotalRielStr} ៛)</h3>
+                </thead>
+                <tbody>
+                    ${currentInvoiceItems.map((item, idx) => `
+                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                            <td style="padding: 10px; text-align: center; border-x: 1px solid #e2e8f0;">${idx + 1}</td>
+                            <td style="padding: 10px; border-x: 1px solid #e2e8f0;"><strong>${item.name}</strong></td>
+                            <td style="padding: 10px; text-align: center; border-x: 1px solid #e2e8f0;">${item.qty}</td>
+                            <td style="padding: 10px; text-align: right; border-x: 1px solid #e2e8f0;">$${parseFloat(item.price).toFixed(2)}</td>
+                            <td style="padding: 10px; text-align: right; border-x: 1px solid #e2e8f0;">$${parseFloat(item.totalPrice).toFixed(2)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+
+            <div style="display: flex; justify-content: flex-end; font-size: 13px;">
+                <div style="width: 250px;">
+                    <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #e2e8f0;">
+                        <span>សរុបទំនិញ៖</span>
+                        <span>$${itemsTotal.toFixed(2)}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #e2e8f0;">
+                        <span>ថ្លៃដឹកជញ្ជូន៖</span>
+                        <span>$${deliveryFee.toFixed(2)}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px 0; font-weight: bold; font-size: 15px; color: #4338ca;">
+                        <span>ប្រាក់សរុប៖</span>
+                        <span>$${grandTotalNum.toFixed(2)}</span>
+                    </div>
+                    <div style="text-align: right; color: #64748b; font-size: 11px;">
+                        (${grandTotalRielStr} ៛)
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 40px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px dashed #cbd5e1; padding-top: 15px;">
+                <p style="margin: 0;">សូមអរគុណចំពោះការគាំទ្រ VCK SHOP!</p>
+            </div>
         </div>
     `;
 
-    const exportDiv = document.getElementById('pdf-export-container') || document.createElement('div');
-    exportDiv.id = 'pdf-export-container';
-    exportDiv.style.display = 'block';
-    exportDiv.innerHTML = htmlContent;
-    document.body.appendChild(exportDiv);
+    // ៣. បង្កើត Element បណ្ដោះអាសន្នសម្រាប់ Render
+    const element = document.createElement('div');
+    element.innerHTML = pdfTemplate;
+    document.body.appendChild(element);
 
-    const opt = { 
-        margin: 0.5, 
-        filename: 'Invoice-' + Date.now() + '.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 }, 
-        jsPDF: { format: 'a4', orientation: 'portrait' }
+    // ៤. កំណត់ Option សម្រាប់ទាញយក
+    const opt = {
+        margin:       [0.3, 0.3, 0.3, 0.3],
+        filename:     `${invCode}_${customer.replace(/\s+/g, '_')}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, logging: false },
+        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
     };
 
-    html2pdf().set(opt).from(exportDiv).save().then(() => {
-        exportDiv.style.display = 'none';
+    // ៥. ដំណើរការទាញយក (Download File)
+    html2pdf().set(opt).from(element).save().then(() => {
+        document.body.removeChild(element); // លុប Element បណ្ដោះអាសន្នចេញវិញ
+    }).catch(err => {
+        console.error("PDF Download Error:", err);
+        alert("❌ មានបញ្ហាក្នុងការទាញយក PDF!");
+        document.body.removeChild(element);
     });
 }
-
 
 function addNewProductToStock() {
     const name = document.getElementById('newProdName').value.trim();
