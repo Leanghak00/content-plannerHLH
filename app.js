@@ -21,17 +21,18 @@ const usersData = [
 
 let productsData = [], currentUser = null, salesData = [], deliveryData = [], currentInvoiceItems = [];
 
+// 🎯 ប្តូរមកប្រើ Token និង Chat ID ថ្មីរបស់អ្នក
 const TELEGRAM_BOT_TOKEN = "8830737719:AAHYaFzRQYAFwPXHhYexgTdVGYOGrenYIKE"; 
-const TELEGRAM_CHAT_ID = "-5482283441"; 
+const TELEGRAM_CHAT_ID = "-1004430346289"; 
 
 window.addEventListener('DOMContentLoaded', () => {
     const savedUser = localStorage.getItem('vck_current_user');
     if (savedUser) {
         currentUser = JSON.parse(savedUser);
-        initSystemAfterLogin()
+        initSystemAfterLogin();
         const today = new Date().toISOString().split('T')[0];
         if (document.getElementById('deliveryStatDate')) document.getElementById('deliveryStatDate').value = today;
-        if (document.getElementById('filterDeliveryDate')) document.getElementById('filterDeliveryDate').value = today; // ➕ កំណត់ថ្ងៃថ្ងៃនេះឱ្យប្រអប់ Filter ដឹកជញ្ជូន;
+        if (document.getElementById('filterDeliveryDate')) document.getElementById('filterDeliveryDate').value = today;
     }
 });
 
@@ -265,8 +266,6 @@ function renderInvoicePreviewTable() {
     }
 
     const grandTotal = itemsTotal + deliveryFee;
-    
-    // ➕ កន្លែងបន្ថែមការគណនា និងបង្ហាញជាលុយរៀល (អត្រាប្តូរប្រាក់ 1$ = 4000៛)
     const exchangeRate = 4000;
     const grandTotalRiel = Math.round(grandTotal * exchangeRate);
     const formattedRiel = grandTotalRiel.toLocaleString('km-KH');
@@ -277,7 +276,7 @@ function renderInvoicePreviewTable() {
     }
 }
 
-function saveFinalInvoice() {
+async function saveFinalInvoice() {
     const customer = document.getElementById('invoiceCustomer').value.trim();
     const phone = document.getElementById('invoicePhone').value.trim();
     const fromLoc = document.getElementById('invoiceFromLocation').value.trim();
@@ -286,7 +285,9 @@ function saveFinalInvoice() {
     const driver = document.getElementById('invoiceDriverSelect').value;
     const deliveryFee = parseFloat(document.getElementById('invoiceDeliveryFee').value) || 0;
 
-    if (!customer || !location || currentInvoiceItems.length === 0) return alert("⚠️ សូមបំពេញព័ត៌មានអតិថិជន ទិសដៅ និងទំនិញឱ្យបានគ្រប់គ្រាន់!");
+    if (!customer || !location || currentInvoiceItems.length === 0) {
+        return alert("⚠️ សូមបំពេញព័ត៌មានអតិថិជន ទិសដៅ និងទំនិញឱ្យបានគ្រប់គ្រាន់!");
+    }
 
     const invCode = 'INV-' + Math.floor(100000 + Math.random() * 900000);
     const itemsTotal = currentInvoiceItems.reduce((sum, item) => sum + item.totalPrice, 0);
@@ -304,31 +305,42 @@ function saveFinalInvoice() {
         }
     });
 
-    database.ref('sales').child(invCode).set({ 
-        invCode, customer, phone, location, date, 
-        itemsTotal: itemsTotal,
-        deliveryFee: deliveryFee,
-        total: grandTotal, 
-        items: currentInvoiceItems 
-    });
-    
-    database.ref('deliveries').child(invCode).set({ invCode, customer, phone, fromLoc, location, driver, status: "កំពុងរៀបចំ" });
-    
-    const productsObj = {};
-    productsData.forEach(p => { productsObj[p.id] = p; });
-    
-    database.ref('products').set(productsObj).then(() => {
-        sendTelegramNotification(invCode, customer, phone, location, date, driver, grandTotal, currentInvoiceItems, deliveryFee);
+    try {
+        // ១. រក្សាទុកចូល Firebase
+        await database.ref('sales').child(invCode).set({ 
+            invCode, customer, phone, location, date, 
+            itemsTotal: itemsTotal,
+            deliveryFee: deliveryFee,
+            total: grandTotal, 
+            items: currentInvoiceItems 
+        });
         
+        await database.ref('deliveries').child(invCode).set({ 
+            invCode, customer, phone, fromLoc, location, driver, status: "កំពុងរៀបចំ" 
+        });
+
+        const productsObj = {};
+        productsData.forEach(p => { productsObj[p.id] = p; });
+        await database.ref('products').set(productsObj);
+
+        // ២. ផ្ញើសារដំណឹងទៅកាន់ Telegram Bot
+        sendTelegramNotification(invCode, customer, phone, location, date, driver, grandTotal, currentInvoiceItems, deliveryFee);
+
         if (lowStockAlerts.length > 0) {
             sendLowStockTelegramAlert(lowStockAlerts);
         }
 
+        // ៣. បង្កើត PDF
         downloadInvoicePDF(invCode);
-        alert("🎉 រក្សាទុកចូលរបាយការណ៍លក់ និងទាញយក PDF ជោគជ័យ!");
+
+        alert("🎉 រក្សាទុកចូលរបាយការណ៍ និងផ្ញើចូល Telegram Bot ជោគជ័យ!");
         resetInvoiceForm();
         switchTab('dashboard');
-    });
+
+    } catch (error) {
+        console.error("Save Invoice Error:", error);
+        alert("❌ មានបញ្ហាក្នុងការរក្សាទុកទិន្នន័យ!");
+    }
 }
 
 function sendLowStockTelegramAlert(items) {
@@ -350,54 +362,76 @@ function sendLowStockTelegramAlert(items) {
     }).catch(err => console.error('Low Stock Telegram Error:', err));
 }
 
-function sendTelegramNotification(invCode, customer, phone, location, date, driver, total, items, deliveryFee) {
-    let itemsText = items.map((item, idx) => 
-        `🔹 *${idx + 1}. ${item.name}* \n   └ ចំនួន: ${item.qty} | តម្លៃ: $${item.totalPrice.toFixed(2)}`
+async function sendTelegramNotification(invCode, customer, phone, location, date, driver, total, items, deliveryFee = 0) {
+    const exchangeRate = 4000;
+    
+    let itemsTotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
+    let itemsTotalRiel = Math.round(itemsTotal * exchangeRate).toLocaleString('km-KH');
+    let deliveryFeeNum = parseFloat(deliveryFee) || 0;
+    let deliveryFeeRiel = Math.round(deliveryFeeNum * exchangeRate).toLocaleString('km-KH');
+    let totalNum = parseFloat(total) || 0;
+    let grandTotalRiel = Math.round(totalNum * exchangeRate).toLocaleString('km-KH');
+
+    let itemsListStr = items.map((item, idx) => 
+        `  ${idx + 1}. <b>${item.name}</b>\n     └ ចំនួន: <code>${item.qty}</code> × $${parseFloat(item.price).toFixed(2)} = <b>$${parseFloat(item.totalPrice).toFixed(2)}</b>`
     ).join('\n');
 
-    const exchangeRate = 4000;
-    const totalRiel = Math.round(total * exchangeRate).toLocaleString('km-KH');
+    // ប្រើប្រាស់ HTML Format ជំនួស Markdown ដើម្បីជៀសវាងបញ្ហា Link Syntax Error
+    let message = `🧾 <b>វិក្កយបត្រលក់ថ្មី / NEW INVOICE</b>\n`;
+    message += `━━━━━━━━━━━━━━━━━━━\n`;
+    message += `🔖 លេខកូដ: <b>${invCode}</b>\n`;
+    message += `📅 កាលបរិច្ឆេទ: <b>${date}</b>\n`;
+    message += `👤 អតិថិជន: <b>${customer}</b>\n`;
+    message += `📞 ទូរស័ព្ទ: <b>${phone || 'គ្មានលេខ'}</b>\n`;
+    message += `📍 ទីតាំងដឹក: <b>${location}</b>\n`;
+    message += `🛵 អ្នកដឹកជញ្ជូន: <b>${driver || 'មិនទាន់ចាត់ចែង'}</b>\n`;
+    message += `━━━━━━━━━━━━━━━━━━━\n`;
+    message += `📦 <b>បញ្ជីទំនិញបញ្ជាទិញ:</b>\n${itemsListStr}\n`;
+    message += `━━━━━━━━━━━━━━━━━━━\n`;
+    message += `💵 សរុបទំនិញ: <b>$${itemsTotal.toFixed(2)}</b> (${itemsTotalRiel} ៛)\n`;
+    message += `🚚 ថ្លៃដឹកជញ្ជូន: <b>$${deliveryFeeNum.toFixed(2)}</b> (${deliveryFeeRiel} ៛)\n`;
+    message += `💰 <b>ប្រាក់សរុបត្រូវទូទាត់:</b>\n👉 <b>$${totalNum.toFixed(2)}</b> (<b>${grandTotalRiel} ៛</b>)\n`;
+    message += `━━━━━━━━━━━━━━━━━━━\n`;
+    message += `📌 ស្ថានភាព: ⏳ <b>កំពុងរៀបចំ</b>`;
 
-    let message = `🚀 *ប្រព័ន្ធលក់ VCK SHOP - វិក្កយបត្រថ្មី* \n` +
-                  `━━━━━━━━━━━━━━━━━━━━━━\n` +
-                  `🆔 *លេខកូដ:* \`${invCode}\`\n` +
-                  `👤 *អតិថិជន:* *${customer}*\n` +
-                  `📞 *ទូរស័ព្ទ:* ${phone || 'អត់មានលេខ'}\n` +
-                  `📍 *ទីតាំង:* ${location}\n` +
-                  `🛵 *អ្នកដឹកជញ្ជូន:* ${driver || 'មិនទាន់ចាត់ចែង'}\n` +
-                  `📅 *ថ្ងៃខែឆ្នាំ:* ${date}\n` +
-                  `━━━━━━━━━━━━━━━━━━━━━━\n` +
-                  `📦 *បញ្ជីទំនិញបានបញ្ជាទិញ៖*\n${itemsText}\n` +
-                  `━━━━━━━━━━━━━━━━━━━━━━\n` +
-                  `🚚 *សេវាដឹកជញ្ជូន:* \`$${deliveryFee.toFixed(2)}\`\n` +
-                  `💰 *ទឹកប្រាក់សរុប:* *\\$${total.toFixed(2)}* (${totalRiel} ៛)\n` +
-                  `━━━━━━━━━━━━━━━━━━━━━━\n` +
-                  `✨ *ស្ថានភាព:* កំពុងរៀបចំ`;
-
-    // ប៊ូតុង Telegram Inline Keyboard
-    const inlineKeyboard = {
+    // ការបង្កើត Inline Keyboard
+    const keyboard = {
         inline_keyboard: [
             [
-                { text: "👁️ មើលអនឡាញ", url: "https://leanghak00.github.io/content-plannerHLH/" },
-                { text: "✅ រួចរាល់/បានប្រគល់ជូន", callback_data: `complete_${invCode}` }
+                { 
+                    text: "👁️ មើលវិក្កយបត្រអនឡាញ", 
+                    url: `https://vck-shop.web.app/?inv=${invCode}` // បើក Browser
+                }
+            ],
+            [
+                { text: "🚚 កំពុងដឹក", callback_data: `status_delivering_${invCode}` },
+                { text: "✅ រួចរាល់", callback_data: `status_completed_${invCode}` }
             ]
         ]
     };
 
-    fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            chat_id: TELEGRAM_CHAT_ID,
-            text: message,
-            parse_mode: 'Markdown',
-            reply_markup: inlineKeyboard
-        })
-    }).catch(error => console.error('Telegram Error:', error));
-}
+    try {
+        const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: TELEGRAM_CHAT_ID,
+                text: message,
+                parse_mode: 'HTML', // ផ្លាស់ប្តូរមកប្រើ HTML វិញដើម្បីកុំឱ្យទាស់ Link
+                reply_markup: keyboard
+            })
+        });
 
-// ➕ បន្ថែម Function សម្រាប់ស្ដាប់ និងចាត់ចែងការចុចប៊ូតុងពី Telegram Bot ស្វ័យប្រវត្តិ
-let lastUpdateId = 0;
+        const resData = await response.json();
+        if (!resData.ok) {
+            console.error("❌ Telegram Error:", resData.description);
+        } else {
+            console.log("✅ ផ្ញើសារទៅ Telegram រួចរាល់!");
+        }
+    } catch (err) {
+        console.error("❌ Network Error:", err);
+    }
+}
 function listenTelegramCommands() {
     fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?offset=${lastUpdateId + 1}`)
         .then(res => res.json())
@@ -406,7 +440,6 @@ function listenTelegramCommands() {
                 data.result.forEach(update => {
                     lastUpdateId = update.update_id;
                     
-                    // ១. ដំណើរការ Inline Button (ដែលមានស្រាប់)
                     if (update.callback_query) {
                         const callbackData = update.callback_query.data;
                         const chatId = update.callback_query.message.chat.id;
@@ -419,12 +452,10 @@ function listenTelegramCommands() {
                         }
                     }
 
-                    // ២. ដំណើរការ Commands ផ្ញើចេញពី Telegram (/stock, /today_sales)
                     if (update.message && update.message.text) {
                         const text = update.message.text.trim();
                         const chatId = update.message.chat.id;
 
-                        // បញ្ជាឆែកទំនិញជិតអស់ពីស្តុក
                         if (text === '/stock') {
                             let lowStock = productsData.filter(p => p.avail <= 5);
                             let replyMsg = `📦 *របាយការណ៍ស្តុកទំនិញជិតអស់ (<= ៥)*\n------------------------------\n`;
@@ -439,7 +470,6 @@ function listenTelegramCommands() {
                             sendTelegramReply(chatId, replyMsg);
                         }
 
-                        // បញ្ជាឆែកចំណូលលក់ប្រចាំថ្ងៃ
                         if (text === '/today_sales') {
                             const today = new Date().toISOString().split('T')[0];
                             let todayTotal = 0;
@@ -466,7 +496,6 @@ function listenTelegramCommands() {
         .catch(err => console.error('Telegram Command Error:', err));
 }
 
-// Helper Function សម្រាប់ផ្ញើសារបកទៅ Telegram
 function sendTelegramReply(chatId, text) {
     fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
         method: 'POST',
@@ -479,8 +508,8 @@ function sendTelegramReply(chatId, text) {
     });
 }
 
-// ប្តូរការហៅ Interval ចាស់មកប្រើមុខងារថ្មីនេះជំនួស
 setInterval(listenTelegramCommands, 3000);
+
 function searchCustomerHistory() {
     const phoneInput = document.getElementById('searchCustPhone').value.trim();
     const resultArea = document.getElementById('custHistoryResult');
@@ -552,11 +581,10 @@ function resetInvoiceForm() {
 
 function downloadInvoicePDF(customInvCode) {
     if (typeof html2pdf === 'undefined') {
-        alert("⚠️ មិនឃើញ Library html2pdf! សូមពិនិត្យមើលការតភ្ជាប់អ៊ីនធឺណិត ឬ CDN ក្នុង HTML");
+        console.warn("⚠️ មិនឃើញ Library html2pdf ទេ!");
         return;
     }
 
-    // ១. យកព័ត៌មានពី Form ឬពីទិន្នន័យបច្ចុប្បន្ន
     const invCode = customInvCode || ('INV-' + Math.floor(100000 + Math.random() * 900000));
     const customer = document.getElementById('invoiceCustomer')?.value || 'អតិថិជនទូទៅ';
     const phone = document.getElementById('invoicePhone')?.value || '-';
@@ -564,105 +592,78 @@ function downloadInvoicePDF(customInvCode) {
     const date = document.getElementById('invoiceDate')?.value || new Date().toISOString().split('T')[0];
     const deliveryFee = parseFloat(document.getElementById('invoiceDeliveryFee')?.value) || 0;
 
-    if (currentInvoiceItems.length === 0) {
-        alert("⚠️ គ្មានទំនិញក្នុងវិក្កយបត្រដើម្បីបង្កើត PDF ទេ!");
-        return;
-    }
+    if (currentInvoiceItems.length === 0) return;
 
     const itemsTotal = currentInvoiceItems.reduce((sum, item) => sum + item.totalPrice, 0);
     const grandTotalNum = itemsTotal + deliveryFee;
     const grandTotalRielStr = Math.round(grandTotalNum * 4000).toLocaleString('km-KH');
 
-    // ២. បង្កើត HTML Template សម្រាប់ PDF (រចនាម៉ូតឱ្យស្អាត)
     const pdfTemplate = `
-        <div style="padding: 30px; font-family: 'Kantumruy Pro', sans-serif, Arial; color: #1e293b; max-width: 800px; margin: auto;">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #6366f1; padding-bottom: 15px; margin-bottom: 20px;">
+        <div style="padding: 20px; font-family: sans-serif; color: #1e293b;">
+            <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #6366f1; padding-bottom: 10px; margin-bottom: 15px;">
                 <div>
-                    <h1 style="color: #6366f1; margin: 0; font-size: 24px; font-weight: bold;">VCK SHOP</h1>
-                    <p style="margin: 5px 0 0 0; font-size: 12px; color: #64748b;">វិក្កយបត្រ / INVOICE</p>
+                    <h1 style="color: #6366f1; margin: 0; font-size: 20px;">VCK SHOP</h1>
+                    <p style="margin: 2px 0; font-size: 11px; color: #64748b;">INVOICE / វិក្កយបត្រ</p>
                 </div>
                 <div style="text-align: right;">
-                    <h3 style="margin: 0; font-size: 16px; color: #334155;">លេខ៖ <span style="color: #6366f1;">${invCode}</span></h3>
-                    <p style="margin: 5px 0 0 0; font-size: 12px; color: #64748b;">ថ្ងៃទី៖ ${date}</p>
+                    <h3 style="margin: 0; font-size: 14px;">លេខ៖ ${invCode}</h3>
+                    <p style="margin: 2px 0; font-size: 11px; color: #64748b;">ថ្ងៃទី៖ ${date}</p>
                 </div>
             </div>
 
-            <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 13px;">
-                <p style="margin: 0 0 5px 0;"><strong>អតិថិជន (Customer):</strong> ${customer}</p>
-                <p style="margin: 0 0 5px 0;"><strong>លេខទូរស័ព្ទ (Phone):</strong> ${phone}</p>
-                <p style="margin: 0;"><strong>អាសយដ្ឋាន (Address):</strong> ${location}</p>
+            <div style="background-color: #f8fafc; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 12px;">
+                <p style="margin: 2px 0;"><strong>អតិថិជន:</strong> ${customer} (${phone})</p>
+                <p style="margin: 2px 0;"><strong>អាសយដ្ឋាន:</strong> ${location}</p>
             </div>
 
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px;">
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 12px;">
                 <thead>
-                    <tr style="background-color: #6366f1; color: white; text-align: left;">
-                        <th style="padding: 10px; border: 1px solid #6366f1; text-align: center; width: 40px;">#</th>
-                        <th style="padding: 10px; border: 1px solid #6366f1;">ឈ្មោះទំនិញ</th>
-                        <th style="padding: 10px; border: 1px solid #6366f1; text-align: center; width: 60px;">ចំនួន</th>
-                        <th style="padding: 10px; border: 1px solid #6366f1; text-align: right; width: 100px;">តម្លៃរាយ</th>
-                        <th style="padding: 10px; border: 1px solid #6366f1; text-align: right; width: 110px;">សរុប</th>
+                    <tr style="background-color: #6366f1; color: white;">
+                        <th style="padding: 6px; border: 1px solid #6366f1;">#</th>
+                        <th style="padding: 6px; border: 1px solid #6366f1; text-align: left;">ទំនិញ</th>
+                        <th style="padding: 6px; border: 1px solid #6366f1;">ចំនួន</th>
+                        <th style="padding: 6px; border: 1px solid #6366f1; text-align: right;">តម្លៃ</th>
+                        <th style="padding: 6px; border: 1px solid #6366f1; text-align: right;">សរុប</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${currentInvoiceItems.map((item, idx) => `
                         <tr style="border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 10px; text-align: center; border-x: 1px solid #e2e8f0;">${idx + 1}</td>
-                            <td style="padding: 10px; border-x: 1px solid #e2e8f0;"><strong>${item.name}</strong></td>
-                            <td style="padding: 10px; text-align: center; border-x: 1px solid #e2e8f0;">${item.qty}</td>
-                            <td style="padding: 10px; text-align: right; border-x: 1px solid #e2e8f0;">$${parseFloat(item.price).toFixed(2)}</td>
-                            <td style="padding: 10px; text-align: right; border-x: 1px solid #e2e8f0;">$${parseFloat(item.totalPrice).toFixed(2)}</td>
+                            <td style="padding: 6px; text-align: center;">${idx + 1}</td>
+                            <td style="padding: 6px;">${item.name}</td>
+                            <td style="padding: 6px; text-align: center;">${item.qty}</td>
+                            <td style="padding: 6px; text-align: right;">$${parseFloat(item.price).toFixed(2)}</td>
+                            <td style="padding: 6px; text-align: right;">$${parseFloat(item.totalPrice).toFixed(2)}</td>
                         </tr>
                     `).join('')}
                 </tbody>
             </table>
 
-            <div style="display: flex; justify-content: flex-end; font-size: 13px;">
-                <div style="width: 250px;">
-                    <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #e2e8f0;">
-                        <span>សរុបទំនិញ៖</span>
-                        <span>$${itemsTotal.toFixed(2)}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #e2e8f0;">
-                        <span>ថ្លៃដឹកជញ្ជូន៖</span>
-                        <span>$${deliveryFee.toFixed(2)}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 10px 0; font-weight: bold; font-size: 15px; color: #4338ca;">
-                        <span>ប្រាក់សរុប៖</span>
-                        <span>$${grandTotalNum.toFixed(2)}</span>
-                    </div>
-                    <div style="text-align: right; color: #64748b; font-size: 11px;">
-                        (${grandTotalRielStr} ៛)
-                    </div>
-                </div>
-            </div>
-
-            <div style="margin-top: 40px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px dashed #cbd5e1; padding-top: 15px;">
-                <p style="margin: 0;">សូមអរគុណចំពោះការគាំទ្រ VCK SHOP!</p>
+            <div style="text-align: right; font-size: 12px;">
+                <p style="margin: 2px 0;">សរុបទំនិញ៖ $${itemsTotal.toFixed(2)}</p>
+                <p style="margin: 2px 0;">ថ្លៃដឹកជញ្ជូន៖ $${deliveryFee.toFixed(2)}</p>
+                <h3 style="margin: 5px 0; color: #4338ca; font-size: 16px;">ប្រាក់សរុប៖ $${grandTotalNum.toFixed(2)} (${grandTotalRielStr} ៛)</h3>
             </div>
         </div>
     `;
 
-    // ៣. បង្កើត Element បណ្ដោះអាសន្នសម្រាប់ Render
     const element = document.createElement('div');
     element.innerHTML = pdfTemplate;
     document.body.appendChild(element);
 
-    // ៤. កំណត់ Option សម្រាប់ទាញយក
     const opt = {
-        margin:       [0.3, 0.3, 0.3, 0.3],
-        filename:     `${invCode}_${customer.replace(/\s+/g, '_')}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, logging: false },
+        margin:       [0.2, 0.2, 0.2, 0.2],
+        filename:     `${invCode}.pdf`,
+        image:        { type: 'jpeg', quality: 0.95 },
+        html2canvas:  { scale: 2, useCORS: true },
         jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
     };
 
-    // ៥. ដំណើរការទាញយក (Download File)
     html2pdf().set(opt).from(element).save().then(() => {
-        document.body.removeChild(element); // លុប Element បណ្ដោះអាសន្នចេញវិញ
+        if (document.body.contains(element)) document.body.removeChild(element);
     }).catch(err => {
-        console.error("PDF Download Error:", err);
-        alert("❌ មានបញ្ហាក្នុងការទាញយក PDF!");
-        document.body.removeChild(element);
+        console.error("PDF Export error:", err);
+        if (document.body.contains(element)) document.body.removeChild(element);
     });
 }
 
@@ -908,7 +909,6 @@ function viewInvoice(invoiceId) {
         const content = document.getElementById('modalInvoiceContent');
         const deliveryFee = parseFloat(data.deliveryFee) || 0;
         
-        // ➕ គណនាលុយរៀលសម្រាប់ Modal មើលព័ត៌មានលម្អិត
         const exchangeRate = 4000;
         const totalNum = parseFloat(data.total) || 0;
         const totalRielStr = Math.round(totalNum * exchangeRate).toLocaleString('km-KH');
@@ -978,11 +978,10 @@ function checkAndSendDailyDriverSummary() {
     const hours = now.getHours();
     const minutes = now.getMinutes();
 
-    // អាចកែសម្រួលម៉ោងតាមតម្រូវការ
     if (hours === 17 && minutes === 17) {
         const today = now.toISOString().split('T')[0];
         const driverCounts = { "លាងហាក់": 0, "ផាន់នី": 0, "សុភាព": 0 };
-        let totalRevenueToday = 0; // ➕ បន្ថែមអង្សាសេប្រមូលប្រាក់សរុបប្រចាំថ្ងៃ
+        let totalRevenueToday = 0;
 
         deliveryData.forEach(d => {
             const matchedSale = salesData.find(s => s.invCode === d.invCode);
@@ -1027,6 +1026,7 @@ function checkAndSendDailyDriverSummary() {
 }
 
 setInterval(checkAndSendDailyDriverSummary, 60000);
+
 let myChartInstance = null;
 
 function renderBestSellersChart() {
@@ -1036,11 +1036,9 @@ function renderBestSellersChart() {
     const filter = document.getElementById('chartFilter')?.value || 'month';
     const currentMonth = new Date().toISOString().substring(0, 7);
     
-    // 1. ប្រមូលទិន្នន័យចំនួនលក់តាមមុខទំនិញ
     const productSalesCount = {};
 
     salesData.forEach(sale => {
-        // បើជ្រើសរើស "ខែនេះ" ត្រូវតម្រងយកតែ sales ក្នុងខែបច្ចុប្បន្ន
         if (filter === 'month' && sale.date && !sale.date.startsWith(currentMonth)) {
             return;
         }
@@ -1056,7 +1054,6 @@ function renderBestSellersChart() {
         }
     });
 
-    // 2. តម្រៀបទំនិញពីលក់ដាច់ច្រើនទៅតិច និងយក Top 5
     const sortedProducts = Object.entries(productSalesCount)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 5);
@@ -1064,12 +1061,10 @@ function renderBestSellersChart() {
     const labels = sortedProducts.map(p => p[0]);
     const dataValues = sortedProducts.map(p => p[1]);
 
-    // 3. លុប Chart ចាស់ចោលមុនគូរ Chart ថ្មី (ការពារ Chart ជាន់គ្នា)
     if (myChartInstance) {
         myChartInstance.destroy();
     }
 
-    // 4. គូរ Chart ថ្មី (Doughnut/Pie Chart)
     myChartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
