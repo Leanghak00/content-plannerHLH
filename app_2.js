@@ -20,21 +20,72 @@ const usersData = [
 ];
 
 let productsData = [], currentUser = null, salesData = [], deliveryData = [], currentInvoiceItems = [];
-
-// 🎯 ប្តូរមកប្រើ Token និង Chat ID ថ្មីរបស់អ្នក
-const TELEGRAM_BOT_TOKEN = "8830737719:AAHYaFzRQYAFwPXHhYexgTdVGYOGrenYIKE"; 
-const TELEGRAM_CHAT_ID = "-1004430346289"; 
+let myChartInstance = null;
+let qrcodeInstance = null;
+let currentInvoiceGrandTotal = 0;
 
 window.addEventListener('DOMContentLoaded', () => {
+    startClock();
+    initTheme();
+    requestNotificationPermission(); // សុំសិទ្ធិបង្ហាញ Notification ពេលបើក App
+    
     const savedUser = localStorage.getItem('vck_current_user');
     if (savedUser) {
         currentUser = JSON.parse(savedUser);
         initSystemAfterLogin();
         const today = new Date().toISOString().split('T')[0];
         if (document.getElementById('deliveryStatDate')) document.getElementById('deliveryStatDate').value = today;
-        if (document.getElementById('filterDeliveryDate')) document.getElementById('filterDeliveryDate').value = today;
     }
 });
+
+// មុខងារសុំសិទ្ធិ និងបង្ហាញ Notification លើ Screen ទូរស័ព្ទ
+function requestNotificationPermission() {
+    if ("Notification" in window) {
+        Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+                console.log("✅ ទទួលបានសិទ្ធិបង្ហាញ Notification រួចរាល់!");
+            }
+        });
+    }
+}
+
+function triggerPhoneNotification(invCode, customer, total) {
+    if ("Notification" in window && Notification.permission === "granted") {
+        const options = {
+            body: `👤 អតិថិជន: ${customer}\n💰 ទឹកប្រាក់សរុប: $${total.toFixed(2)}`,
+            icon: 'https://cdn-icons-png.flaticon.com/512/3144/3144456.png',
+            vibrate: [200, 100, 200],
+            tag: invCode
+        };
+
+        new Notification(`🧾 វិក្កយបត្រថ្មី៖ ${invCode}`, options);
+    }
+}
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('vck_theme');
+    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+        const icon = document.getElementById('darkModeIcon');
+        if (icon) icon.innerText = '☀️';
+    }
+}
+
+function toggleDarkMode() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('vck_theme', isDark ? 'dark' : 'light');
+    const icon = document.getElementById('darkModeIcon');
+    if (icon) icon.innerText = isDark ? '☀️' : '🌙';
+}
+
+function startClock() {
+    const clockEl = document.getElementById('liveClockDisplay');
+    if (!clockEl) return;
+    setInterval(() => {
+        const now = new Date();
+        clockEl.innerText = now.toLocaleDateString('km-KH') + ' | ' + now.toLocaleTimeString('en-US', { hour12: true });
+    }, 1000);
+}
 
 function handleLogin() {
     const userIn = document.getElementById('loginUsername').value.trim();
@@ -103,9 +154,11 @@ function switchTab(tabId) {
     const targetTab = document.getElementById('tab-' + tabId);
     if (targetTab) targetTab.classList.remove('hidden');
 
-    document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active-menu'));
+    document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active-menu', 'bg-indigo-600', 'text-white'));
     const targetBtn = document.getElementById('btn-' + tabId);
-    if (targetBtn) targetBtn.classList.add('active-menu');
+    if (targetBtn) {
+        targetBtn.classList.add('active-menu', 'bg-indigo-600', 'text-white');
+    }
     
     const titles = { 
         'dashboard': '📊 ផ្ទាំងគ្រប់គ្រងទូទៅ', 
@@ -195,6 +248,13 @@ function autoFillProductPrice() {
     }
 }
 
+function adjustInvoiceQty(amount) {
+    const qtyInput = document.getElementById('invoiceQty');
+    if (!qtyInput) return;
+    let currentQty = parseInt(qtyInput.value) || 0;
+    qtyInput.value = Math.max(1, currentQty + amount);
+}
+
 function addItemToCurrentInvoice() {
     const productId = document.getElementById('invoiceProductIdHidden').value;
     const productName = document.getElementById('invoiceProductInput').value;
@@ -246,13 +306,13 @@ function renderInvoicePreviewTable() {
     currentInvoiceItems.forEach((item, index) => {
         itemsTotal += item.totalPrice;
         html += `
-        <tr class="border-b text-xs">
-            <td class="p-2 text-center border-r">${index + 1}</td>
-            <td class="p-2 border-r font-medium">${item.name}</td>
-            <td class="p-2 text-center border-r font-bold">${item.qty}</td>
-            <td class="p-2 text-right border-r">$${item.price.toFixed(2)}</td>
-            <td class="p-2 text-right font-bold text-slate-700">$${item.totalPrice.toFixed(2)}</td>
-            <td class="p-2 text-center print-hide"><button onclick="removeInvoiceItem(${index})" class="text-rose-500 cursor-pointer">❌</button></td>
+        <tr class="border-b dark:border-slate-800 text-xs hover:bg-slate-50 dark:hover:bg-slate-800/50">
+            <td class="p-2 text-center border-r dark:border-slate-800">${index + 1}</td>
+            <td class="p-2 border-r dark:border-slate-800 font-medium text-slate-800 dark:text-slate-200">${item.name}</td>
+            <td class="p-2 text-center border-r dark:border-slate-800 font-bold">${item.qty}</td>
+            <td class="p-2 text-right border-r dark:border-slate-800">$${item.price.toFixed(2)}</td>
+            <td class="p-2 text-right font-bold text-slate-700 dark:text-slate-200">$${item.totalPrice.toFixed(2)}</td>
+            <td class="p-2 text-center print-hide"><button onclick="removeInvoiceItem(${index})" class="text-rose-500 hover:text-rose-700 cursor-pointer">❌</button></td>
         </tr>`;
     });
     tbody.innerHTML = html;
@@ -266,13 +326,79 @@ function renderInvoicePreviewTable() {
     }
 
     const grandTotal = itemsTotal + deliveryFee;
+    currentInvoiceGrandTotal = grandTotal;
+    
     const exchangeRate = 4000;
     const grandTotalRiel = Math.round(grandTotal * exchangeRate);
     const formattedRiel = grandTotalRiel.toLocaleString('km-KH');
 
     const grandTotalElement = document.getElementById('invoiceGrandTotal');
     if (grandTotalElement) {
-        grandTotalElement.innerHTML = `$${grandTotal.toFixed(2)} <span class="text-xs font-normal text-slate-500">(${formattedRiel} ៛)</span>`;
+        grandTotalElement.innerHTML = `$${grandTotal.toFixed(2)} <span class="text-xs font-normal text-slate-500 dark:text-slate-400 block sm:inline">(${formattedRiel} ៛)</span>`;
+    }
+
+    generateDynamicKHQR(grandTotal);
+    calculateChange();
+}
+
+function calculateChange() {
+    const cashInput = document.getElementById('cashReceived');
+    const changeOutput = document.getElementById('changeDue');
+    if (!cashInput || !changeOutput) return;
+
+    const cashReceived = parseFloat(cashInput.value) || 0;
+    if (cashReceived <= 0 || currentInvoiceGrandTotal <= 0) {
+        changeOutput.value = '$0.00';
+        return;
+    }
+
+    const changeDue = cashReceived - currentInvoiceGrandTotal;
+    if (changeDue < 0) {
+        changeOutput.value = `ខ្វះ $${Math.abs(changeDue).toFixed(2)}`;
+    } else {
+        const exchangeRate = 4000;
+        const changeRiel = Math.round(changeDue * exchangeRate).toLocaleString('km-KH');
+        changeOutput.value = `$${changeDue.toFixed(2)} (${changeRiel} ៛)`;
+    }
+}
+
+function generateDynamicKHQR(amount) {
+    const qrcodeContainer = document.getElementById('qrcode');
+    if (!qrcodeContainer) return;
+    
+    qrcodeContainer.innerHTML = '';
+    const payload = `00020101021230380016bakong@vckshop0108VCK_SHOP5204599953038405405${amount.toFixed(2)}5802KH5910VCK SHOP6010Phnom Penh6304`;
+
+    qrcodeInstance = new QRCode(qrcodeContainer, {
+        text: payload,
+        width: 80,
+        height: 80,
+        colorDark: "#0f172a",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+    });
+}
+
+function playSuccessSound() {
+    try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, audioContext.currentTime); // D5
+        osc.frequency.setValueAtTime(880, audioContext.currentTime + 0.1); // A5
+        
+        gain.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.3);
+        
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        
+        osc.start();
+        osc.stop(audioContext.currentTime + 0.3);
+    } catch(e) {
+        console.log("Sound alert disabled");
     }
 }
 
@@ -293,20 +419,14 @@ async function saveFinalInvoice() {
     const itemsTotal = currentInvoiceItems.reduce((sum, item) => sum + item.totalPrice, 0);
     const grandTotal = itemsTotal + deliveryFee;
 
-    const lowStockAlerts = [];
-
     currentInvoiceItems.forEach(item => {
         const p = productsData.find(prod => prod.id === item.productId);
         if (p) {
             p.avail -= item.qty;
-            if (p.avail <= 5) {
-                lowStockAlerts.push({ name: p.name, avail: p.avail });
-            }
         }
     });
 
     try {
-        // ១. រក្សាទុកចូល Firebase
         await database.ref('sales').child(invCode).set({ 
             invCode, customer, phone, location, date, 
             itemsTotal: itemsTotal,
@@ -323,192 +443,25 @@ async function saveFinalInvoice() {
         productsData.forEach(p => { productsObj[p.id] = p; });
         await database.ref('products').set(productsObj);
 
-        // ២. ផ្ញើសារដំណឹងទៅកាន់ Telegram Bot
-        sendTelegramNotification(invCode, customer, phone, location, date, driver, grandTotal, currentInvoiceItems, deliveryFee);
+        // 🔔 ១. ចាក់សំឡេង
+        playSuccessSound();
 
-        if (lowStockAlerts.length > 0) {
-            sendLowStockTelegramAlert(lowStockAlerts);
-        }
+        // 📱 ២. លោត Notification លើ Screen ទូរស័ព្ទ
+        triggerPhoneNotification(invCode, customer, grandTotal);
 
-        // ៣. បង្កើត PDF
+        // 📄 ៣. ទាញយក PDF
         downloadInvoicePDF(invCode);
 
-        alert("🎉 រក្សាទុកចូលរបាយការណ៍ និងផ្ញើចូល Telegram Bot ជោគជ័យ!");
+        alert(`🎉 រក្សាទុកវិក្កយបត្រលេខ ${invCode} រួចរាល់ដោយជោគជ័យ!`);
+        
         resetInvoiceForm();
-        switchTab('dashboard');
+        switchTab('delivery');
 
     } catch (error) {
         console.error("Save Invoice Error:", error);
         alert("❌ មានបញ្ហាក្នុងការរក្សាទុកទិន្នន័យ!");
     }
 }
-
-function sendLowStockTelegramAlert(items) {
-    let itemsListText = items.map(i => `⚠️ *${i.name}* ➔ នៅសល់ត្រឹមតែ *${i.avail}* ប៉ុណ្ណោះ!`).join('\n');
-    let message = `🚨 *ការជូនដំណឹង៖ ទំនិញជិតអស់ពីស្តុក (LOW STOCK ALERT)*\n` +
-                  `------------------------------\n` +
-                  `${itemsListText}\n` +
-                  `------------------------------\n` +
-                  `សូមពិនិត្យ និងបំពេញស្តុកបន្ថែម!`;
-
-    fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            chat_id: TELEGRAM_CHAT_ID,
-            text: message,
-            parse_mode: 'Markdown'
-        })
-    }).catch(err => console.error('Low Stock Telegram Error:', err));
-}
-
-async function sendTelegramNotification(invCode, customer, phone, location, date, driver, total, items, deliveryFee = 0) {
-    const exchangeRate = 4000;
-    
-    let itemsTotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
-    let itemsTotalRiel = Math.round(itemsTotal * exchangeRate).toLocaleString('km-KH');
-    let deliveryFeeNum = parseFloat(deliveryFee) || 0;
-    let deliveryFeeRiel = Math.round(deliveryFeeNum * exchangeRate).toLocaleString('km-KH');
-    let totalNum = parseFloat(total) || 0;
-    let grandTotalRiel = Math.round(totalNum * exchangeRate).toLocaleString('km-KH');
-
-    let itemsListStr = items.map((item, idx) => 
-        `  ${idx + 1}. <b>${item.name}</b>\n     └ ចំនួន: <code>${item.qty}</code> × $${parseFloat(item.price).toFixed(2)} = <b>$${parseFloat(item.totalPrice).toFixed(2)}</b>`
-    ).join('\n');
-
-    // ប្រើប្រាស់ HTML Format ជំនួស Markdown ដើម្បីជៀសវាងបញ្ហា Link Syntax Error
-    let message = `🧾 <b>វិក្កយបត្រលក់ថ្មី / NEW INVOICE</b>\n`;
-    message += `━━━━━━━━━━━━━━━━━━━\n`;
-    message += `🔖 លេខកូដ: <b>${invCode}</b>\n`;
-    message += `📅 កាលបរិច្ឆេទ: <b>${date}</b>\n`;
-    message += `👤 អតិថិជន: <b>${customer}</b>\n`;
-    message += `📞 ទូរស័ព្ទ: <b>${phone || 'គ្មានលេខ'}</b>\n`;
-    message += `📍 ទីតាំងដឹក: <b>${location}</b>\n`;
-    message += `🛵 អ្នកដឹកជញ្ជូន: <b>${driver || 'មិនទាន់ចាត់ចែង'}</b>\n`;
-    message += `━━━━━━━━━━━━━━━━━━━\n`;
-    message += `📦 <b>បញ្ជីទំនិញបញ្ជាទិញ:</b>\n${itemsListStr}\n`;
-    message += `━━━━━━━━━━━━━━━━━━━\n`;
-    message += `💵 សរុបទំនិញ: <b>$${itemsTotal.toFixed(2)}</b> (${itemsTotalRiel} ៛)\n`;
-    message += `🚚 ថ្លៃដឹកជញ្ជូន: <b>$${deliveryFeeNum.toFixed(2)}</b> (${deliveryFeeRiel} ៛)\n`;
-    message += `💰 <b>ប្រាក់សរុបត្រូវទូទាត់:</b>\n👉 <b>$${totalNum.toFixed(2)}</b> (<b>${grandTotalRiel} ៛</b>)\n`;
-    message += `━━━━━━━━━━━━━━━━━━━\n`;
-    message += `📌 ស្ថានភាព: ⏳ <b>កំពុងរៀបចំ</b>`;
-
-    // ការបង្កើត Inline Keyboard
-    const keyboard = {
-        inline_keyboard: [
-            [
-                { 
-                    text: "👁️ មើលវិក្កយបត្រអនឡាញ", 
-                    url: `https://vck-shop.web.app/?inv=${invCode}` // បើក Browser
-                }
-            ],
-            [
-                { text: "🚚 កំពុងដឹក", callback_data: `status_delivering_${invCode}` },
-                { text: "✅ រួចរាល់", callback_data: `status_completed_${invCode}` }
-            ]
-        ]
-    };
-
-    try {
-        const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: TELEGRAM_CHAT_ID,
-                text: message,
-                parse_mode: 'HTML', // ផ្លាស់ប្តូរមកប្រើ HTML វិញដើម្បីកុំឱ្យទាស់ Link
-                reply_markup: keyboard
-            })
-        });
-
-        const resData = await response.json();
-        if (!resData.ok) {
-            console.error("❌ Telegram Error:", resData.description);
-        } else {
-            console.log("✅ ផ្ញើសារទៅ Telegram រួចរាល់!");
-        }
-    } catch (err) {
-        console.error("❌ Network Error:", err);
-    }
-}
-function listenTelegramCommands() {
-    fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?offset=${lastUpdateId + 1}`)
-        .then(res => res.json())
-        .then(data => {
-            if (data.ok && data.result.length > 0) {
-                data.result.forEach(update => {
-                    lastUpdateId = update.update_id;
-                    
-                    if (update.callback_query) {
-                        const callbackData = update.callback_query.data;
-                        const chatId = update.callback_query.message.chat.id;
-
-                        if (callbackData.startsWith('complete_')) {
-                            const invCode = callbackData.replace('complete_', '');
-                            database.ref('deliveries/' + invCode).update({ status: 'បានប្រគល់ជូន' }).then(() => {
-                                sendTelegramReply(chatId, `✅ *វិក្កយបត្រ ${invCode} បានផ្លាស់ប្តូរទៅជា៖ [បានប្រគល់ជូន] រួចរាល់!*`);
-                            });
-                        }
-                    }
-
-                    if (update.message && update.message.text) {
-                        const text = update.message.text.trim();
-                        const chatId = update.message.chat.id;
-
-                        if (text === '/stock') {
-                            let lowStock = productsData.filter(p => p.avail <= 5);
-                            let replyMsg = `📦 *របាយការណ៍ស្តុកទំនិញជិតអស់ (<= ៥)*\n------------------------------\n`;
-                            
-                            if (lowStock.length === 0) {
-                                replyMsg += `✅ គ្រប់មុខទំនិញទាំងអស់មានស្តុកគ្រប់គ្រាន់!`;
-                            } else {
-                                lowStock.forEach(p => {
-                                    replyMsg += `⚠️ *${p.name}*: នៅសល់ \`${p.avail}\` ${p.cat}\n`;
-                                });
-                            }
-                            sendTelegramReply(chatId, replyMsg);
-                        }
-
-                        if (text === '/today_sales') {
-                            const today = new Date().toISOString().split('T')[0];
-                            let todayTotal = 0;
-                            let count = 0;
-
-                            salesData.forEach(s => {
-                                if (s.date === today) {
-                                    todayTotal += (parseFloat(s.total) || 0);
-                                    count++;
-                                }
-                            });
-
-                            const totalRiel = Math.round(todayTotal * 4000).toLocaleString('km-KH');
-                            let replyMsg = `💰 *របាយការណ៍លក់ប្រចាំថ្ងៃ (${today})*\n------------------------------\n` +
-                                           `🧾 ចំនួនវិក្កយបត្រ៖ *${count}*\n` +
-                                           `💵 ចំណូលសរុប៖ *$${todayTotal.toFixed(2)}* (${totalRiel} ៛)`;
-                            
-                            sendTelegramReply(chatId, replyMsg);
-                        }
-                    }
-                });
-            }
-        })
-        .catch(err => console.error('Telegram Command Error:', err));
-}
-
-function sendTelegramReply(chatId, text) {
-    fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            chat_id: chatId,
-            text: text,
-            parse_mode: 'Markdown'
-        })
-    });
-}
-
-setInterval(listenTelegramCommands, 3000);
 
 function searchCustomerHistory() {
     const phoneInput = document.getElementById('searchCustPhone').value.trim();
@@ -541,16 +494,16 @@ function searchCustomerHistory() {
     totalInvEl.innerText = `${customerSales.length} វិក្កយបត្រ`;
 
     tableBody.innerHTML = customerSales.map(s => `
-        <tr class="text-xs hover:bg-slate-50 border-b">
+        <tr class="text-xs hover:bg-slate-50 dark:hover:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
             <td class="p-3 pl-6 font-medium">${s.date || '-'}</td>
-            <td class="p-3 font-bold text-indigo-600 cursor-pointer" onclick="viewInvoice('${s.invCode}')">${s.invCode}</td>
-            <td class="p-3 text-slate-600">
+            <td class="p-3 font-bold text-indigo-600 dark:text-indigo-400 cursor-pointer" onclick="viewInvoice('${s.invCode}')">${s.invCode}</td>
+            <td class="p-3 text-slate-600 dark:text-slate-300">
                 ${s.items ? s.items.map(i => `${i.name} (x${i.qty})`).join(', ') : '-'}
             </td>
-            <td class="p-3 text-slate-500">${s.location || '-'}</td>
-            <td class="p-3 text-right font-bold text-emerald-600">$${(parseFloat(s.total) || 0).toFixed(2)}</td>
+            <td class="p-3 text-slate-500 dark:text-slate-400">${s.location || '-'}</td>
+            <td class="p-3 text-right font-bold text-emerald-600 dark:text-emerald-400">$${(parseFloat(s.total) || 0).toFixed(2)}</td>
             <td class="p-3 text-center">
-                <button onclick="viewInvoice('${s.invCode}')" class="bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-600 p-1.5 rounded transition text-[11px] font-bold">👁️ មើល</button>
+                <button onclick="viewInvoice('${s.invCode}')" class="bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-600 hover:text-white text-indigo-600 dark:text-indigo-400 p-1.5 rounded-xl transition text-[11px] font-bold cursor-pointer">👁️ មើល</button>
             </td>
         </tr>
     `).join('');
@@ -571,11 +524,14 @@ function deleteInvoice(invCode) {
 
 function resetInvoiceForm() {
     currentInvoiceItems = [];
-    document.getElementById('invoiceCustomer').value = '';
-    document.getElementById('invoicePhone').value = '';
-    document.getElementById('invoiceLocation').value = '';
-    document.getElementById('invoiceDeliveryFee').value = '0.00';
-    document.getElementById('invoiceDriverSelect').value = 'មិនទាន់ចាត់ចែង';
+    currentInvoiceGrandTotal = 0;
+    if (document.getElementById('invoiceCustomer')) document.getElementById('invoiceCustomer').value = '';
+    if (document.getElementById('invoicePhone')) document.getElementById('invoicePhone').value = '';
+    if (document.getElementById('invoiceLocation')) document.getElementById('invoiceLocation').value = '';
+    if (document.getElementById('invoiceDeliveryFee')) document.getElementById('invoiceDeliveryFee').value = '0.00';
+    if (document.getElementById('invoiceDriverSelect')) document.getElementById('invoiceDriverSelect').value = 'មិនទាន់ចាត់ចែង';
+    if (document.getElementById('cashReceived')) document.getElementById('cashReceived').value = '';
+    if (document.getElementById('changeDue')) document.getElementById('changeDue').value = '$0.00';
     renderInvoicePreviewTable();
 }
 
@@ -599,50 +555,60 @@ function downloadInvoicePDF(customInvCode) {
     const grandTotalRielStr = Math.round(grandTotalNum * 4000).toLocaleString('km-KH');
 
     const pdfTemplate = `
-        <div style="padding: 20px; font-family: sans-serif; color: #1e293b;">
-            <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #6366f1; padding-bottom: 10px; margin-bottom: 15px;">
+        <div style="padding: 24px; font-family: 'Kantumruy Pro', sans-serif; color: #0f172a; background: #ffffff;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #6366f1; padding-bottom: 12px; margin-bottom: 20px;">
                 <div>
-                    <h1 style="color: #6366f1; margin: 0; font-size: 20px;">VCK SHOP</h1>
-                    <p style="margin: 2px 0; font-size: 11px; color: #64748b;">INVOICE / វិក្កយបត្រ</p>
+                    <h1 style="color: #4f46e5; margin: 0; font-size: 22px; font-weight: 900;">VCK SHOP</h1>
+                    <p style="margin: 3px 0 0 0; font-size: 11px; color: #64748b;">ផ្គត់ផ្គង់សម្ភារៈតុការចានប្រណិតទាន់សម័យ</p>
                 </div>
                 <div style="text-align: right;">
-                    <h3 style="margin: 0; font-size: 14px;">លេខ៖ ${invCode}</h3>
-                    <p style="margin: 2px 0; font-size: 11px; color: #64748b;">ថ្ងៃទី៖ ${date}</p>
+                    <h3 style="margin: 0; font-size: 15px; color: #1e293b;">វិក្កយបត្រ / INVOICE</h3>
+                    <p style="margin: 3px 0 0 0; font-size: 11px; color: #6366f1; font-weight: bold;">${invCode}</p>
                 </div>
             </div>
 
-            <div style="background-color: #f8fafc; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 12px;">
-                <p style="margin: 2px 0;"><strong>អតិថិជន:</strong> ${customer} (${phone})</p>
-                <p style="margin: 2px 0;"><strong>អាសយដ្ឋាន:</strong> ${location}</p>
+            <div style="background-color: #f8fafc; padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; font-size: 12px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between;">
+                <div>
+                    <p style="margin: 2px 0;"><strong>អតិថិជន:</strong> ${customer}</p>
+                    <p style="margin: 2px 0;"><strong>លេខទូរស័ព្ទ:</strong> ${phone}</p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="margin: 2px 0;"><strong>ថ្ងៃខែ:</strong> ${date}</p>
+                    <p style="margin: 2px 0;"><strong>ទិសដៅ:</strong> ${location}</p>
+                </div>
             </div>
 
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 12px;">
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
                 <thead>
-                    <tr style="background-color: #6366f1; color: white;">
-                        <th style="padding: 6px; border: 1px solid #6366f1;">#</th>
-                        <th style="padding: 6px; border: 1px solid #6366f1; text-align: left;">ទំនិញ</th>
-                        <th style="padding: 6px; border: 1px solid #6366f1;">ចំនួន</th>
-                        <th style="padding: 6px; border: 1px solid #6366f1; text-align: right;">តម្លៃ</th>
-                        <th style="padding: 6px; border: 1px solid #6366f1; text-align: right;">សរុប</th>
+                    <tr style="background-color: #4f46e5; color: white;">
+                        <th style="padding: 8px; text-align: center; border-radius: 6px 0 0 0;">#</th>
+                        <th style="padding: 8px; text-align: left;">ឈ្មោះទំនិញ</th>
+                        <th style="padding: 8px; text-align: center;">ចំនួន</th>
+                        <th style="padding: 8px; text-align: right;">តម្លៃរាយ</th>
+                        <th style="padding: 8px; text-align: right; border-radius: 0 6px 0 0;">សរុប</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${currentInvoiceItems.map((item, idx) => `
-                        <tr style="border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 6px; text-align: center;">${idx + 1}</td>
-                            <td style="padding: 6px;">${item.name}</td>
-                            <td style="padding: 6px; text-align: center;">${item.qty}</td>
-                            <td style="padding: 6px; text-align: right;">$${parseFloat(item.price).toFixed(2)}</td>
-                            <td style="padding: 6px; text-align: right;">$${parseFloat(item.totalPrice).toFixed(2)}</td>
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 8px; text-align: center; color: #64748b;">${idx + 1}</td>
+                            <td style="padding: 8px; font-weight: bold;">${item.name}</td>
+                            <td style="padding: 8px; text-align: center;">${item.qty}</td>
+                            <td style="padding: 8px; text-align: right;">$${parseFloat(item.price).toFixed(2)}</td>                             <td style="padding: 8px; text-align: right; font-weight: bold;">$${parseFloat(item.totalPrice).toFixed(2)}</td>
                         </tr>
                     `).join('')}
                 </tbody>
             </table>
 
-            <div style="text-align: right; font-size: 12px;">
-                <p style="margin: 2px 0;">សរុបទំនិញ៖ $${itemsTotal.toFixed(2)}</p>
-                <p style="margin: 2px 0;">ថ្លៃដឹកជញ្ជូន៖ $${deliveryFee.toFixed(2)}</p>
-                <h3 style="margin: 5px 0; color: #4338ca; font-size: 16px;">ប្រាក់សរុប៖ $${grandTotalNum.toFixed(2)} (${grandTotalRielStr} ៛)</h3>
+            <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                <div style="font-size: 10px; color: #94a3b8;">
+                    <p style="margin: 0;">សូមអរគុណចំពោះការគាំទ្រ VCK SHOP!</p>
+                </div>
+                <div style="text-align: right; font-size: 12px;">
+                    <p style="margin: 2px 0; color: #64748b;">សរុបទំនិញ៖ $${itemsTotal.toFixed(2)}</p>
+                    <p style="margin: 2px 0; color: #64748b;">សេវាដឹកជញ្ជូន៖ $${deliveryFee.toFixed(2)}</p>
+                    <h3 style="margin: 6px 0 0 0; color: #4338ca; font-size: 18px; font-weight: 900;">សរុប៖ $${grandTotalNum.toFixed(2)} (${grandTotalRielStr} ៛)</h3>
+                </div>
             </div>
         </div>
     `;
@@ -654,7 +620,7 @@ function downloadInvoicePDF(customInvCode) {
     const opt = {
         margin:       [0.2, 0.2, 0.2, 0.2],
         filename:     `${invCode}.pdf`,
-        image:        { type: 'jpeg', quality: 0.95 },
+        image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2, useCORS: true },
         jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
     };
@@ -753,14 +719,8 @@ function renderDashboard() {
 
     salesData.forEach(s => {
         const amt = parseFloat(s.total) || 0;
-        
-        if (selectedDate && s.date === selectedDate) {
-            dailySum += amt;
-        }
-        
-        if (s.date && typeof s.date === 'string' && s.date.substring(0, 7) === selectedMonth) {
-            monthlySum += amt;
-        }
+        if (selectedDate && s.date === selectedDate) dailySum += amt;
+        if (s.date && typeof s.date === 'string' && s.date.substring(0, 7) === selectedMonth) monthlySum += amt;
     });
 
     const isAdmin = currentUser && currentUser.role === 'Admin';
@@ -772,7 +732,16 @@ function renderDashboard() {
         document.getElementById('dashMonthlyAmount').innerText = isAdmin ? `$${monthlySum.toFixed(2)}` : '***';
     }
 
+    if (document.getElementById('dashTotalProducts')) {
+        document.getElementById('dashTotalProducts').innerText = `${productsData.length} មុខ`;
+    }
+    if (document.getElementById('dashLowStockCount')) {
+        const lowStockCount = productsData.filter(p => p.avail <= 5).length;
+        document.getElementById('dashLowStockCount').innerText = `${lowStockCount} មុខ`;
+    }
+
     renderSalesTable(selectedDate);
+    renderBestSellersChart();
 }
 
 function renderSalesTable(selectedDate) {
@@ -782,28 +751,31 @@ function renderSalesTable(selectedDate) {
     const salesTbody = document.getElementById('salesTableBody');
     if (salesTbody) {
         if (filteredSales.length === 0) {
-            const cols = (currentUser && currentUser.role === 'Admin') ? 6 : 5;
+            const cols = (currentUser && currentUser.role === 'Admin') ? 6 : 4;
             salesTbody.innerHTML = `<tr><td colspan="${cols}" class="p-6 text-center text-xs font-bold text-slate-400">📝 មិនទាន់មានទិន្នន័យលក់ ${selectedDate ? 'សម្រាប់ថ្ងៃទី ' + selectedDate : ''} ទេ</td></tr>`;
         } else {
             salesTbody.innerHTML = filteredSales.map(s => {
                 const totalAmt = parseFloat(s.total) || 0;
+                let totalTd = '';
                 let actionTd = '';
+
                 if (currentUser && currentUser.role === 'Admin') {
+                    totalTd = `<td class="p-3 text-right font-bold text-emerald-600 dark:text-emerald-400">$${totalAmt.toFixed(2)}</td>`;
                     actionTd = (s.invCode && s.invCode !== '-') ? 
-                        `<td class="p-3 text-center pr-6 flex justify-center gap-1.5">
-                            <button onclick="viewInvoice('${s.invCode}')" class="bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-600 p-1 rounded transition text-[11px] cursor-pointer shadow-sm" title="មើលលម្អិត">👁️</button>
-                            <button onclick="deleteInvoice('${s.invCode}')" class="bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 p-1 rounded transition text-[11px] cursor-pointer shadow-sm" title="លុប">🗑️</button>
+                        `<td class="p-3 text-center pr-6 flex justify-center gap-1">
+                            <button onclick="viewInvoice('${s.invCode}')" class="bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-600 hover:text-white text-indigo-600 dark:text-indigo-400 p-1.5 rounded-lg transition text-[11px] cursor-pointer" title="មើល">👁️</button>
+                            <button onclick="deleteInvoice('${s.invCode}')" class="bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-600 hover:text-white text-rose-600 dark:text-rose-400 p-1.5 rounded-lg transition text-[11px] cursor-pointer" title="លុប">🗑️</button>
                          </td>` : 
-                        `<td class="p-3 text-center pr-6 text-slate-300">-</td>`;
+                        `<td class="p-3 text-center pr-6 text-slate-300 dark:text-slate-600">-</td>`;
                 }
 
                 return `
-                    <tr class="text-xs hover:bg-slate-50">
+                    <tr class="text-xs hover:bg-slate-50 dark:hover:bg-slate-800/50 transition border-b border-slate-100 dark:border-slate-800">
                         <td class="p-3 pl-6">${s.date || '-'}</td>
-                        <td class="p-3 text-indigo-600 font-bold cursor-pointer" onclick="viewInvoice('${s.invCode}')">${s.invCode || '-'}</td>
-                        <td class="p-3 font-medium">${s.customer || '-'}</td>
-                        <td class="p-3 text-slate-500">${s.location || '-'}</td>
-                        <td class="p-3 text-right font-bold text-emerald-600">$${totalAmt.toFixed(2)}</td>
+                        <td class="p-3 text-indigo-600 dark:text-indigo-400 font-bold cursor-pointer" onclick="viewInvoice('${s.invCode}')">${s.invCode || '-'}</td>
+                        <td class="p-3 font-bold text-slate-800 dark:text-slate-200">${s.customer || '-'}</td>
+                        <td class="p-3 text-slate-500 dark:text-slate-400">${s.location || '-'}</td>
+                        ${totalTd}
                         ${actionTd}
                     </tr>
                 `;
@@ -812,9 +784,39 @@ function renderSalesTable(selectedDate) {
     }
 }
 
+function filterDashSalesTable() {
+    const input = document.getElementById('dashSalesSearch').value.toLowerCase();
+    const tbody = document.getElementById('salesTableBody');
+    const trs = tbody.getElementsByTagName('tr');
+
+    for (let tr of trs) {
+        const text = tr.textContent.toLowerCase();
+        tr.style.display = text.includes(input) ? '' : 'none';
+    }
+}
+
+function filterDeliveryTable() {
+    const driverFilter = document.getElementById('filterDeliveryDriver').value;
+    const statusFilter = document.getElementById('filterDeliveryStatus').value;
+    const tbody = document.getElementById('deliveryTableBody');
+    const trs = tbody.getElementsByTagName('tr');
+
+    for (let tr of trs) {
+        const driverSelect = tr.querySelector('select[onchange*="updateDriver"]');
+        const statusSelect = tr.querySelector('select[onchange*="updateStatus"]');
+
+        const driverVal = driverSelect ? driverSelect.value : '';
+        const statusVal = statusSelect ? statusSelect.value : '';
+
+        const driverMatch = (driverFilter === 'all') || (driverVal === driverFilter);
+        const statusMatch = (statusFilter === 'all') || (statusVal === statusFilter);
+
+        tr.style.display = (driverMatch && statusMatch) ? '' : 'none';
+    }
+}
+
 function renderAll() {
     const today = new Date().toISOString().split('T')[0];
-
     renderDashboard();
 
     const deliveryTbody = document.getElementById('deliveryTableBody');
@@ -826,14 +828,14 @@ function renderAll() {
                 const matchedSale = salesData.find(s => s.invCode === d.invCode);
                 const dDate = matchedSale ? matchedSale.date : today;
                 return `
-                    <tr class="text-xs hover:bg-slate-50">
-                        <td class="p-4 pl-6 text-slate-500">${dDate}</td>
-                        <td class="p-4 font-bold text-indigo-600 cursor-pointer" onclick="viewInvoice('${d.invCode}')">${d.invCode || '-'}</td>
-                        <td class="p-4 font-bold">${d.customer || '-'} ${d.phone ? `(${d.phone})` : ''}</td>
-                        <td class="p-4 font-medium text-slate-600">${d.fromLoc || 'ភ្នំពេញ'}</td>
-                        <td class="p-4 font-medium text-indigo-600">${d.location || '-'}</td>
+                    <tr class="text-xs hover:bg-slate-50 dark:hover:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                        <td class="p-4 pl-6 text-slate-500 dark:text-slate-400">${dDate}</td>
+                        <td class="p-4 font-bold text-indigo-600 dark:text-indigo-400 cursor-pointer" onclick="viewInvoice('${d.invCode}')">${d.invCode || '-'}</td>
+                        <td class="p-4 font-bold dark:text-slate-200">${d.customer || '-'} ${d.phone ? `(${d.phone})` : ''}</td>
+                        <td class="p-4 font-medium text-slate-600 dark:text-slate-400">${d.fromLoc || 'ភ្នំពេញ'}</td>
+                        <td class="p-4 font-medium text-indigo-600 dark:text-indigo-400">${d.location || '-'}</td>
                         <td class="p-4">
-                            <select onchange="updateDriver('${d.invCode}', this.value)" class="border border-slate-200 p-1.5 rounded-xl text-xs bg-white font-bold text-slate-700 focus:outline-none">
+                            <select onchange="updateDriver('${d.invCode}', this.value)" class="border border-slate-200 dark:border-slate-700 p-1.5 rounded-xl text-xs bg-white dark:bg-slate-800 font-bold text-slate-700 dark:text-slate-200 focus:outline-none">
                                 <option value="មិនទាន់ចាត់ចែង" ${d.driver === 'មិនទាន់ចាត់ចែង' ? 'selected' : ''}>--- ជ្រើសរើស ---</option>
                                 <option value="លាងហាក់" ${d.driver === 'លាងហាក់' ? 'selected' : ''}>លាងហាក់</option>
                                 <option value="ផាន់នី" ${d.driver === 'ផាន់នី' ? 'selected' : ''}>ផាន់នី</option>
@@ -841,10 +843,10 @@ function renderAll() {
                             </select>
                         </td>
                         <td class="p-4 text-center">
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${d.status === 'បានប្រគល់ជូន' ? 'bg-emerald-50 text-emerald-600' : d.status === 'កំពុងដឹក' ? 'bg-indigo-50 text-indigo-600' : 'bg-amber-50 text-amber-600'}">${d.status || 'កំពុងរៀបចំ'}</span>
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${d.status === 'បានប្រគល់ជូន' ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' : d.status === 'កំពុងដឹក' ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800' : 'bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800'}">${d.status || 'កំពុងរៀបចំ'}</span>
                         </td>
                         <td class="p-4 text-center">
-                            <select onchange="updateStatus('${d.invCode}', this.value)" class="border border-slate-200 p-1.5 rounded-xl text-xs bg-white text-slate-700 focus:outline-none">
+                            <select onchange="updateStatus('${d.invCode}', this.value)" class="border border-slate-200 dark:border-slate-700 p-1.5 rounded-xl text-xs bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:outline-none">
                                 <option value="កំពុងរៀបចំ" ${d.status === 'កំពុងរៀបចំ' ? 'selected' : ''}>កំពុងរៀបចំ</option>
                                 <option value="កំពុងដឹក" ${d.status === 'កំពុងដឹក' ? 'selected' : ''}>កំពុងដឹក</option>
                                 <option value="បានប្រគល់ជូន" ${d.status === 'បានប្រគល់ជូន' ? 'selected' : ''}>បានប្រគល់ជូន</option>
@@ -861,14 +863,14 @@ function renderAll() {
             stockTbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-xs font-bold text-slate-400">📦 មិនទាន់មានទំនិញទេ</td></tr>`;
         } else {
             stockTbody.innerHTML = productsData.map((p, index) => `
-                <tr class="text-xs hover:bg-slate-50">
+                <tr class="text-xs hover:bg-slate-50 dark:hover:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
                     <td class="p-3 text-center font-bold text-slate-400">${index + 1}</td>
-                    <td class="p-3 font-bold text-slate-700">${p.name}</td>
-                    <td class="p-3"><span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px]">${p.cat}</span></td>
-                    <td class="p-2 text-center"><input type="number" id="inline-total-${p.id}" value="${p.total}" onchange="autoSaveProduct(${p.id})" class="w-16 border border-slate-200 rounded text-center p-1 font-bold"></td>
-                    <td class="p-2 text-center"><input type="number" id="inline-avail-${p.id}" value="${p.avail}" onchange="autoSaveProduct(${p.id})" class="w-16 border border-slate-200 rounded text-center p-1 font-bold ${p.avail <= 5 ? 'text-rose-500 font-black' : ''}"></td>
-                    <td class="p-2 text-right"><input type="number" step="0.01" id="inline-price-${p.id}" value="${p.price}" onchange="autoSaveProduct(${p.id})" class="w-20 border border-slate-200 rounded text-right p-1 font-bold"></td>
-                    <td class="p-3 text-center"><button onclick="deleteProductFromStock(${p.id})" class="text-rose-600 cursor-pointer text-sm">🗑️</button></td>
+                    <td class="p-3 font-bold text-slate-800 dark:text-slate-200">${p.name}</td>
+                    <td class="p-3"><span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-lg text-[10px] font-bold">${p.cat}</span></td>
+                    <td class="p-2 text-center"><input type="number" id="inline-total-${p.id}" value="${p.total}" onchange="autoSaveProduct(${p.id})" class="w-16 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white rounded-lg text-center p-1 font-bold"></td>
+                    <td class="p-2 text-center"><input type="number" id="inline-avail-${p.id}" value="${p.avail}" onchange="autoSaveProduct(${p.id})" class="w-16 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white rounded-lg text-center p-1 font-bold ${p.avail <= 5 ? 'text-rose-500 font-black bg-rose-50 dark:bg-rose-950/50' : ''}"></td>
+                    <td class="p-2 text-right"><input type="number" step="0.01" id="inline-price-${p.id}" value="${p.price}" onchange="autoSaveProduct(${p.id})" class="w-20 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white rounded-lg text-right p-1 font-bold"></td>
+                    <td class="p-3 text-center"><button onclick="deleteProductFromStock(${p.id})" class="text-rose-600 dark:text-rose-400 hover:text-rose-800 cursor-pointer text-sm">🗑️</button></td>
                 </tr>
             `).join('');
         }
@@ -914,46 +916,45 @@ function viewInvoice(invoiceId) {
         const totalRielStr = Math.round(totalNum * exchangeRate).toLocaleString('km-KH');
 
         content.innerHTML = `
-            <div class="border-b pb-3 mb-4">
-                <p class="text-xs font-bold text-slate-500">វិក្កយបត្រលេខ: <span class="text-slate-800">${data.invCode || invoiceId}</span></p>
-                <p class="text-xs font-bold text-slate-500">អតិថិជន: <span class="text-slate-800">${data.customer || '-'}</span> (${data.phone || 'គ្មានលេខ'})</p>
-                <p class="text-xs font-bold text-slate-500">ទិសដៅ: <span class="text-slate-800">${data.location || '-'}</span></p>
-                <p class="text-xs font-bold text-slate-500">កាលបរិច្ឆេទ: <span class="text-slate-800">${data.date || '-'}</span></p>
+            <div class="border-b border-slate-100 dark:border-slate-800 pb-3 mb-4 space-y-1">
+                <p class="text-xs font-bold text-slate-500 dark:text-slate-400">វិក្កយបត្រលេខ: <span class="text-indigo-600 dark:text-indigo-400 font-extrabold">${data.invCode || invoiceId}</span></p>
+                <p class="text-xs font-bold text-slate-500 dark:text-slate-400">អតិថិជន: <span class="text-slate-800 dark:text-slate-200">${data.customer || '-'}</span> (${data.phone || 'គ្មានលេខ'})</p>
+                <p class="text-xs font-bold text-slate-500 dark:text-slate-400">ទិសដៅ: <span class="text-slate-800 dark:text-slate-200">${data.location || '-'}</span></p>
+                <p class="text-xs font-bold text-slate-500 dark:text-slate-400">កាលបរិច្ឆេទ: <span class="text-slate-800 dark:text-slate-200">${data.date || '-'}</span></p>
             </div>
-            <table class="w-full text-xs border border-slate-200">
-                <thead class="bg-slate-100">
+            <table class="w-full text-xs border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+                <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                     <tr>
-                        <th class="p-2 border-r text-left">ទំនិញ</th>
-                        <th class="p-2 border-r">ចំនួន</th>
-                        <th class="p-2 text-right">តម្លៃរាយ</th>
+                        <th class="p-2 border-r dark:border-slate-800 text-left">ទំនិញ</th>
+                        <th class="p-2 border-r dark:border-slate-800 text-center">ចំនួន</th>
+                        <th class="p-2 text-right border-r dark:border-slate-800">តម្លៃ</th>
                         <th class="p-2 text-right">សរុប</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y text-center">
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
                     ${data.items ? data.items.map(item => `
                         <tr>
-                            <td class="p-2 border-r text-left font-medium">${item.name}</td>
-                            <td class="p-2 border-r font-bold">${item.qty}</td>
-                            <td class="p-2 border-r text-right">$${parseFloat(item.price).toFixed(2)}</td>
-                            <td class="p-2 text-right font-bold text-slate-700">$${parseFloat(item.totalPrice).toFixed(2)}</td>
+                            <td class="p-2 border-r dark:border-slate-800 text-left font-medium text-slate-800 dark:text-slate-200">${item.name}</td>
+                            <td class="p-2 border-r dark:border-slate-800 text-center font-bold">${item.qty}</td>
+                            <td class="p-2 border-r dark:border-slate-800 text-right">$${parseFloat(item.price).toFixed(2)}</td>                             <td class="p-2 text-right font-bold text-slate-700 dark:text-slate-200">$${parseFloat(item.totalPrice).toFixed(2)}</td>
                         </tr>
-                    `).join('') : '<tr><td colspan="4" class="p-2">គ្មានទិន្នន័យ</td></tr>'}
+                    `).join('') : '<tr><td colspan="4" class="p-2 text-center text-slate-400">គ្មានទិន្នន័យ</td></tr>'}
                 </tbody>
             </table>
 
-            <div class="mt-3 text-xs space-y-1 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                <div class="flex justify-between text-slate-600">
+            <div class="mt-3 text-xs space-y-1 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <div class="flex justify-between text-slate-600 dark:text-slate-400">
                     <span>សរុបតម្លៃទំនិញ៖</span>
                     <span>$${(parseFloat(data.total) - deliveryFee).toFixed(2)}</span>
                 </div>
-                <div class="flex justify-between text-slate-600">
+                <div class="flex justify-between text-slate-600 dark:text-slate-400">
                     <span>សេវាដឹកជញ្ជូន៖</span>
                     <span>$${deliveryFee.toFixed(2)}</span>
                 </div>
             </div>
 
-            <div class="text-right mt-4 p-3 bg-indigo-50 rounded-xl">
-                <p class="text-xs font-bold text-indigo-600">សរុបទាំងអស់: $${totalNum.toFixed(2)} (${totalRielStr} ៛)</p>
+            <div class="text-right mt-4 p-3 bg-indigo-50 dark:bg-indigo-950/50 rounded-2xl border border-indigo-100 dark:border-indigo-900/50">
+                <p class="text-xs font-black text-indigo-700 dark:text-indigo-300">សរុបទាំងអស់: $${totalNum.toFixed(2)} (${totalRielStr} ៛)</p>
             </div>
         `;
         modal.classList.remove('hidden');
@@ -972,62 +973,6 @@ function toggleMobileMenu() {
     footer.classList.toggle('hidden');
     footer.classList.toggle('flex');
 }
-
-function checkAndSendDailyDriverSummary() {
-    const now = new Date();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-
-    if (hours === 17 && minutes === 17) {
-        const today = now.toISOString().split('T')[0];
-        const driverCounts = { "លាងហាក់": 0, "ផាន់នី": 0, "សុភាព": 0 };
-        let totalRevenueToday = 0;
-
-        deliveryData.forEach(d => {
-            const matchedSale = salesData.find(s => s.invCode === d.invCode);
-            const deliveryDate = matchedSale ? matchedSale.date : '';
-
-            if (deliveryDate === today) {
-                if (matchedSale) {
-                    totalRevenueToday += (parseFloat(matchedSale.total) || 0);
-                }
-                if (driverCounts.hasOwnProperty(d.driver) && d.status === 'បានប្រគល់ជូន') {
-                    driverCounts[d.driver]++;
-                }
-            }
-        });
-
-        const exchangeRate = 4000;
-        const totalRevenueRiel = Math.round(totalRevenueToday * exchangeRate).toLocaleString('km-KH');
-
-        let message = `🛵 *របាយការណ៍សង្ខេបប្រចាំថ្ងៃ*\n` +
-                      `📅 *កាលបរិច្ឆេទ:* ${today}\n` +
-                      `------------------------------\n` +
-                      `👤 *លោក លាងហាក់:* ${driverCounts["លាងហាក់"]} ជើង\n` +
-                      `👤 *លោក ផាន់នី:* ${driverCounts["ផាន់នី"]} ជើង\n` +
-                      `👤 *លោក សុភាព:* ${driverCounts["សុភាព"]} ជើង\n` +
-                      `------------------------------\n` +
-                      `💰 *ចំណូលសរុបថ្ងៃនេះ:* *$${totalRevenueToday.toFixed(2)}* (${totalRevenueRiel} ៛)\n` +
-                      `------------------------------\n` +
-                      `✅ បានបញ្ចប់ការពិនិត្យស្វ័យប្រវត្តី។`;
-
-        fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: TELEGRAM_CHAT_ID,
-                text: message,
-                parse_mode: 'Markdown'
-            })
-        })
-        .then(response => console.log('Daily summary sent successfully'))
-        .catch(err => console.error('Daily Summary Telegram Error:', err));
-    }
-}
-
-setInterval(checkAndSendDailyDriverSummary, 60000);
-
-let myChartInstance = null;
 
 function renderBestSellersChart() {
     const ctx = document.getElementById('bestSellersChart')?.getContext('2d');
